@@ -5,9 +5,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/spf13/cobra"
-	"os"
-	"storj.io/common/grant"
-	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/rpc"
 	"storj.io/common/signing"
@@ -18,17 +15,14 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:  "piece-download <storagenode-id> <pieceid> <size>",
+		Use:  "download-drpc <storagenode-id> <pieceid> <size>",
 		Args: cobra.ExactArgs(3),
 	}
+	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
 		ctx := context.Background()
-		d, err := NewRawDownloader(ctx, args[0])
-		if err != nil {
-			return err
-		}
 
 		downloadedBytes := int64(0)
 		downloadedChunks := 0
@@ -36,14 +30,19 @@ func init() {
 		if err != nil {
 			return err
 		}
-		max := 1000
+		max := *samples
 		for i := 0; i < max; i++ {
+			d, err := NewRawDownloader(ctx, args[0])
+			if err != nil {
+				return err
+			}
 			n, c, err := d.Download(ctx, args[1], int64(size))
 			if err != nil {
 				return err
 			}
 			downloadedBytes += n
 			downloadedChunks += c
+			d.Close()
 		}
 		seconds := time.Now().Sub(start).Seconds()
 		fmt.Printf("%d Mbytes are downloaded under %f sec (with %d chunk/RPC request in average), which is %f Mbytes/sec\n", downloadedBytes/1024/1024, seconds, downloadedChunks/max, float64(downloadedBytes)/seconds/1024/1024)
@@ -53,51 +52,22 @@ func init() {
 }
 
 type RawDownloader struct {
-	satelliteURL   storj.NodeURL
-	storagenodeURL storj.NodeURL
-	conn           *rpc.Conn
-	client         pb.DRPCPiecestoreClient
-	fi             *identity.FullIdentity
-	signee         signing.Signer
+	Downloader
+	conn   *rpc.Conn
+	client pb.DRPCPiecestoreClient
 }
 
 func NewRawDownloader(ctx context.Context, storagenodeURL string) (d RawDownloader, err error) {
-	gr := os.Getenv("UPLINK_ACCESS")
-	access, err := grant.ParseAccess(gr)
-	if err != nil {
-		return d, err
-	}
-	d.satelliteURL, err = storj.ParseNodeURL(access.SatelliteAddress)
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL)
 	if err != nil {
 		return
 	}
 
-	d.storagenodeURL, err = storj.ParseNodeURL(storagenodeURL)
-	if err != nil {
-		return
-	}
-
-	dialer, err := getDialer(ctx)
-	if err != nil {
-		return
-	}
-
-	d.conn, err = dialer.DialNodeURL(ctx, d.storagenodeURL)
+	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
 	d.client = pb.NewDRPCPiecestoreClient(d.conn)
-
-	satelliteIdentityCfg := identity.Config{
-		CertPath: "identity.cert",
-		KeyPath:  "identity.key",
-	}
-	d.fi, err = satelliteIdentityCfg.Load()
-	if err != nil {
-		return
-	}
-
-	d.signee = signing.SignerFromFullIdentity(d.fi)
 	return
 }
 

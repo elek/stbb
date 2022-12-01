@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"storj.io/common/identity"
-	"storj.io/common/pb"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/rpc"
 	"storj.io/common/socket"
@@ -104,18 +103,12 @@ func GetSatelliteID(ctx context.Context, address string) (string, error) {
 	}
 	defer func() { _ = conn.Close() }()
 
-	req := pb.GetTimeRequest{}
-	client := pb.NewDRPCNodeClient(conn)
-	_, err = client.GetTime(ctx, &req)
-	if err != nil {
-		return "", err
-	}
 	peerIdentity, err := conn.PeerIdentity()
 	if err != nil {
 		return "", err
 	}
 
-	return peerIdentity.ID.String(), nil
+	return peerIdentity.ID.String() + "@" + address, nil
 
 }
 

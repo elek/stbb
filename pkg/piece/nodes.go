@@ -16,16 +16,19 @@ import (
 )
 
 func init() {
-	PieceCmd.AddCommand(&cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "nodes",
 		Short: "Print out storagenodes which stores a specific object",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return listLocations(args[0])
-		},
-	})
+	}
+	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		return listLocations(args[0], *samples)
+	}
+	PieceCmd.AddCommand(cmd)
+
 }
 
-func listLocations(s string) error {
+func listLocations(s string, samples int) error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -62,17 +65,25 @@ func listLocations(s string) error {
 		return err
 	}
 
-	resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
-		Bucket:             []byte(bucket),
-		EncryptedObjectKey: decoded,
-	})
-	if err != nil {
-		return err
-	}
-	for _, k := range resp.DownloadedSegments {
-		for _, l := range k.Limits {
-			if l != nil && l.StorageNodeAddress != nil {
-				fmt.Println(l.Limit.StorageNodeId.String()+"@"+l.StorageNodeAddress.Address, l.Limit.PieceId, l.Limit.Limit)
+	nodes := map[string]bool{}
+
+	for i := 0; i < samples; i++ {
+		resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
+			Bucket:             []byte(bucket),
+			EncryptedObjectKey: decoded,
+		})
+		if err != nil {
+			return err
+		}
+		for _, k := range resp.DownloadedSegments {
+			for _, l := range k.Limits {
+				if l != nil && l.StorageNodeAddress != nil {
+					nodeID := l.Limit.StorageNodeId.String()
+					if _, found := nodes[nodeID]; !found {
+						fmt.Println(nodeID+"@"+l.StorageNodeAddress.Address, l.Limit.PieceId, l.Limit.Limit)
+						nodes[nodeID] = true
+					}
+				}
 			}
 		}
 	}

@@ -3,6 +3,8 @@ package main
 import (
 	stbb "github.com/elek/stbb/pkg"
 	_ "github.com/elek/stbb/pkg/piece"
+	_ "github.com/elek/stbb/pkg/rpc"
+	_ "github.com/elek/stbb/pkg/tls"
 	"log"
 )
 

@@ -6,7 +6,9 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/zeebo/errs/v2 v2.0.3
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
+	google.golang.org/protobuf v1.27.1
 	storj.io/common v0.0.0-20220518091716-ec9c16f58d50
+	storj.io/drpc v0.0.30
 	storj.io/storj v0.12.1-0.20220624223030-91ea659298bf
 	storj.io/uplink v1.8.2-0.20220406151905-7305e5b6da85
 )
@@ -38,6 +40,5 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220128215802-99c3d69c2c27 // indirect
 	golang.org/x/text v0.3.6 // indirect
-	storj.io/drpc v0.0.30 // indirect
 	storj.io/private v0.0.0-20220614154538-e18b72a55f43 // indirect
 )
