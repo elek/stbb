@@ -11,6 +11,7 @@ import (
 	"storj.io/common/identity"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/rpc"
+	"storj.io/common/rpc/quic"
 	"storj.io/storj/cmd/uplink/ulloc"
 	"storj.io/uplink/private/metaclient"
 )
@@ -21,14 +22,15 @@ func init() {
 		Short: "Print out storagenodes which stores a specific object",
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
+	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return listLocations(args[0], *samples)
+		return listLocations(args[0], *samples, *useQuic)
 	}
 	PieceCmd.AddCommand(cmd)
 
 }
 
-func listLocations(s string, samples int) error {
+func listLocations(s string, samples int, useQuic bool) error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -41,7 +43,7 @@ func listLocations(s string, samples int) error {
 		return errs.New("Path is not remote %s", s)
 	}
 
-	dialer, err := getDialer(ctx)
+	dialer, err := getDialer(ctx, useQuic)
 	if err != nil {
 		return err
 	}
@@ -91,7 +93,35 @@ func listLocations(s string, samples int) error {
 	return nil
 }
 
-func getDialer(ctx context.Context) (rpc.Dialer, error) {
+func getDialer(ctx context.Context, forceQuic bool) (rpc.Dialer, error) {
+	ident, err := identity.NewFullIdentity(ctx, identity.NewCAOptions{
+		Difficulty:  0,
+		Concurrency: 1,
+	})
+	if err != nil {
+		return rpc.Dialer{}, err
+	}
+
+	tlsConfig := tlsopts.Config{
+		UsePeerCAWhitelist: false,
+		PeerIDVersions:     "0",
+	}
+
+	tlsOptions, err := tlsopts.NewOptions(ident, tlsConfig, nil)
+	if err != nil {
+		return rpc.Dialer{}, err
+	}
+	dialer := rpc.NewDefaultDialer(tlsOptions)
+	if forceQuic {
+		dialer.Connector = quic.NewDefaultConnector(nil)
+	} else {
+		dialer.Connector = rpc.NewDefaultTCPConnector(nil)
+	}
+
+	return dialer, nil
+}
+
+func getTCPDialer(ctx context.Context) (rpc.Dialer, error) {
 	ident, err := identity.NewFullIdentity(ctx, identity.NewCAOptions{
 		Difficulty:  0,
 		Concurrency: 1,
@@ -111,5 +141,6 @@ func getDialer(ctx context.Context) (rpc.Dialer, error) {
 	}
 	dialer := rpc.NewDefaultDialer(tlsOptions)
 	dialer.Connector = rpc.NewDefaultTCPConnector(nil)
+
 	return dialer, nil
 }

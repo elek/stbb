@@ -3,24 +3,22 @@ package piece
 import (
 	"context"
 	"os"
-	"path/filepath"
 	"storj.io/common/grant"
 	"storj.io/common/identity"
 	"storj.io/common/rpc"
-	"storj.io/common/signing"
 	"storj.io/common/storj"
 )
 
 type Downloader struct {
-	satelliteURL   storj.NodeURL
-	storagenodeURL storj.NodeURL
-	fi             *identity.FullIdentity
-	signee         signing.Signer
-	dialer         rpc.Dialer
-	grant          *grant.Access
+	satelliteURL      storj.NodeURL
+	storagenodeURL    storj.NodeURL
+	fi                *identity.FullIdentity
+	OrderLimitCreator OrderLimitCreator
+	dialer            rpc.Dialer
+	grant             *grant.Access
 }
 
-func NewDownloader(ctx context.Context, storagenodeURL string) (d Downloader, err error) {
+func NewDownloader(ctx context.Context, storagenodeURL string, quic bool) (d Downloader, err error) {
 	gr := os.Getenv("UPLINK_ACCESS")
 	d.grant, err = grant.ParseAccess(gr)
 	if err != nil {
@@ -36,21 +34,14 @@ func NewDownloader(ctx context.Context, storagenodeURL string) (d Downloader, er
 		return
 	}
 
-	d.dialer, err = getDialer(ctx)
+	d.dialer, err = getDialer(ctx, quic)
 	if err != nil {
 		return
 	}
 
-	keysDir := os.Getenv("STBB_KEYS")
-	satelliteIdentityCfg := identity.Config{
-		CertPath: filepath.Join(keysDir, "identity.cert"),
-		KeyPath:  filepath.Join(keysDir, "identity.key"),
-	}
-	d.fi, err = satelliteIdentityCfg.Load()
+	d.OrderLimitCreator, err = NewKeySigner()
 	if err != nil {
 		return
 	}
-
-	d.signee = signing.SignerFromFullIdentity(d.fi)
 	return
 }

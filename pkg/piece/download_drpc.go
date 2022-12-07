@@ -2,7 +2,6 @@ package piece
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"github.com/spf13/cobra"
 	"storj.io/common/pb"
@@ -19,6 +18,7 @@ func init() {
 		Args: cobra.ExactArgs(3),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
+	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
@@ -32,7 +32,7 @@ func init() {
 		}
 		max := *samples
 		for i := 0; i < max; i++ {
-			d, err := NewRawDownloader(ctx, args[0])
+			d, err := NewRawDownloader(ctx, args[0], *useQuic)
 			if err != nil {
 				return err
 			}
@@ -57,8 +57,8 @@ type RawDownloader struct {
 	client pb.DRPCPiecestoreClient
 }
 
-func NewRawDownloader(ctx context.Context, storagenodeURL string) (d RawDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL)
+func NewRawDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d RawDownloader, err error) {
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
 	if err != nil {
 		return
 	}
@@ -82,34 +82,12 @@ func (d RawDownloader) Download(ctx context.Context, pieceToDownload string, siz
 	}
 	defer stream.Close()
 
-	pub, priv, err := storj.NewPieceKey()
-	if err != nil {
-		return
-	}
-
 	pieceID, err := storj.PieceIDFromString(pieceToDownload)
 	if err != nil {
 		return
 	}
 
-	sn := storj.SerialNumber{}
-	_, err = rand.Read(sn[:])
-	if err != nil {
-		return
-	}
-
-	orderLimit := &pb.OrderLimit{
-		PieceId:         pieceID,
-		SerialNumber:    sn,
-		SatelliteId:     d.satelliteURL.ID,
-		StorageNodeId:   d.storagenodeURL.ID,
-		Action:          pb.PieceAction_GET,
-		Limit:           size,
-		OrderCreation:   time.Now(),
-		OrderExpiration: time.Now().Add(24 * time.Hour),
-		UplinkPublicKey: pub,
-	}
-	orderLimit, err = signing.SignOrderLimit(ctx, d.signee, orderLimit)
+	orderLimit, priv, sn, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, size, d.satelliteURL.ID, d.storagenodeURL.ID)
 	if err != nil {
 		return
 	}

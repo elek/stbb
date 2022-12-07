@@ -37,7 +37,7 @@ func listPieces(s string) error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
-	dialer, err := getDialer(ctx)
+	dialer, err := getTCPDialer(ctx)
 	if err != nil {
 		return err
 	}

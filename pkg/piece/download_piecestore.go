@@ -3,12 +3,9 @@ package piece
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"fmt"
 	"github.com/spf13/cobra"
 	"io"
-	"storj.io/common/pb"
-	"storj.io/common/signing"
 	"storj.io/common/storj"
 	"storj.io/uplink/private/piecestore"
 	"strconv"
@@ -21,12 +18,12 @@ func init() {
 		Args: cobra.ExactArgs(3),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-
+	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
 		ctx := context.Background()
-		d, err := NewPieceDownloader(ctx, args[0])
+		d, err := NewPieceDownloader(ctx, args[0], *useQuic)
 		if err != nil {
 			return err
 		}
@@ -57,8 +54,8 @@ type PieceDownloader struct {
 	client *piecestore.Client
 }
 
-func NewPieceDownloader(ctx context.Context, storagenodeID string) (PieceDownloader, error) {
-	d, err := NewDownloader(ctx, storagenodeID)
+func NewPieceDownloader(ctx context.Context, storagenodeID string, useQuic bool) (PieceDownloader, error) {
+	d, err := NewDownloader(ctx, storagenodeID, useQuic)
 	if err != nil {
 		return PieceDownloader{}, err
 	}
@@ -84,34 +81,12 @@ func (d PieceDownloader) Download(ctx context.Context, pieceId string, size int6
 	}
 	defer d.client.Close()
 
-	pub, priv, err := storj.NewPieceKey()
-	if err != nil {
-		return
-	}
-
 	pieceID, err := storj.PieceIDFromString(pieceId)
 	if err != nil {
 		return
 	}
 
-	sn := storj.SerialNumber{}
-	_, err = rand.Read(sn[:])
-	if err != nil {
-		return
-	}
-
-	orderLimit := &pb.OrderLimit{
-		PieceId:         pieceID,
-		SerialNumber:    sn,
-		SatelliteId:     d.satelliteURL.ID,
-		StorageNodeId:   d.storagenodeURL.ID,
-		Action:          pb.PieceAction_GET,
-		Limit:           size,
-		OrderCreation:   time.Now(),
-		OrderExpiration: time.Now().Add(24 * time.Hour),
-		UplinkPublicKey: pub,
-	}
-	orderLimit, err = signing.SignOrderLimit(ctx, d.signee, orderLimit)
+	orderLimit, priv, _, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, size, d.satelliteURL.ID, d.storagenodeURL.ID)
 	if err != nil {
 		return
 	}

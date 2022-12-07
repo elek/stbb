@@ -15,9 +15,10 @@ func init() {
 		Short: "Find piece which is store on a specific storage nodes",
 		Args:  cobra.ExactArgs(2),
 	}
+	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		p, err := NewPieceFinder(ctx, args[1])
+		p, err := NewPieceFinder(ctx, args[1], *useQuic)
 		if err != nil {
 			return err
 		}
@@ -35,8 +36,8 @@ type PieceFinder struct {
 	Downloader
 }
 
-func NewPieceFinder(ctx context.Context, storagenodeID string) (PieceFinder, error) {
-	downloader, err := NewDownloader(ctx, storagenodeID)
+func NewPieceFinder(ctx context.Context, storagenodeID string, useQuic bool) (PieceFinder, error) {
+	downloader, err := NewDownloader(ctx, storagenodeID, useQuic)
 	if err != nil {
 		return PieceFinder{}, err
 	}
