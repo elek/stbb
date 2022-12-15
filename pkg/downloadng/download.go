@@ -19,13 +19,13 @@ func download(bucket []byte, key []byte) error {
 
 	downloader := ObjectDownloader{
 		inbox:            make(chan *DownloadObject),
-		outbox:           make(chan *DownloadPiece),
+		outboxDownload:   logSent(make(chan *DownloadPiece)),
 		satelliteAddress: access.SatelliteAddress,
 		APIKey:           access.APIKey,
 	}
 
 	result := make(chan *Download)
-	sd := NewSegmentDownloader(downloader.outbox, func(url storj.NodeURL) (chan *DownloadPiece, error) {
+	sd := NewDownloadRouter(downloader.outboxDownload, func(url storj.NodeURL) (chan *DownloadPiece, error) {
 		client, err := NewPieceStoreClient(url, result)
 		if err != nil {
 			return nil, err
@@ -34,16 +34,15 @@ func download(bucket []byte, key []byte) error {
 		return client.Inbox(), nil
 	})
 
-	ec := ECDecoder{
-		inbox:    result,
-		segments: map[string]*segmentBuffer{},
-		finish: func() {
-			close(downloader.inbox)
-		},
+	p := NewParallel(result, downloader)
+
+	ec, err := NewECDecoder(p.Outbox())
+	if err != nil {
+		return err
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		err := downloader.Run(ctx)
@@ -54,6 +53,13 @@ func download(bucket []byte, key []byte) error {
 	go func() {
 		defer wg.Done()
 		err := sd.Run(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		err := p.Run(ctx)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -75,10 +81,45 @@ func download(bucket []byte, key []byte) error {
 	return nil
 }
 
+func logReceived[T any](outbox chan T) chan T {
+	c := make(chan T)
+	go func() {
+		for {
+			select {
+			case t, ok := <-outbox:
+				if !ok {
+					close(c)
+					return
+				}
+				fmt.Println(t)
+				c <- t
+			}
+		}
+	}()
+	return c
+}
+func logSent[T any](outbox chan T) chan T {
+	c := make(chan T)
+	go func() {
+		for {
+			select {
+			case t, ok := <-c:
+				if !ok {
+					close(outbox)
+					return
+				}
+				fmt.Println(t)
+				outbox <- t
+			}
+		}
+	}()
+	return c
+}
+
 func simulatedDownloader(downloader ObjectDownloader) {
 	for {
 		select {
-		case out := <-downloader.outbox:
+		case out := <-downloader.outboxDownload:
 			if out == nil {
 				return
 			}

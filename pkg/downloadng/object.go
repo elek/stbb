@@ -8,7 +8,8 @@ import (
 
 type ObjectDownloader struct {
 	inbox            chan *DownloadObject
-	outbox           chan *DownloadPiece
+	outboxDownload   chan *DownloadPiece
+	outboxEncryption chan *InitDecryption
 	satelliteAddress string
 	APIKey           *macaroon.APIKey
 }
@@ -19,7 +20,7 @@ type DownloadObject struct {
 }
 
 func (s *ObjectDownloader) Run(ctx context.Context) error {
-	defer close(s.outbox)
+	defer close(s.outboxDownload)
 	dialer, err := getDialer(ctx, false)
 	if err != nil {
 		return err
@@ -35,7 +36,7 @@ func (s *ObjectDownloader) Run(ctx context.Context) error {
 			if req == nil {
 				return nil
 			}
-			err = s.Download49(ctx, metainfoClient, req)
+			err = s.Download(ctx, metainfoClient, req)
 			if err != nil {
 				return err
 			}
@@ -54,7 +55,9 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 	if err != nil {
 		return err
 	}
+
 	for _, k := range resp.DownloadedSegments {
+
 		for ix, l := range k.Limits {
 			if l != nil && l.StorageNodeAddress != nil {
 				d := DownloadPiece{
@@ -65,7 +68,14 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 					ecShare:    ix,
 					segmentID:  k.Info.SegmentID,
 				}
-				s.outbox <- &d
+
+				s.outboxEncryption <- &InitDecryption{
+					bucket:               req.bucket,
+					segmentEncryption:    k.Info.SegmentEncryption,
+					encryptionParameters: resp.Object.EncryptionParameters,
+					position:             k.Info.Position,
+				}
+				s.outboxDownload <- &d
 
 			}
 		}
@@ -76,7 +86,7 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 // this is a hack and depends on having only one segment
 func (s *ObjectDownloader) Download49(ctx context.Context, metainfoClient *metaclient.Client, req *DownloadObject) error {
 	used := map[int]bool{}
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 2; i++ {
 		resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
 			Bucket:             req.bucket,
 			EncryptedObjectKey: req.encryptedKey,
@@ -96,7 +106,7 @@ func (s *ObjectDownloader) Download49(ctx context.Context, metainfoClient *metac
 							ecShare:    ix,
 							segmentID:  k.Info.SegmentID,
 						}
-						s.outbox <- &d
+						s.outboxDownload <- &d
 						used[ix] = true
 					}
 

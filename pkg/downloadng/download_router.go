@@ -5,25 +5,25 @@ import (
 	"storj.io/common/storj"
 )
 
-type SegmentDownloader struct {
+type DownloadRouter struct {
 	inbox       chan *DownloadPiece
 	connections map[storj.NodeID]chan *DownloadPiece
 	factory     func(url storj.NodeURL) (chan *DownloadPiece, error)
 }
 
-func NewSegmentDownloader(inbox chan *DownloadPiece, factory func(url storj.NodeURL) (chan *DownloadPiece, error)) *SegmentDownloader {
-	return &SegmentDownloader{
+func NewDownloadRouter(inbox chan *DownloadPiece, factory func(url storj.NodeURL) (chan *DownloadPiece, error)) *DownloadRouter {
+	return &DownloadRouter{
 		inbox:       inbox,
 		connections: make(map[storj.NodeID]chan *DownloadPiece),
 		factory:     factory,
 	}
 }
 
-func (d *SegmentDownloader) Inbox() chan *DownloadPiece {
+func (d *DownloadRouter) Inbox() chan *DownloadPiece {
 	return d.inbox
 }
 
-func (d *SegmentDownloader) Run(ctx context.Context) (err error) {
+func (d *DownloadRouter) Run(ctx context.Context) (err error) {
 	defer func() {
 		for _, c := range d.connections {
 			close(c)

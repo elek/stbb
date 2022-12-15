@@ -1,3 +1,5 @@
+*.ipynb
+nodes.csv
 *.cert
 *.crt
 *.key

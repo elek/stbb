@@ -77,12 +77,13 @@ func listLocations(s string, samples int, useQuic bool) error {
 		if err != nil {
 			return err
 		}
+		fmt.Println(resp.Object.StreamID.String())
 		for _, k := range resp.DownloadedSegments {
-			for _, l := range k.Limits {
+			for ix, l := range k.Limits {
 				if l != nil && l.StorageNodeAddress != nil {
 					nodeID := l.Limit.StorageNodeId.String()
 					if _, found := nodes[nodeID]; !found {
-						fmt.Println(nodeID+"@"+l.StorageNodeAddress.Address, l.Limit.PieceId, l.Limit.Limit)
+						fmt.Println(ix, nodeID+"@"+l.StorageNodeAddress.Address, l.Limit.PieceId, l.Limit.Limit)
 						nodes[nodeID] = true
 					}
 				}

@@ -32,7 +32,7 @@ func init() {
 		}
 		max := *samples
 		for i := 0; i < max; i++ {
-			d, err := NewRawDownloader(ctx, args[0], *useQuic)
+			d, err := NewDRPCDownloader(ctx, args[0], *useQuic)
 			if err != nil {
 				return err
 			}
@@ -51,13 +51,13 @@ func init() {
 	PieceCmd.AddCommand(cmd)
 }
 
-type RawDownloader struct {
+type DRPCDownloader struct {
 	Downloader
 	conn   *rpc.Conn
 	client pb.DRPCPiecestoreClient
 }
 
-func NewRawDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d RawDownloader, err error) {
+func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d DRPCDownloader, err error) {
 	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
 	if err != nil {
 		return
@@ -71,11 +71,14 @@ func NewRawDownloader(ctx context.Context, storagenodeURL string, useQuic bool) 
 	return
 }
 
-func (d RawDownloader) Close() error {
-	return d.conn.Close()
+func (d DRPCDownloader) Close() error {
+	if d.conn != nil {
+		return d.conn.Close()
+	}
+	return nil
 }
 
-func (d RawDownloader) Download(ctx context.Context, pieceToDownload string, size int64) (downloaded int64, chunks int, err error) {
+func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, size int64) (downloaded int64, chunks int, err error) {
 	stream, err := d.client.Download(ctx)
 	if err != nil {
 		return

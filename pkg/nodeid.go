@@ -10,6 +10,7 @@ import (
 	"storj.io/common/rpc"
 	"storj.io/common/socket"
 	"storj.io/common/storj"
+	"storj.io/drpc"
 	"time"
 )
 
@@ -102,7 +103,9 @@ func GetSatelliteID(ctx context.Context, address string) (string, error) {
 		return "", err
 	}
 	defer func() { _ = conn.Close() }()
-
+	in := struct{}{}
+	out := struct{}{}
+	conn.Invoke(ctx, "asd", &NullEncoding{}, in, out)
 	peerIdentity, err := conn.PeerIdentity()
 	if err != nil {
 		return "", err
@@ -133,3 +136,16 @@ func getProcessTLSOptions(ctx context.Context) (*tlsopts.Options, error) {
 
 	return tlsOptions, nil
 }
+
+type NullEncoding struct {
+}
+
+func (n NullEncoding) Marshal(msg drpc.Message) ([]byte, error) {
+	return []byte{1}, nil
+}
+
+func (n NullEncoding) Unmarshal(buf []byte, msg drpc.Message) error {
+	return nil
+}
+
+var _ drpc.Encoding = &NullEncoding{}

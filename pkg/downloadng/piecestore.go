@@ -42,7 +42,7 @@ type Download struct {
 }
 
 func NewPieceStoreClient(node storj.NodeURL, outbox chan *Download) (*PieceStoreClient, error) {
-	dialer, err := getDialer(context.Background(), false)
+	dialer, err := getDialer(context.Background(), true)
 	if err != nil {
 		return nil, err
 	}

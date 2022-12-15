@@ -18,10 +18,12 @@ type OrderLimitCreator interface {
 
 type KeySigner struct {
 	signer signing.Signer
+	action pb.PieceAction
 }
 
 func NewKeySigner() (*KeySigner, error) {
 	d := KeySigner{}
+	d.action = pb.PieceAction_GET
 	keysDir := os.Getenv("STBB_KEYS")
 	satelliteIdentityCfg := identity.Config{
 		CertPath: filepath.Join(keysDir, "identity.cert"),
@@ -51,7 +53,7 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 		SerialNumber:    serial,
 		SatelliteId:     satellite,
 		StorageNodeId:   sn,
-		Action:          pb.PieceAction_GET,
+		Action:          d.action,
 		Limit:           size,
 		OrderCreation:   time.Now(),
 		OrderExpiration: time.Now().Add(24 * time.Hour),
