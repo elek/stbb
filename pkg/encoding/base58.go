@@ -1,4 +1,4 @@
-package stbb
+package encoding
 
 import (
 	"encoding/hex"
@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(&cobra.Command{
+	EncodingCmd.AddCommand(&cobra.Command{
 		Use: "base58-decode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			result, _, err := base58.CheckDecode(args[0])
@@ -20,7 +20,7 @@ func init() {
 		},
 	})
 
-	RootCmd.AddCommand(&cobra.Command{
+	EncodingCmd.AddCommand(&cobra.Command{
 		Use: "base58-encode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			parsed, err := hex.DecodeString(args[0])

@@ -11,6 +11,7 @@ import (
 	"github.com/zeebo/errs/v2"
 	"io"
 	"os"
+	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"sync"
 	"time"
@@ -55,7 +56,7 @@ func scanNodes(nodesFile string, action string, file string, quic bool) error {
 
 						switch action {
 						case "upload":
-							um, err := piece.NewDRPCUploader(ctx, task.NodeID.String()+"@"+task.Address, quic)
+							um, err := piece.NewDRPCUploader(ctx, task.NodeID.String()+"@"+task.Address, quic, pb.PieceHashAlgorithm_SHA256, false)
 							if err != nil {
 								return err
 							}

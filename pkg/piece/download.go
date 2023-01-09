@@ -20,13 +20,23 @@ type Downloader struct {
 
 func NewDownloader(ctx context.Context, storagenodeURL string, quic bool) (d Downloader, err error) {
 	gr := os.Getenv("UPLINK_ACCESS")
-	d.grant, err = grant.ParseAccess(gr)
-	if err != nil {
-		return d, err
+	if gr != "" {
+		d.grant, err = grant.ParseAccess(gr)
+		if err != nil {
+			return d, err
+		}
+		d.satelliteURL, err = storj.ParseNodeURL(d.grant.SatelliteAddress)
+		if err != nil {
+			return
+		}
 	}
-	d.satelliteURL, err = storj.ParseNodeURL(d.grant.SatelliteAddress)
-	if err != nil {
-		return
+
+	sat := os.Getenv("STBB_SATELLITE")
+	if sat != "" {
+		d.satelliteURL, err = storj.ParseNodeURL(sat)
+		if err != nil {
+			return
+		}
 	}
 
 	d.storagenodeURL, err = storj.ParseNodeURL(storagenodeURL)

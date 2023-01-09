@@ -1,4 +1,4 @@
-package stbb
+package encoding
 
 import (
 	"encoding/base64"
@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(&cobra.Command{
+	EncodingCmd.AddCommand(&cobra.Command{
 		Use: "base64-decode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			result, err := base64.URLEncoding.DecodeString(args[0])

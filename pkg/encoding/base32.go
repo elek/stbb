@@ -1,4 +1,4 @@
-package stbb
+package encoding
 
 import (
 	"encoding/base32"
@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(&cobra.Command{
+	EncodingCmd.AddCommand(&cobra.Command{
 		Use: "base32-decode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			result, err := base32.StdEncoding.DecodeString(args[0])
@@ -20,7 +20,7 @@ func init() {
 		},
 	})
 
-	RootCmd.AddCommand(&cobra.Command{
+	EncodingCmd.AddCommand(&cobra.Command{
 		Use: "base32-encode",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
