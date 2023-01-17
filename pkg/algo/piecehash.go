@@ -3,6 +3,7 @@ package piece
 import (
 	"crypto/sha256"
 	"crypto/sha512"
+	"flag"
 	"fmt"
 	"github.com/klauspost/cpuid/v2"
 	sha256simd "github.com/minio/sha256-simd"
@@ -18,13 +19,15 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "hash",
-		Short: "Test piece hash calculation speed",
+		FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
+		Use:                "hash",
+		Short:              "Test piece hash calculation speed",
 	}
 	size := cmd.Flags().IntP("size", "n", 657743, "Size of data to be hashed")
 	writes := cmd.Flags().IntP("buffer", "b", 1024, "Size of the buffer, used to call hash.Write")
 	algo := cmd.Flags().StringP("hash", "a", "sha-256", "Hash algorithm to be used")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		flag.Parse()
 		pieceHash(*writes, *size, *algo)
 		return nil
 	}

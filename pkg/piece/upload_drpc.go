@@ -2,6 +2,7 @@ package piece
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
@@ -76,10 +77,23 @@ func NewDRPCUploader(ctx context.Context, storagenodeURL string, useQuic bool, h
 		return
 	}
 	d.OrderLimitCreator.(*KeySigner).action = pb.PieceAction_PUT
-	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
+
+	//priv, err := hex.DecodeString("83603a2d16ddd8c38e838f353eb1560e60dfab9fdae71cf9b23f0ca4ad872757")
+	//if err != nil {
+	//	return
+	//}
+	pub, err := hex.DecodeString("9b322ffec5a8f5f769c31817b1bbfe788c19133a8613109eb2bed2d9f2e45862")
 	if err != nil {
 		return
 	}
+	noiseInfo := &pb.NoiseInfo{
+		NoisePattern: pb.NoiseInfo_IK,
+		Dh:           pb.NoiseInfo_DH25519,
+		Cipher:       pb.NoiseInfo_CHACHA_POLY,
+		Hash:         pb.NoiseInfo_BLAKE_2B,
+		PublicKey:    pub,
+	}
+	d.conn, err = d.dialer.DialNodeURLWithNoise(ctx, d.storagenodeURL, noiseInfo)
 	d.conn = experiment.NewConnWrapper(d.conn)
 	d.client = pb.NewDRPCPiecestoreClient(d.conn)
 	d.noSync = noSync
@@ -138,7 +152,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		return 0, errs.Wrap(err)
 	}
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 1024*1024*10)
 	written := 0
 	for {
 		n, err := source.Read(buffer)

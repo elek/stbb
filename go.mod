@@ -26,6 +26,7 @@ require (
 	github.com/calebcase/tmpfile v1.0.3 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/flynn/noise v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -41,6 +42,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0 // indirect
 	github.com/jtolds/tracetagger/v2 v2.0.0-rc5 // indirect
 	github.com/jtolio/eventkit v0.0.0-20221007130042-690145affff8 // indirect
+	github.com/jtolio/noiseconn v0.0.0-20221221220842-9fd7c3bbbb8a // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucas-clemente/quic-go v0.28.1 // indirect
 	github.com/marten-seemann/qtls-go1-16 v0.1.5 // indirect
@@ -58,7 +60,7 @@ require (
 	go.uber.org/zap v1.16.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7 // indirect
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/tools v0.1.12 // indirect
@@ -66,3 +68,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	storj.io/private v0.0.0-20221108123115-3a27297f0b78 // indirect
 )
+
+replace storj.io/common => ../common
