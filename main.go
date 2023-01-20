@@ -10,6 +10,7 @@ import (
 	_ "github.com/elek/stbb/pkg/piece"
 	_ "github.com/elek/stbb/pkg/rpc"
 	_ "github.com/elek/stbb/pkg/satellite"
+	_ "github.com/elek/stbb/pkg/store"
 	_ "github.com/elek/stbb/pkg/tls"
 	"log"
 	"os"
