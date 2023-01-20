@@ -2,17 +2,15 @@ package piece
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"os"
-	"storj.io/common/experiment"
 	"storj.io/common/pb"
-	"storj.io/common/rpc/rpcpool"
+	"storj.io/common/pkcrypto"
+	"storj.io/common/rpc"
 	"storj.io/common/signing"
 	"storj.io/common/storj"
-	"strings"
 	"time"
 )
 
@@ -23,8 +21,7 @@ func init() {
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
 	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
-	pieceHashAlgo := cmd.Flags().StringP("hash", "", "SHA256", "Piece hash algorithm to use")
-	noSync := cmd.Flags().BoolP("nosync", "", false, "Disable file sync on upload")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
@@ -32,7 +29,7 @@ func init() {
 
 		uploaded := 0
 		for i := 0; i < *samples; i++ {
-			d, err := NewDRPCUploader(ctx, args[0], *useQuic, hashAlgo(*pieceHashAlgo), *noSync)
+			d, err := NewDRPCUploader(ctx, args[0], *useQuic)
 			if err != nil {
 				return err
 			}
@@ -51,53 +48,23 @@ func init() {
 	PieceCmd.AddCommand(cmd)
 }
 
-func hashAlgo(s string) pb.PieceHashAlgorithm {
-	var available []string
-	for value, name := range pb.PieceHashAlgorithm_name {
-		available = append(available, name)
-		if name == s {
-			return pb.PieceHashAlgorithm(value)
-
-		}
-	}
-	panic("Piece hash algorithm is invalid. Available options: " + strings.Join(available, ","))
-}
-
 type DrpcUploader struct {
 	Downloader
-	conn     rpcpool.Conn
-	client   pb.DRPCPiecestoreClient
-	hashAlgo pb.PieceHashAlgorithm
-	noSync   bool
+	conn   *rpc.Conn
+	client pb.DRPCPiecestoreClient
 }
 
-func NewDRPCUploader(ctx context.Context, storagenodeURL string, useQuic bool, hashAlgo pb.PieceHashAlgorithm, noSync bool) (d DrpcUploader, err error) {
+func NewDRPCUploader(ctx context.Context, storagenodeURL string, useQuic bool) (d DrpcUploader, err error) {
 	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
 	if err != nil {
 		return
 	}
 	d.OrderLimitCreator.(*KeySigner).action = pb.PieceAction_PUT
-
-	//priv, err := hex.DecodeString("83603a2d16ddd8c38e838f353eb1560e60dfab9fdae71cf9b23f0ca4ad872757")
-	//if err != nil {
-	//	return
-	//}
-	pub, err := hex.DecodeString("9b322ffec5a8f5f769c31817b1bbfe788c19133a8613109eb2bed2d9f2e45862")
+	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
-	noiseInfo := &pb.NoiseInfo{
-		NoisePattern: pb.NoiseInfo_IK,
-		Dh:           pb.NoiseInfo_DH25519,
-		Cipher:       pb.NoiseInfo_CHACHA_POLY,
-		Hash:         pb.NoiseInfo_BLAKE_2B,
-		PublicKey:    pub,
-	}
-	d.conn, err = d.dialer.DialNodeURLWithNoise(ctx, d.storagenodeURL, noiseInfo)
-	d.conn = experiment.NewConnWrapper(d.conn)
 	d.client = pb.NewDRPCPiecestoreClient(d.conn)
-	d.noSync = noSync
-	d.hashAlgo = hashAlgo
 	return
 }
 
@@ -106,9 +73,6 @@ func (d DrpcUploader) Close() error {
 }
 
 func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, err error) {
-	if d.noSync {
-		ctx = experiment.With(ctx, "nosync")
-	}
 	stream, err := d.client.Upload(ctx)
 	if err != nil {
 		return 0, errs.Wrap(err)
@@ -129,7 +93,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 
 	err = stream.Send(&pb.PieceUploadRequest{
 		Limit:         orderLimit,
-		HashAlgorithm: d.hashAlgo,
+		HashAlgorithm: pb.PieceHashAlgorithm_SHA256,
 	})
 	if err != nil {
 		return 0, errs.Wrap(err)
@@ -145,14 +109,14 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		return 0, errs.Wrap(err)
 	}
 
-	h := pb.NewHashFromAlgorithm(d.hashAlgo)
+	h := pkcrypto.NewHash()
 
 	source, err := os.Open(file)
 	if err != nil {
 		return 0, errs.Wrap(err)
 	}
 
-	buffer := make([]byte, 1024*1024*10)
+	buffer := make([]byte, 1024*1024)
 	written := 0
 	for {
 		n, err := source.Read(buffer)
@@ -165,7 +129,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 				Offset: int64(written),
 				Data:   buffer[0:n],
 			},
-			HashAlgorithm: d.hashAlgo,
+			HashAlgorithm: pb.PieceHashAlgorithm_SHA256,
 		})
 		order = nil
 		if err != nil {
@@ -187,7 +151,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		PieceSize:     stat.Size(),
 		Hash:          h.Sum(nil),
 		Timestamp:     orderLimit.OrderCreation,
-		HashAlgorithm: d.hashAlgo,
+		HashAlgorithm: pb.PieceHashAlgorithm_SHA256,
 	})
 
 	err = stream.Send(&pb.PieceUploadRequest{

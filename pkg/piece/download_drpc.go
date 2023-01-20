@@ -62,13 +62,8 @@ func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool)
 	if err != nil {
 		return
 	}
-	noiseInfo := &pb.NoiseInfo{
-		NoisePattern: pb.NoiseInfo_IK,
-		Dh:           pb.NoiseInfo_DH25519,
-		Cipher:       pb.NoiseInfo_CHACHA_POLY,
-		Hash:         pb.NoiseInfo_BLAKE_2B,
-	}
-	d.conn, err = d.dialer.DialNodeURLWithNoise(ctx, d.storagenodeURL, noiseInfo)
+
+	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
