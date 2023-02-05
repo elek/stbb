@@ -212,7 +212,7 @@ func createWorker(node storj.NodeID, address string, results chan TaskResult) ch
 
 				downloadCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
-				_, _, err := d.Download(downloadCtx, derivedPieceID.String(), 256)
+				_, _, err := d.Download(downloadCtx, derivedPieceID.String(), 256, func(bytes []byte) {})
 				cancel()
 				if errors.Is(err, context.Canceled) {
 					connectionError = err

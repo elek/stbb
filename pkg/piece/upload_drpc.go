@@ -33,7 +33,7 @@ func init() {
 			if err != nil {
 				return err
 			}
-			n, err := d.Upload(ctx, args[1])
+			n, _, err := d.Upload(ctx, args[1])
 			if err != nil {
 				return err
 			}
@@ -72,23 +72,24 @@ func (d DrpcUploader) Close() error {
 	return d.conn.Close()
 }
 
-func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, err error) {
-	stream, err := d.client.Upload(ctx)
-	if err != nil {
-		return 0, errs.Wrap(err)
-	}
-	defer stream.Close()
+func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id storj.PieceID, err error) {
 
 	pieceID := storj.NewPieceID()
 
+	stream, err := d.client.Upload(ctx)
+	if err != nil {
+		return 0, pieceID, errs.Wrap(err)
+	}
+	defer stream.Close()
+
 	stat, err := os.Stat(file)
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	orderLimit, pk, sn, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, stat.Size(), d.satelliteURL.ID, d.storagenodeURL.ID)
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	err = stream.Send(&pb.PieceUploadRequest{
@@ -96,7 +97,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		HashAlgorithm: pb.PieceHashAlgorithm_SHA256,
 	})
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	order := &pb.Order{
@@ -106,14 +107,14 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 
 	order, err = signing.SignUplinkOrder(ctx, pk, order)
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	h := pkcrypto.NewHash()
 
 	source, err := os.Open(file)
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	buffer := make([]byte, 1024*1024)
@@ -121,7 +122,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 	for {
 		n, err := source.Read(buffer)
 		if err != nil {
-			return 0, errs.Wrap(err)
+			return 0, pieceID, errs.Wrap(err)
 		}
 		err = stream.Send(&pb.PieceUploadRequest{
 			Order: order,
@@ -133,11 +134,11 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		})
 		order = nil
 		if err != nil {
-			return 0, errs.Wrap(err)
+			return 0, pieceID, errs.Wrap(err)
 		}
 		_, err = h.Write(buffer[0:n])
 		if err != nil {
-			return 0, errs.Wrap(err)
+			return 0, pieceID, errs.Wrap(err)
 		}
 
 		written += n
@@ -158,12 +159,12 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, er
 		Done: uplinkHash,
 	})
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
 
 	_, err = stream.CloseAndRecv()
 	if err != nil {
-		return 0, errs.Wrap(err)
+		return 0, pieceID, errs.Wrap(err)
 	}
-	return written, nil
+	return written, pieceID, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	stbb "github.com/elek/stbb/pkg"
 	_ "github.com/elek/stbb/pkg/algo"
+	_ "github.com/elek/stbb/pkg/audit"
 	_ "github.com/elek/stbb/pkg/downloadng"
 	_ "github.com/elek/stbb/pkg/encoding"
 	_ "github.com/elek/stbb/pkg/node"

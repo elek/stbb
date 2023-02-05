@@ -36,7 +36,7 @@ func init() {
 			if err != nil {
 				return err
 			}
-			n, c, err := d.Download(ctx, args[1], int64(size))
+			n, c, err := d.Download(ctx, args[1], int64(size), func(bytes []byte) {})
 			if err != nil {
 				return err
 			}
@@ -78,7 +78,7 @@ func (d DRPCDownloader) Close() error {
 	return nil
 }
 
-func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, size int64) (downloaded int64, chunks int, err error) {
+func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, size int64, handler func([]byte)) (downloaded int64, chunks int, err error) {
 	stream, err := d.client.Download(ctx)
 	if err != nil {
 		return
@@ -143,6 +143,7 @@ func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, si
 
 		chunks++
 		downloaded += int64(len(resp.Chunk.Data))
+		handler(resp.Chunk.Data)
 	}
 
 	return

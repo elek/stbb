@@ -1,3 +1,5 @@
+
+pkg/store/perf/results.txt
 *.ipynb
 nodes.csv
 *.cert

@@ -59,7 +59,7 @@ func scanNodes(nodesFile string, action string, file string, quic bool) error {
 							if err != nil {
 								return err
 							}
-							_, err = um.Upload(ctx, file)
+							_, _, err = um.Upload(ctx, file)
 							if err != nil {
 								return err
 							}

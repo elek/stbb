@@ -126,15 +126,7 @@ func (b *BlobStore) ListNamespaces(ctx context.Context) ([][]byte, error) {
 }
 
 func (b *BlobStore) WalkNamespace(ctx context.Context, namespace []byte, walkFunc func(storage.BlobInfo) error) error {
-	return b.db.View(func(tx *bbolt.Tx) error {
-		return tx.Bucket(namespace).ForEach(func(k, v []byte) error {
-			s := storage.BlobInfo{}
-			err := walkFunc(s)
-			if err != nil {
-				return err
-			}
-		})
-	})
+	panic("implement me")
 }
 
 func (b *BlobStore) CreateVerificationFile(ctx context.Context, id storj.NodeID) error {

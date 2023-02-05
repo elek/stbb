@@ -105,7 +105,7 @@ func GetSatelliteID(ctx context.Context, address string) (string, error) {
 	defer func() { _ = conn.Close() }()
 	in := struct{}{}
 	out := struct{}{}
-	conn.Invoke(ctx, "asd", &NullEncoding{}, in, out)
+	_ = conn.Invoke(ctx, "asd", &NullEncoding{}, in, out)
 	peerIdentity, err := conn.PeerIdentity()
 	if err != nil {
 		return "", err

@@ -2,10 +2,9 @@ package rpc
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
-	"storj.io/storj/storage/filestore"
 )
 
 func init() {
@@ -16,16 +15,17 @@ func init() {
 	}
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		store, err := filestore.NewDir(zap.NewNop(), args[0])
+
+		blobs, err := createBlobs(args[0])
 		if err != nil {
 			return err
 		}
-		ids, err := store.ListNamespaces(ctx)
+		ids, err := blobs.ListNamespaces(ctx)
 		if err != nil {
 			return err
 		}
 		for _, id := range ids {
-			fmt.Println(id)
+			fmt.Println(hex.EncodeToString(id))
 		}
 		return nil
 	}

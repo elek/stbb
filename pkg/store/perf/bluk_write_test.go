@@ -3,7 +3,7 @@ package perf
 import (
 	"context"
 	"github.com/elek/stbb/pkg/store/boltstore"
-	"github.com/elek/stbb/pkg/store/sqlite"
+	"github.com/elek/storj-badger-storage"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"os"
@@ -35,6 +35,15 @@ func BenchmarkBolt(b *testing.B) {
 	defer ctx.Cleanup()
 
 	blobs := createBoltBlob(b, "bolt", ctx, false)
+	bulkWriteTest(ctx, b, blobs, pb.PieceHashAlgorithm_SHA256)
+	defer ctx.Check(blobs.Close)
+}
+
+func BenchmarkBadger(b *testing.B) {
+	ctx := testcontext.NewWithContextAndTimeout(context.Background(), b, 1*time.Hour)
+	defer ctx.Cleanup()
+
+	blobs := createBadgerBlob(b, "bolt", ctx, false)
 	bulkWriteTest(ctx, b, blobs, pb.PieceHashAlgorithm_SHA256)
 	defer ctx.Check(blobs.Close)
 }
@@ -73,16 +82,18 @@ func bulkWriteTest(ctx context.Context, b *testing.B, blobs storage.Blobs, hashA
 
 }
 
-func createBoltBlob(b *testing.B, name string, ctx *testcontext.Context, skipSync bool) storage.Blobs {
+func createBadgerBlob(b *testing.B, name string, ctx *testcontext.Context, skipSync bool) storage.Blobs {
 	workingDir := ctx.Dir(name)
 	_ = os.MkdirAll(workingDir, 0755)
-	blobs, err := boltstore.NewBlobStore()
+	blobs, err := badger.NewBlobStore(workingDir)
 	require.NoError(b, err)
 	return blobs
 }
 
-func createSqliteBlob(b *testing.B, name string, ctx *testcontext.Context, skipSync bool) storage.Blobs {
-	blobs, err := sqlite.NewBlobStore(name+".db", !skipSync)
+func createBoltBlob(b *testing.B, name string, ctx *testcontext.Context, skipSync bool) storage.Blobs {
+	workingDir := ctx.Dir(name)
+	_ = os.MkdirAll(workingDir, 0755)
+	blobs, err := boltstore.NewBlobStore()
 	require.NoError(b, err)
 	return blobs
 }
