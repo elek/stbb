@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"os"
+	"storj.io/common/pb"
 )
 
 func init() {
@@ -14,7 +15,7 @@ func init() {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
-		u, err := NewDRPCUploader(ctx, args[0], false)
+		u, err := NewDRPCUploader(ctx, args[0], false, pb.PieceHashAlgorithm_SHA256, false)
 		if err != nil {
 			return err
 		}
