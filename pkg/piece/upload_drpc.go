@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
+	"hash"
 	"os"
 	"storj.io/common/experiment"
 	"storj.io/common/pb"
@@ -51,6 +52,9 @@ func init() {
 }
 
 func hashAlgo(s string) pb.PieceHashAlgorithm {
+	if s == "NONE" {
+		return pb.PieceHashAlgorithm(-1)
+	}
 	var available []string
 	for value, name := range pb.PieceHashAlgorithm_name {
 		available = append(available, name)
@@ -131,6 +135,9 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id
 	}
 
 	h := pb.NewHashFromAlgorithm(d.hashAlgo)
+	if d.hashAlgo == pb.PieceHashAlgorithm(-1) {
+		h = &NoHash{}
+	}
 
 	source, err := os.Open(file)
 	if err != nil {
@@ -188,3 +195,28 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id
 	}
 	return written, pieceID, nil
 }
+
+type NoHash struct {
+}
+
+func (n2 *NoHash) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
+func (n2 *NoHash) Sum(b []byte) []byte {
+	return []byte{1, 2, 3, 4}
+}
+
+func (n2 *NoHash) Reset() {
+
+}
+
+func (n2 *NoHash) Size() int {
+	return 4
+}
+
+func (n2 *NoHash) BlockSize() int {
+	return 4
+}
+
+var _ hash.Hash = &NoHash{}
