@@ -1,19 +1,47 @@
-package stbb
+package access
 
 import (
 	"fmt"
+	"github.com/elek/stbb/pkg"
 	"github.com/spf13/cobra"
 	"os"
+	"storj.io/common/storj"
 	"storj.io/uplink"
 )
 
 func init() {
-	RootCmd.AddCommand(&cobra.Command{
+	stbb.RootCmd.AddCommand(&cobra.Command{
 		Use: "access-change",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return accessChange()
 		},
 	})
+
+	stbb.RootCmd.AddCommand(&cobra.Command{
+		Use: "change-host",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return changeHost(args[0])
+		},
+	})
+}
+
+func changeHost(hostNew string) error {
+	gr := os.Getenv("UPLINK_ACCESS")
+	access, err := ParseAccess(gr)
+	if err != nil {
+		return err
+	}
+	access.SatelliteURL = storj.NodeURL{
+		ID:      access.SatelliteURL.ID,
+		Address: hostNew,
+	}
+
+	serialized, err := access.Serialize()
+	if err != nil {
+		return err
+	}
+	fmt.Println(serialized)
+	return nil
 }
 
 func accessChange() error {

@@ -18,7 +18,7 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "nodes",
+		Use:   "nodes <sj://bucket/encryptedpath>",
 		Short: "Print out storagenodes which stores a specific object",
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")

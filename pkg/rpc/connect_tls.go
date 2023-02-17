@@ -16,6 +16,7 @@ func init() {
 		Args:  cobra.ExactArgs(1),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
+	sleep := cmd.Flags().IntP("sleep", "", 0, "Sleep time between milliseconds")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		conf := &tls.Config{
 			InsecureSkipVerify: true,
@@ -24,25 +25,34 @@ func init() {
 		start := time.Now()
 		for i := 0; i < *samples; i++ {
 
-			conn, err := net.Dial("tcp", args[0])
+			err := tlsOpenClose(args, conf)
 			if err != nil {
 				return err
 			}
-			_, err = conn.Write([]byte(drpcmigrate.DRPCHeader))
-			if err != nil {
-				return err
-			}
-
-			tlsConn := tls.Client(conn, conf)
-			err = tlsConn.Handshake()
-			if err != nil {
-				return err
-			}
-			conn.Close()
+			time.Sleep(time.Duration(*sleep) * time.Millisecond)
 		}
 
-		fmt.Printf("%d", time.Since(start).Milliseconds()/int64(*samples))
+		fmt.Printf("%d\n", time.Since(start).Milliseconds()/int64(*samples))
 		return nil
 	}
 	RpcCmd.AddCommand(cmd)
+}
+
+func tlsOpenClose(args []string, conf *tls.Config) error {
+	conn, err := net.Dial("tcp", args[0])
+	if err != nil {
+		return err
+	}
+	_, err = conn.Write([]byte(drpcmigrate.DRPCHeader))
+	if err != nil {
+		return err
+	}
+
+	tlsConn := tls.Client(conn, conf)
+	err = tlsConn.Handshake()
+	if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
 }

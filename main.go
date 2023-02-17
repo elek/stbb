@@ -1,27 +1,60 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	stbb "github.com/elek/stbb/pkg"
+	_ "github.com/elek/stbb/pkg/access"
 	_ "github.com/elek/stbb/pkg/algo"
 	_ "github.com/elek/stbb/pkg/audit"
 	_ "github.com/elek/stbb/pkg/downloadng"
 	_ "github.com/elek/stbb/pkg/encoding"
+	_ "github.com/elek/stbb/pkg/metainfo"
 	_ "github.com/elek/stbb/pkg/node"
 	_ "github.com/elek/stbb/pkg/piece"
 	_ "github.com/elek/stbb/pkg/rpc"
 	_ "github.com/elek/stbb/pkg/satellite"
 	_ "github.com/elek/stbb/pkg/store"
 	_ "github.com/elek/stbb/pkg/tls"
+	"github.com/spacemonkeygo/monkit/v3"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	jaeger "storj.io/monkit-jaeger"
+	"sync"
 	"syscall"
 )
 
 func main() {
+
+	if os.Getenv("STBB_JAEGER") != "" {
+
+		collector, err := jaeger.NewUDPCollector(zap.L(), "agent.tracing.datasci.storj.io:5775", "stbb", nil, 0, 0, 0)
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			_ = collector.Close()
+		}()
+
+		defer tracked(context.Background(), collector.Run)()
+
+		cancel := jaeger.RegisterJaeger(monkit.Default, collector, jaeger.Options{Fraction: 1})
+		defer cancel()
+
+		//var printedFirst bool
+		monkit.Default.ObserveTraces(func(trace *monkit.Trace) {
+			// workaround to hide the traceID of tlsopts.verifyIndentity called from a separated goroutine
+			//if !printedFirst {
+			fmt.Printf("trace: %x\n", trace.Id())
+			//printedFirst = true
+			//}
+		})
+
+	}
 
 	if os.Getenv("STBB_PPROF") != "" {
 		var output *os.File
@@ -68,5 +101,21 @@ func readStack() []byte {
 			return buf[:n]
 		}
 		buf = make([]byte, 2*len(buf))
+	}
+}
+
+func tracked(ctx context.Context, cb func(context.Context)) (done func()) {
+	ctx, cancel := context.WithCancel(ctx)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		cb(ctx)
+		wg.Done()
+	}()
+
+	return func() {
+		cancel()
+		wg.Wait()
 	}
 }
