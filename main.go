@@ -31,8 +31,8 @@ import (
 func main() {
 
 	if os.Getenv("STBB_JAEGER") != "" {
-
-		collector, err := jaeger.NewUDPCollector(zap.L(), "agent.tracing.datasci.storj.io:5775", "stbb", nil, 0, 0, 0)
+		// agent.tracing.datasci.storj.io:5775
+		collector, err := jaeger.NewUDPCollector(zap.L(), os.Getenv("STBB_JAEGER"), "stbb", nil, 0, 0, 0)
 		if err != nil {
 			panic(err)
 		}

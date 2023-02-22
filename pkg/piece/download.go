@@ -2,6 +2,7 @@ package piece
 
 import (
 	"context"
+	"github.com/elek/stbb/pkg/util"
 	"os"
 	"storj.io/common/grant"
 	"storj.io/common/identity"
@@ -18,7 +19,7 @@ type Downloader struct {
 	grant             *grant.Access
 }
 
-func NewDownloader(ctx context.Context, storagenodeURL string, quic bool) (d Downloader, err error) {
+func NewDownloader(ctx context.Context, storagenodeURL string, quic bool, pooled bool) (d Downloader, err error) {
 	gr := os.Getenv("UPLINK_ACCESS")
 	if gr != "" {
 		d.grant, err = grant.ParseAccess(gr)
@@ -44,7 +45,7 @@ func NewDownloader(ctx context.Context, storagenodeURL string, quic bool) (d Dow
 		return
 	}
 
-	d.dialer, err = getDialer(ctx, quic)
+	d.dialer, err = util.GetDialer(ctx, quic, pooled)
 	if err != nil {
 		return
 	}

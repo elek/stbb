@@ -22,8 +22,8 @@ func init() {
 		Args: cobra.ExactArgs(1),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
+	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
 	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		return download(args[0], *samples, *pooled, *quic, *verbose)

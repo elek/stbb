@@ -37,7 +37,7 @@ type PieceFinder struct {
 }
 
 func NewPieceFinder(ctx context.Context, storagenodeID string, useQuic bool) (PieceFinder, error) {
-	downloader, err := NewDownloader(ctx, storagenodeID, useQuic)
+	downloader, err := NewDownloader(ctx, storagenodeID, useQuic, false)
 	if err != nil {
 		return PieceFinder{}, err
 	}

@@ -3,6 +3,7 @@ package piece
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"storj.io/common/pb"
 	"storj.io/common/rpc"
@@ -18,10 +19,10 @@ func init() {
 		Args: cobra.ExactArgs(3),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
+	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
+	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
+	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		start := time.Now()
-
 		ctx := context.Background()
 
 		downloadedBytes := int64(0)
@@ -31,8 +32,8 @@ func init() {
 			return err
 		}
 		max := *samples
-		for i := 0; i < max; i++ {
-			d, err := NewDRPCDownloader(ctx, args[0], *useQuic)
+		_, err = loop(max, *verbose, func() error {
+			d, err := NewDRPCDownloader(ctx, args[0], *quic, *pooled)
 			if err != nil {
 				return err
 			}
@@ -43,12 +44,31 @@ func init() {
 			downloadedBytes += n
 			downloadedChunks += c
 			d.Close()
+			return nil
+		})
+		if err != nil {
+			return err
 		}
-		seconds := time.Now().Sub(start).Seconds()
-		fmt.Printf("%d Mbytes are downloaded under %f sec (with %d chunk/RPC request in average), which is %f Mbytes/sec\n", downloadedBytes/1024/1024, seconds, downloadedChunks/max, float64(downloadedBytes)/seconds/1024/1024)
 		return nil
 	}
 	PieceCmd.AddCommand(cmd)
+}
+
+func loop(n int, verbose bool, do func() error) (durationMs int64, err error) {
+	for i := 0; i < n; i++ {
+		start := time.Now()
+		err = do()
+		if err != nil {
+			return
+		}
+		elapsed := time.Since(start)
+		if verbose {
+			fmt.Println(elapsed)
+		}
+		durationMs += elapsed.Milliseconds()
+	}
+	fmt.Printf("Executed %d times during %d ms %f req/sec", n, durationMs, float64(n*1000)/float64(durationMs))
+	return
 }
 
 type DRPCDownloader struct {
@@ -57,8 +77,8 @@ type DRPCDownloader struct {
 	client pb.DRPCPiecestoreClient
 }
 
-func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d DRPCDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
+func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool, pooled bool) (d DRPCDownloader, err error) {
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, pooled)
 	if err != nil {
 		return
 	}
@@ -67,7 +87,7 @@ func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool)
 	if err != nil {
 		return
 	}
-	d.client = pb.NewDRPCPiecestoreClient(d.conn)
+	d.client = pb.NewDRPCPiecestoreClient(util.NewTracedConnection(d.conn))
 	return
 }
 
@@ -79,6 +99,7 @@ func (d DRPCDownloader) Close() error {
 }
 
 func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, size int64, handler func([]byte)) (downloaded int64, chunks int, err error) {
+	defer mon.Task()(&ctx)(&err)
 	stream, err := d.client.Download(ctx)
 	if err != nil {
 		return

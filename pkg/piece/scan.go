@@ -104,7 +104,7 @@ type PieceScanner struct {
 }
 
 func NewPieceScanner(ctx context.Context, storagenodeURL string, useQuic bool) (d PieceScanner, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
 	if err != nil {
 		return
 	}

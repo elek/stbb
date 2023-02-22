@@ -25,6 +25,7 @@ func init() {
 	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	pieceHashAlgo := cmd.Flags().StringP("hash", "", "SHA256", "Piece hash algorithm to use")
 	noSync := cmd.Flags().BoolP("nosync", "", false, "Disable file sync on upload")
+	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose (print out piece hashes)")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
@@ -36,7 +37,10 @@ func init() {
 			if err != nil {
 				return err
 			}
-			n, _, err := d.Upload(ctx, args[1])
+			n, h, err := d.Upload(ctx, args[1])
+			if *verbose {
+				fmt.Println("pieceHash:", h)
+			}
 			if err != nil {
 				return err
 			}
@@ -75,7 +79,7 @@ type DrpcUploader struct {
 }
 
 func NewDRPCUploader(ctx context.Context, storagenodeURL string, useQuic bool, hashAlgo pb.PieceHashAlgorithm, noSync bool) (d DrpcUploader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
 	if err != nil {
 		return
 	}
@@ -95,6 +99,7 @@ func (d DrpcUploader) Close() error {
 }
 
 func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id storj.PieceID, err error) {
+	defer mon.Task()(&ctx)(&err)
 	pieceID := storj.NewPieceID()
 	if d.noSync {
 		ctx = experiment.With(ctx, "nosync")

@@ -190,7 +190,7 @@ func createWorker(node storj.NodeID, address string, results chan TaskResult) ch
 	go func() {
 		connectionCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		d, connectionError := piece.NewDRPCDownloader(connectionCtx, node.String()+"@"+address, false)
+		d, connectionError := piece.NewDRPCDownloader(connectionCtx, node.String()+"@"+address, false, false)
 		defer d.Close()
 		for {
 			select {

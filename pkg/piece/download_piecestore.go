@@ -18,12 +18,13 @@ func init() {
 		Args: cobra.ExactArgs(3),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
+	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
+	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
 		ctx := context.Background()
-		d, err := NewPieceDownloader(ctx, args[0], *useQuic)
+		d, err := NewPieceDownloader(ctx, args[0], *quic, *pooled)
 		if err != nil {
 			return err
 		}
@@ -54,8 +55,8 @@ type PieceDownloader struct {
 	client *piecestore.Client
 }
 
-func NewPieceDownloader(ctx context.Context, storagenodeID string, useQuic bool) (PieceDownloader, error) {
-	d, err := NewDownloader(ctx, storagenodeID, useQuic)
+func NewPieceDownloader(ctx context.Context, storagenodeID string, useQuic bool, pooled bool) (PieceDownloader, error) {
+	d, err := NewDownloader(ctx, storagenodeID, useQuic, pooled)
 	if err != nil {
 		return PieceDownloader{}, err
 	}

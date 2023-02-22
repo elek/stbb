@@ -61,7 +61,7 @@ type TTFBDownloader struct {
 }
 
 func NewTTFBDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d TTFBDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic)
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
 	if err != nil {
 		return
 	}

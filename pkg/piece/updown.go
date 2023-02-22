@@ -32,7 +32,7 @@ func init() {
 
 		u.Close()
 
-		d, err := NewDRPCDownloader(ctx, args[0], false)
+		d, err := NewDRPCDownloader(ctx, args[0], false, false)
 		if err != nil {
 			return err
 		}
