@@ -32,7 +32,7 @@ func main() {
 
 	if os.Getenv("STBB_JAEGER") != "" {
 		// agent.tracing.datasci.storj.io:5775
-		collector, err := jaeger.NewUDPCollector(zap.L(), os.Getenv("STBB_JAEGER"), "stbb", nil, 0, 0, 0)
+		collector, err := jaeger.NewUDPCollector(zap.L(), os.Getenv("STBB_JAEGER"), "stbb-storagenode", nil, 0, 0, 0)
 		if err != nil {
 			panic(err)
 		}
