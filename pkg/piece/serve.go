@@ -22,10 +22,10 @@ import (
 
 var (
 	//go:embed identity.cert
-	cert []byte
+	Cert []byte
 
 	//go:embed identity.key
-	key []byte
+	Key []byte
 )
 
 func init() {
@@ -41,7 +41,7 @@ func init() {
 func serve() error {
 	ctx := context.Background()
 
-	ident, err := identity.FullIdentityFromPEM(cert, key)
+	ident, err := identity.FullIdentityFromPEM(Cert, Key)
 	fmt.Println("Starting ", ident.ID.String()+"@localhost:28567")
 	if err != nil {
 		return errs.Wrap(err)

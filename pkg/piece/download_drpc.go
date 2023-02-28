@@ -2,7 +2,6 @@ package piece
 
 import (
 	"context"
-	"fmt"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"storj.io/common/pb"
@@ -10,7 +9,6 @@ import (
 	"storj.io/common/signing"
 	"storj.io/common/storj"
 	"strconv"
-	"time"
 )
 
 func init() {
@@ -32,7 +30,7 @@ func init() {
 			return err
 		}
 		max := *samples
-		_, err = loop(max, *verbose, func() error {
+		_, err = util.Loop(max, *verbose, func() error {
 			d, err := NewDRPCDownloader(ctx, args[0], *quic, *pooled)
 			if err != nil {
 				return err
@@ -52,23 +50,6 @@ func init() {
 		return nil
 	}
 	PieceCmd.AddCommand(cmd)
-}
-
-func loop(n int, verbose bool, do func() error) (durationMs int64, err error) {
-	for i := 0; i < n; i++ {
-		start := time.Now()
-		err = do()
-		if err != nil {
-			return
-		}
-		elapsed := time.Since(start)
-		if verbose {
-			fmt.Println(elapsed)
-		}
-		durationMs += elapsed.Milliseconds()
-	}
-	fmt.Printf("Executed %d times during %d ms %f req/sec", n, durationMs, float64(n*1000)/float64(durationMs))
-	return
 }
 
 type DRPCDownloader struct {

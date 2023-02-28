@@ -3,17 +3,15 @@ package tls
 import (
 	"bufio"
 	"crypto/tls"
-	stbb "github.com/elek/stbb/pkg"
+	"github.com/elek/stbb/pkg/piece"
 	"github.com/spf13/cobra"
 	"log"
 	"net"
+	"strconv"
+	"strings"
 )
 
 func init() {
-	tlsCmd := cobra.Command{
-		Use: "tls",
-	}
-
 	{
 		cmd := cobra.Command{
 			Use: "serve",
@@ -22,31 +20,18 @@ func init() {
 			},
 		}
 
-		tlsCmd.AddCommand(&cmd)
+		TlsCmd.AddCommand(&cmd)
 	}
-
-	{
-		cmd := cobra.Command{
-			Use: "client",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return client()
-			},
-		}
-
-		tlsCmd.AddCommand(&cmd)
-	}
-
-	stbb.RootCmd.AddCommand(&tlsCmd)
 }
 
 func run() (err error) {
-	cer, err := tls.LoadX509KeyPair("server.crt", "server.key")
+	cer, err := tls.X509KeyPair(piece.Cert, piece.Key)
 	if err != nil {
 		return
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
-	ln, err := tls.Listen("tcp", ":1443", config)
+	ln, err := tls.Listen("tcp", ":28967", config)
 	if err != nil {
 		return
 	}
@@ -71,13 +56,18 @@ func handleConnection(conn net.Conn) {
 			log.Println(err)
 			return
 		}
+		length, err := strconv.Atoi(strings.TrimSpace(msg))
+		if err != nil {
+			log.Println(err)
+			return
+		}
 
-		println(msg)
-
-		n, err := conn.Write([]byte("world\n"))
+		data := make([]byte, length)
+		n, err := conn.Write(data)
 		if err != nil {
 			log.Println(n, err)
 			return
 		}
+		conn.Close()
 	}
 }
