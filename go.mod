@@ -21,7 +21,7 @@ require (
 	golang.org/x/crypto v0.5.0
 	google.golang.org/protobuf v1.28.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20230224050842-81c8060f089b
+	storj.io/common v0.0.0-20230301105927-7f966760c100
 	storj.io/drpc v0.0.33-0.20230224050324-1fd05d3459f8
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
 	storj.io/private v0.0.0-20221108123115-3a27297f0b78
@@ -101,5 +101,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	storj.io/picobuf v0.0.1 // indirect
 )
-
-replace storj.io/common => ../common
