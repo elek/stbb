@@ -16,6 +16,7 @@ import (
 	_ "github.com/elek/stbb/pkg/satellite"
 	_ "github.com/elek/stbb/pkg/store"
 	_ "github.com/elek/stbb/pkg/tls"
+	_ "github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
 	"log"

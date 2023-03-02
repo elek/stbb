@@ -21,12 +21,12 @@ require (
 	golang.org/x/crypto v0.5.0
 	google.golang.org/protobuf v1.28.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20230119142925-0516a82c96f0
-	storj.io/drpc v0.0.33-0.20230204035225-c9649dee8f2a
+	storj.io/common v0.0.0-20230224050842-81c8060f089b
+	storj.io/drpc v0.0.33-0.20230224050324-1fd05d3459f8
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
 	storj.io/private v0.0.0-20221108123115-3a27297f0b78
 	storj.io/storj v1.70.2
-	storj.io/uplink v1.10.0
+	storj.io/uplink v1.10.1-0.20230301224149-a528c5e7cc61
 )
 
 require (
