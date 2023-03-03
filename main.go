@@ -78,6 +78,32 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	if os.Getenv("STBB_MONKIT") != "" {
+		defer func() {
+			monkit.Default.Stats(func(key monkit.SeriesKey, field string, val float64) {
+				fmt.Println(key, field, val)
+			})
+		}()
+	}
+
+	if os.Getenv("STBB_PPROF_ALLOCS") != "" {
+		var output *os.File
+		output, err := os.Create(os.Getenv("STBB_PPROF_ALLOCS"))
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			output.Close()
+		}()
+
+		defer func() {
+			err = pprof.Lookup("allocs").WriteTo(output, 0)
+			if err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	usr1 := make(chan os.Signal, 1)
 	defer close(usr1)
 	signal.Notify(usr1, syscall.SIGUSR1)

@@ -26,7 +26,7 @@ require (
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
 	storj.io/private v0.0.0-20221108123115-3a27297f0b78
 	storj.io/storj v1.70.2
-	storj.io/uplink v1.10.1-0.20230301224149-a528c5e7cc61
+	storj.io/uplink v1.10.1-0.20230206144545-221a90c6a9be
 )
 
 require (
@@ -101,3 +101,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	storj.io/picobuf v0.0.1 // indirect
 )
+
+replace storj.io/uplink => ../uplink
+
+replace storj.io/common => ../common

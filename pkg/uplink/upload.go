@@ -9,7 +9,7 @@ import (
 	"os"
 	"storj.io/storj/cmd/uplink/ulloc"
 	"storj.io/uplink"
-	"storj.io/uplink/private/testuplink"
+	//	"storj.io/uplink/private/testuplink"
 )
 
 func init() {
@@ -21,19 +21,16 @@ func init() {
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
 	refactored := cmd.Flags().BoolP("refactored", "r", false, "User refactored code path")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		_, err := util.Loop(*samples, *verbose, func() error {
-			return upload(args[0], args[1], *refactored)
-		})
-		return err
+		return upload(args[0], args[1], *samples, *verbose, *refactored)
 	}
 	UplinkCmd.AddCommand(cmd)
 }
 
-func upload(from string, to string, refactored bool) error {
+func upload(from string, to string, samples int, verbose bool, refactored bool) error {
 	ctx := context.Background()
 
 	if refactored {
-		ctx = testuplink.WithConcurrentSegmentUploadsDefaultConfig(ctx)
+		//		ctx = testuplink.WithConcurrentSegmentUploadsDefaultConfig(ctx)
 	}
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -55,10 +52,19 @@ func upload(from string, to string, refactored bool) error {
 	cfg := uplink.Config{
 		UserAgent: "stbb",
 	}
+
+	_, err = util.Loop(samples, verbose, func() error {
+		return uploadOne(ctx, cfg, access, from, bucket, key)
+	})
+	return err
+}
+
+func uploadOne(ctx context.Context, cfg uplink.Config, access *uplink.Access, from, bucket string, key string) error {
 	project, err := cfg.OpenProject(ctx, access)
 	if err != nil {
 		return err
 	}
+	defer project.Close()
 
 	source, err := os.Open(from)
 	if err != nil {
@@ -79,6 +85,5 @@ func upload(from string, to string, refactored bool) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
