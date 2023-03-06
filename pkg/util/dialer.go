@@ -16,6 +16,10 @@ func GetDialer(ctx context.Context, pooled bool, forceQuic bool) (rpc.Dialer, er
 	if err != nil {
 		return rpc.Dialer{}, err
 	}
+	return GetDialerForIdentity(ctx, ident, pooled, forceQuic)
+}
+
+func GetDialerForIdentity(ctx context.Context, ident *identity.FullIdentity, pooled bool, forceQuic bool) (rpc.Dialer, error) {
 
 	tlsConfig := tlsopts.Config{
 		UsePeerCAWhitelist: false,
