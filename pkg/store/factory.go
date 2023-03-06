@@ -25,6 +25,6 @@ func createBlobs(s string) (storage.Blobs, error) {
 	if _, err := os.Stat(filepath.Join(s, "storage-badger-verification")); err == nil {
 		return badger.NewBlobStore(s)
 	}
-	return nil, errs.New("Directory %s doesn't contain initialized storage directory")
+	return nil, errs.New("Directory %s doesn't contain initialized storage directory", s)
 
 }
