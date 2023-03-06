@@ -85,7 +85,3 @@ require (
 	storj.io/picobuf v0.0.1 // indirect
 	storj.io/private v0.0.0-20221108123115-3a27297f0b78 // indirect
 )
-
-replace storj.io/uplink => ../uplink
-
-replace storj.io/common => ../common
