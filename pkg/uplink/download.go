@@ -23,14 +23,15 @@ func init() {
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
 	pool := cmd.Flags().IntP("pool", "p", 0, "Use pool: 0 - no, 1 - common, 2 - separated pool for satellite and storagenode")
+	poolSize := cmd.Flags().IntP("pool-size", "", 200, "Number of elements in the pool")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return download(args[0], args[1], *samples, *verbose, *pool)
+		return download(args[0], args[1], *samples, *verbose, *pool, *poolSize)
 	}
 	UplinkCmd.AddCommand(cmd)
 }
 
-func download(from string, to string, samples int, verbose bool, pool int) error {
+func download(from string, to string, samples int, verbose bool, pool int, poolSize int) error {
 	ctx := context.Background()
 
 	gr := os.Getenv("UPLINK_ACCESS")
@@ -57,9 +58,9 @@ func download(from string, to string, samples int, verbose bool, pool int) error
 	if pool > 0 {
 		pool := rpcpool.New(rpcpool.Options{
 			Name:           "uplink",
-			Capacity:       200,
+			Capacity:       poolSize,
 			KeyCapacity:    5,
-			IdleExpiration: 2 * time.Minute,
+			IdleExpiration: 20 * time.Minute,
 		})
 		defer pool.Close()
 		err = transport.SetConnectionPool(ctx, &cfg, pool)
