@@ -104,6 +104,7 @@ func downloadOne(ctx context.Context, cfg uplink.Config, access *uplink.Access, 
 	if err != nil {
 		return err
 	}
+	defer source.Close()
 
 	_, err = io.Copy(dest, source)
 	if err != nil {
