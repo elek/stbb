@@ -1,0 +1,28 @@
+env:
+  - name: STORJ_MAIL_FROM
+    value: storj-up@storj.io
+  - name: STORJ_SERVER_ADDRESS
+    value: 0.0.0.0:7777
+  - name: STORJ_AUDIT_USE_RANGED_LOOP
+    value: "true"
+  - name: STORJ_AUDIT_CHORE_INTERVAL
+    value: "0h0m30s"
+  - name: STORJ_DEBUG_ADDR
+    value: 0.0.0.0:11111
+  - name: STORJ_METRICS_APP_SUFFIX
+    value: sim
+  - name: STORJ_LOG_LEVEL
+    value: debug
+  - name: STORJ_DEFAULTS
+    value: dev
+  - name: STORJ_IDENTITY_DIR
+    value: /var/lib/storj/.local/share/storj/identity/satellite-auditor/
+  - name: STORJ_USE_PREDEFINED_IDENTITY
+    value: "1"
+  - name: STORJ_DATABASE
+    value: cockroach://root@cockroachdb:26257/master?sslmode=disable
+  #              value: cockroach://root@cockroachdb:26257/master?sslmode=disable,repairqueue:cockroach://root@cockroachdb:26257/repairqueue?sslmode=disable,reverifyqueue:cockroach://root@cockroachdb:26257/reverifyqueue?sslmode=disable,verifyqueue:cockroach://root@cockroachdb:26257/verifyqueue?sslmode=disable
+  - name: STORJ_METAINFO_DATABASE_URL
+    value: cockroach://root@cockroachdb:26257/metainfo?sslmode=disable
+  - name: STORJ_SERVER_REVOCATION_DBURL
+    value: redis://redis:6379?db=1

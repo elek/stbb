@@ -4,12 +4,13 @@ go 1.18
 
 require (
 	github.com/elek/storj-badger-storage v0.0.0-20230120195724-f5d13c855444
-	github.com/jackc/pgx/v5 v5.2.0
+	github.com/elek/storj-largefile-storage v0.0.0-20230120195724-f5d13c855444
+	github.com/jackc/pgx/v5 v5.3.1
 	github.com/klauspost/cpuid/v2 v2.0.12
 	github.com/minio/sha256-simd v1.0.0
 	github.com/spacemonkeygo/monkit/v3 v3.0.19
 	github.com/spf13/cobra v1.1.3
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/vivint/infectious v0.0.0-20200605153912-25a574ae18a3
 	github.com/zeebo/blake3 v0.2.3
 	github.com/zeebo/errs v1.3.0
@@ -18,13 +19,15 @@ require (
 	go.etcd.io/bbolt v1.3.5
 	go.uber.org/zap v1.16.0
 	golang.org/x/benchmarks v0.0.0-20221122030604-0e4f958d02e0
-	golang.org/x/crypto v0.5.0
+	golang.org/x/crypto v0.6.0
+	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	google.golang.org/protobuf v1.28.1
+	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
 	storj.io/common v0.0.0-20230301105927-7f966760c100
 	storj.io/drpc v0.0.33-0.20230224050324-1fd05d3459f8
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
-	storj.io/storj v1.70.2
+	storj.io/storj v1.74.4
 	storj.io/uplink v1.10.1-0.20230206144545-221a90c6a9be
 )
 
@@ -33,7 +36,7 @@ require (
 	github.com/bmkessler/fastdiv v0.0.0-20190227075523-41d5178f2044 // indirect
 	github.com/calebcase/tmpfile v1.0.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/badger/v3 v3.2103.5 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
@@ -55,7 +58,7 @@ require (
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/pgtype v1.10.0 // indirect
 	github.com/jackc/pgx/v4 v4.15.0 // indirect
 	github.com/jtolds/tracetagger/v2 v2.0.0-rc5 // indirect
@@ -74,14 +77,14 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
-	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db // indirect
 	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	storj.io/picobuf v0.0.1 // indirect
-	storj.io/private v0.0.0-20221108123115-3a27297f0b78 // indirect
+	storj.io/private v0.0.0-20230123202745-d3e63b336444 // indirect
 )
+
+replace github.com/elek/storj-largefile-storage => ../../p/storj-largefile-storage

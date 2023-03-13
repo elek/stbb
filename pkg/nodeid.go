@@ -2,15 +2,20 @@ package stbb
 
 import (
 	"context"
+	"crypto"
 	"encoding/hex"
 	"fmt"
 	"github.com/spf13/cobra"
+	"os"
 	"storj.io/common/identity"
+	"storj.io/common/peertls"
 	"storj.io/common/peertls/tlsopts"
+	"storj.io/common/pkcrypto"
 	"storj.io/common/rpc"
 	"storj.io/common/socket"
 	"storj.io/common/storj"
 	"storj.io/drpc"
+	"strings"
 	"time"
 )
 
@@ -75,6 +80,55 @@ func init() {
 				return err
 			}
 			fmt.Println(id)
+			return nil
+		},
+	})
+	nodeIDCmd.AddCommand(&cobra.Command{
+		Use:   "generate",
+		Short: "Generate node id",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			for {
+				version := storj.IDVersions[storj.V0]
+				k, err := version.NewPrivateKey()
+				if err != nil {
+					return err
+				}
+
+				var pubKey crypto.PublicKey
+				pubKey, err = pkcrypto.PublicKeyFromPrivate(k)
+				if err != nil {
+					return err
+				}
+				nodeID, err := identity.NodeIDFromKey(pubKey, version)
+				if err != nil {
+					return err
+				}
+				if strings.HasSuffix(nodeID.String(), "prdn") {
+					fmt.Println(nodeID.String())
+					err = pkcrypto.WritePrivateKeyPEM(os.Stdout, k)
+					if err != nil {
+						return err
+					}
+
+					ct, err := peertls.CATemplate()
+					if err != nil {
+						return err
+					}
+					cert, err := peertls.CreateSelfSignedCertificate(k, ct)
+					if err != nil {
+						return err
+					}
+					ca := &identity.FullCertificateAuthority{
+						Cert: cert,
+						Key:  k,
+						ID:   nodeID,
+					}
+					fmt.Println(ca)
+					break
+				}
+			}
+
 			return nil
 		},
 	})

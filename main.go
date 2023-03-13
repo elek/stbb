@@ -25,6 +25,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	jaeger "storj.io/monkit-jaeger"
+	"strings"
 	"sync"
 	"syscall"
 )
@@ -79,9 +80,12 @@ func main() {
 	}
 
 	if os.Getenv("STBB_MONKIT") != "" {
+		filter := strings.ToLower(os.Getenv("STBB_MONKIT"))
 		defer func() {
 			monkit.Default.Stats(func(key monkit.SeriesKey, field string, val float64) {
-				fmt.Println(key, field, val)
+				if filter == "true" || strings.Contains(strings.ToLower(key.String()), filter) {
+					fmt.Println(key, field, val)
+				}
 			})
 		}()
 	}

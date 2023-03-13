@@ -43,7 +43,7 @@ func init() {
 				}
 				size += len(data)
 				if *verbose {
-					fmt.Printf("%s %d %d %x\n", hex.EncodeToString(info.BlobRef().Key), len(data), md5.Sum(data))
+					fmt.Printf("%s %d %x\n", hex.EncodeToString(info.BlobRef().Key), len(data), md5.Sum(data))
 				}
 				return nil
 			})

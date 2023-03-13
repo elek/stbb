@@ -2,10 +2,11 @@ package uplink
 
 import (
 	"context"
+	"fmt"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
-	"io"
+	"golang.org/x/exp/rand"
 	"os"
 	"storj.io/common/rpc/rpcpool"
 	"storj.io/storj/cmd/uplink/ulloc"
@@ -17,7 +18,7 @@ import (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:  "download <sj://bucket/encryptedpath> <dest>",
+		Use:  "updown <file> <sj://bucket/encryptedpath> ",
 		Args: cobra.ExactArgs(2),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
@@ -26,12 +27,12 @@ func init() {
 	poolSize := cmd.Flags().IntP("pool-size", "", 200, "Number of elements in the pool")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return download(args[0], args[1], *samples, *verbose, *pool, *poolSize)
+		return updown(args[0], args[1], *samples, *verbose, *pool, *poolSize)
 	}
 	UplinkCmd.AddCommand(cmd)
 }
 
-func download(from string, to string, samples int, verbose bool, pool int, poolSize int) error {
+func updown(fileName string, keyBucket string, samples int, verbose bool, pool int, poolSize int) error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -40,14 +41,14 @@ func download(from string, to string, samples int, verbose bool, pool int, poolS
 		return err
 	}
 
-	p, err := ulloc.Parse(from)
+	p, err := ulloc.Parse(keyBucket)
 	if err != nil {
 		return err
 	}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", to)
+		return errs.New("Path is not remote %s", keyBucket)
 	}
 
 	cfg := uplink.Config{
@@ -83,45 +84,26 @@ func download(from string, to string, samples int, verbose bool, pool int, poolS
 	}
 
 	_, err = util.Loop(samples, verbose, func() error {
-		return downloadOne(ctx, cfg, access, bucket, key, to)
+		currentKey := fmt.Sprintf("%s-%d", key, rand.Int63())
+		if verbose {
+			fmt.Println("Key name:", currentKey)
+		}
+		err := uploadOne(ctx, cfg, access, fileName, bucket, currentKey)
+		if err != nil {
+			return err
+		}
+
+		err = downloadOne(ctx, cfg, access, bucket, currentKey, fileName+".down")
+		if err != nil {
+			return err
+		}
+
+		err = deleteOne(ctx, cfg, access, bucket, currentKey)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
-	return err
-}
-
-func downloadOne(ctx context.Context, cfg uplink.Config, access *uplink.Access, bucket string, key string, to string) error {
-	project, err := cfg.OpenProject(ctx, access)
-	if err != nil {
-		return err
-	}
-	defer project.Close()
-
-	dest, err := os.Create(to)
-	if err != nil {
-		return err
-	}
-
-	source, err := project.DownloadObject(ctx, bucket, key, nil)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-
-	_, err = io.Copy(dest, source)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func deleteOne(ctx context.Context, cfg uplink.Config, access *uplink.Access, bucket string, key string) error {
-	project, err := cfg.OpenProject(ctx, access)
-	if err != nil {
-		return err
-	}
-	defer project.Close()
-
-	_, err = project.DeleteObject(ctx, bucket, key)
 	return err
 
 }
