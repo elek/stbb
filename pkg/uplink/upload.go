@@ -9,6 +9,7 @@ import (
 	"os"
 	"storj.io/storj/cmd/uplink/ulloc"
 	"storj.io/uplink"
+	"storj.io/uplink/private/testuplink"
 	//	"storj.io/uplink/private/testuplink"
 )
 
@@ -30,7 +31,7 @@ func upload(from string, to string, samples int, verbose bool, refactored bool) 
 	ctx := context.Background()
 
 	if refactored {
-		//		ctx = testuplink.WithConcurrentSegmentUploadsDefaultConfig(ctx)
+		ctx = testuplink.WithConcurrentSegmentUploadsDefaultConfig(ctx)
 	}
 	gr := os.Getenv("UPLINK_ACCESS")
 
