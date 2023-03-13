@@ -9,6 +9,7 @@ import (
 	_ "github.com/elek/stbb/pkg/audit"
 	_ "github.com/elek/stbb/pkg/downloadng"
 	_ "github.com/elek/stbb/pkg/encoding"
+	_ "github.com/elek/stbb/pkg/load"
 	_ "github.com/elek/stbb/pkg/metainfo"
 	_ "github.com/elek/stbb/pkg/node"
 	_ "github.com/elek/stbb/pkg/piece"

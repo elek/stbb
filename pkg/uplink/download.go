@@ -99,6 +99,7 @@ func downloadOne(ctx context.Context, cfg uplink.Config, access *uplink.Access, 
 	if err != nil {
 		return err
 	}
+	defer dest.Close()
 
 	source, err := project.DownloadObject(ctx, bucket, key, nil)
 	if err != nil {
