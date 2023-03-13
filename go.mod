@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/elek/storj-badger-storage v0.0.0-20230120195724-f5d13c855444
-	github.com/elek/storj-largefile-storage v0.0.0-20230120195724-f5d13c855444
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/klauspost/cpuid/v2 v2.2.4
 	github.com/minio/sha256-simd v1.0.0
@@ -86,5 +85,3 @@ require (
 	storj.io/picobuf v0.0.1 // indirect
 	storj.io/private v0.0.0-20230123202745-d3e63b336444 // indirect
 )
-
-replace github.com/elek/storj-largefile-storage => ../../p/storj-largefile-storage

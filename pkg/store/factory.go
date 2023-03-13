@@ -1,8 +1,7 @@
 package rpc
 
 import (
-	"github.com/elek/storj-badger-storage"
-	largefile "github.com/elek/storj-largefile-storage"
+	//largefile "github.com/elek/storj-largefile-storage"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
@@ -26,9 +25,9 @@ func createBlobs(s string) (storage.Blobs, error) {
 	if _, err := os.Stat(filepath.Join(s, "storage-badger-verification")); err == nil {
 		return badger.NewBlobStore(s)
 	}
-	if _, err := os.Stat(filepath.Join(s, "storage-largefile-verification")); err == nil {
-		return largefile.NewBlobStore(os.Getenv("STORJ_LARGEFILE_CONN"), s)
-	}
+	//if _, err := os.Stat(filepath.Join(s, "storage-largefile-verification")); err == nil {
+	//	return largefile.NewBlobStore(os.Getenv("STORJ_LARGEFILE_CONN"), s)
+	//}
 	return nil, errs.New("Directory %s doesn't contain initialized storage directory", s)
 
 }
