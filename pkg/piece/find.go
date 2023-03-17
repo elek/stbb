@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"storj.io/uplink/private/metaclient"
 	"strings"
@@ -15,10 +16,10 @@ func init() {
 		Short: "Find piece which is store on a specific storage nodes",
 		Args:  cobra.ExactArgs(2),
 	}
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
+	dh := util.NewDialerHelper(cmd.Flags())
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
-		p, err := NewPieceFinder(ctx, args[1], *useQuic)
+		p, err := NewPieceFinder(ctx, args[1], dh)
 		if err != nil {
 			return err
 		}
@@ -36,8 +37,8 @@ type PieceFinder struct {
 	Downloader
 }
 
-func NewPieceFinder(ctx context.Context, storagenodeID string, useQuic bool) (PieceFinder, error) {
-	downloader, err := NewDownloader(ctx, storagenodeID, useQuic, false)
+func NewPieceFinder(ctx context.Context, storagenodeID string, dh *util.DialerHelper) (PieceFinder, error) {
+	downloader, err := NewDownloader(ctx, storagenodeID, dh)
 	if err != nil {
 		return PieceFinder{}, err
 	}
@@ -47,8 +48,12 @@ func NewPieceFinder(ctx context.Context, storagenodeID string, useQuic bool) (Pi
 }
 func (p PieceFinder) Find(ctx context.Context, bucketName string) error {
 
+	dialer, err := p.dialer.CreateRPCDialer()
+	if err != nil {
+		return err
+	}
 	metainfoClient, err := metaclient.DialNodeURL(ctx,
-		p.dialer,
+		dialer,
 		p.satelliteURL.String(),
 		p.grant.APIKey,
 		"stbb")

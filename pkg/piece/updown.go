@@ -2,6 +2,7 @@ package piece
 
 import (
 	"context"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
 	"storj.io/common/pb"
@@ -15,7 +16,7 @@ func init() {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
-		u, err := NewDRPCUploader(ctx, args[0], false, pb.PieceHashAlgorithm_SHA256, false)
+		u, err := NewDRPCUploader(ctx, args[0], &util.DialerHelper{}, pb.PieceHashAlgorithm_SHA256, false)
 		if err != nil {
 			return err
 		}
@@ -32,7 +33,7 @@ func init() {
 
 		u.Close()
 
-		d, err := NewDRPCDownloader(ctx, args[0], false, false)
+		d, err := NewDRPCDownloader(ctx, args[0], &util.DialerHelper{})
 		if err != nil {
 			return err
 		}

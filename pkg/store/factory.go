@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	badger "github.com/elek/storj-badger-storage"
 	//largefile "github.com/elek/storj-largefile-storage"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
@@ -22,9 +23,9 @@ func createBlobs(s string) (storage.Blobs, error) {
 		blobs = filestore.New(zap.NewNop(), dir, filestore.DefaultConfig)
 		return blobs, nil
 	}
-	//if _, err := os.Stat(filepath.Join(s, "storage-badger-verification")); err == nil {
-	//	return badger.NewBlobStore(s)
-	//}
+	if _, err := os.Stat(filepath.Join(s, "storage-badger-verification")); err == nil {
+		return badger.NewBlobStore(s)
+	}
 	//if _, err := os.Stat(filepath.Join(s, "storage-largefile-verification")); err == nil {
 	//	return largefile.NewBlobStore(os.Getenv("STORJ_LARGEFILE_CONN"), s)
 	//}

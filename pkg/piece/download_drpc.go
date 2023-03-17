@@ -18,8 +18,7 @@ func init() {
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
-	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
+	dh := util.NewDialerHelper(cmd.Flags())
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
@@ -31,7 +30,7 @@ func init() {
 		}
 		max := *samples
 		_, err = util.Loop(max, *verbose, func() error {
-			d, err := NewDRPCDownloader(ctx, args[0], *quic, *pooled)
+			d, err := NewDRPCDownloader(ctx, args[0], dh)
 			if err != nil {
 				return err
 			}
@@ -55,20 +54,20 @@ func init() {
 type DRPCDownloader struct {
 	Downloader
 	conn   *rpc.Conn
-	client pb.DRPCPiecestoreClient
+	client pb.DRPCReplaySafePiecestoreClient
 }
 
-func NewDRPCDownloader(ctx context.Context, storagenodeURL string, useQuic bool, pooled bool) (d DRPCDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, pooled)
+func NewDRPCDownloader(ctx context.Context, storagenodeURL string, dh *util.DialerHelper) (d DRPCDownloader, err error) {
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, dh)
 	if err != nil {
 		return
 	}
 
-	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
+	d.conn, err = dh.Connect(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
-	d.client = pb.NewDRPCPiecestoreClient(util.NewTracedConnection(d.conn))
+	d.client = pb.NewDRPCReplaySafePiecestoreClient(util.NewTracedConnection(d.conn))
 	return
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"io"
 	"storj.io/common/storj"
@@ -18,13 +19,12 @@ func init() {
 		Args: cobra.ExactArgs(3),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
-	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
+	dh := util.NewDialerHelper(cmd.Flags())
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
 
 		ctx := context.Background()
-		d, err := NewPieceDownloader(ctx, args[0], *quic, *pooled)
+		d, err := NewPieceDownloader(ctx, args[0], dh)
 		if err != nil {
 			return err
 		}
@@ -55,8 +55,8 @@ type PieceDownloader struct {
 	client *piecestore.Client
 }
 
-func NewPieceDownloader(ctx context.Context, storagenodeID string, useQuic bool, pooled bool) (PieceDownloader, error) {
-	d, err := NewDownloader(ctx, storagenodeID, useQuic, pooled)
+func NewPieceDownloader(ctx context.Context, storagenodeID string, dh *util.DialerHelper) (PieceDownloader, error) {
+	d, err := NewDownloader(ctx, storagenodeID, dh)
 	if err != nil {
 		return PieceDownloader{}, err
 	}
@@ -76,7 +76,11 @@ func (d PieceDownloader) Download(ctx context.Context, pieceId string, size int6
 	//config.DownloadBufferSize = 1024 * 1024
 	//config.InitialStep = 1024 * 1024
 	//config.MaximumStep = 1024 * 1024
-	d.client, err = piecestore.Dial(ctx, d.dialer, d.storagenodeURL, config)
+	dialer, err := d.dialer.CreateRPCDialer()
+	if err != nil {
+		return
+	}
+	d.client, err = piecestore.Dial(ctx, dialer, d.storagenodeURL, config)
 	if err != nil {
 		return
 	}

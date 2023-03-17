@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"io"
@@ -23,9 +24,8 @@ func init() {
 		Short: "Test performance of each nodes, one bye one",
 	}
 
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return scanNodes(args[0], args[1], args[2], *useQuic)
+		return scanNodes(args[0], args[1], args[2])
 	}
 	NodeCmd.AddCommand(cmd)
 }
@@ -36,15 +36,13 @@ type result struct {
 	err      error
 }
 
-func scanNodes(nodesFile string, action string, file string, quic bool) error {
+func scanNodes(nodesFile string, action string, file string) error {
 	ctx := context.Background()
 	tasks := make(chan NodeInfo)
 	results := make(chan result)
 	wg := sync.WaitGroup{}
 	p := "tcp"
-	if quic {
-		p = "quic"
-	}
+
 	for i := 0; i < 50; i++ {
 		go func() {
 			for {
@@ -56,7 +54,7 @@ func scanNodes(nodesFile string, action string, file string, quic bool) error {
 
 						switch action {
 						case "upload":
-							um, err := piece.NewDRPCUploader(ctx, task.NodeID.String()+"@"+task.Address, quic, pb.PieceHashAlgorithm_SHA256, false)
+							um, err := piece.NewDRPCUploader(ctx, task.NodeID.String()+"@"+task.Address, &util.DialerHelper{}, pb.PieceHashAlgorithm_SHA256, false)
 							if err != nil {
 								return err
 							}

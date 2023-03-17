@@ -3,6 +3,7 @@ package piece
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"hash"
@@ -13,7 +14,6 @@ import (
 	"storj.io/common/signing"
 	"storj.io/common/storj"
 	"strings"
-	"time"
 )
 
 func init() {
@@ -22,35 +22,31 @@ func init() {
 		Args: cobra.ExactArgs(2),
 	}
 	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
 	pieceHashAlgo := cmd.Flags().StringP("hash", "", "SHA256", "Piece hash algorithm to use")
 	noSync := cmd.Flags().BoolP("nosync", "", false, "Disable file sync on upload")
 	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose (print out piece hashes)")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		start := time.Now()
 
+	dh := util.NewDialerHelper(cmd.Flags())
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
-		uploaded := 0
-		for i := 0; i < *samples; i++ {
-			d, err := NewDRPCUploader(ctx, args[0], *useQuic, hashAlgo(*pieceHashAlgo), *noSync)
+		_, err := util.Loop(*samples, *verbose, func() error {
+			d, err := NewDRPCUploader(ctx, args[0], dh, hashAlgo(*pieceHashAlgo), *noSync)
 			if err != nil {
 				return err
 			}
-			n, h, err := d.Upload(ctx, args[1])
+			_, h, err := d.Upload(ctx, args[1])
 			if *verbose {
 				fmt.Println("pieceHash:", h)
 			}
 			if err != nil {
 				return err
 			}
-			uploaded += n
 			d.Close()
-		}
+			return nil
+		})
 
-		seconds := time.Now().Sub(start).Seconds()
-		fmt.Printf("%d Mbytes are uploaded under %f sec, which is %f Mbytes/sec\n", uploaded/1024/1024, seconds, float64(uploaded)/seconds/1024/1024)
-		return nil
+		return err
 	}
 	PieceCmd.AddCommand(cmd)
 }
@@ -73,22 +69,23 @@ func hashAlgo(s string) pb.PieceHashAlgorithm {
 type DrpcUploader struct {
 	Downloader
 	conn     rpcpool.Conn
-	client   pb.DRPCPiecestoreClient
+	client   pb.DRPCReplaySafePiecestoreClient
 	hashAlgo pb.PieceHashAlgorithm
 	noSync   bool
 }
 
-func NewDRPCUploader(ctx context.Context, storagenodeURL string, useQuic bool, hashAlgo pb.PieceHashAlgorithm, noSync bool) (d DrpcUploader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
+func NewDRPCUploader(ctx context.Context, storagenodeURL string, dh *util.DialerHelper, hashAlgo pb.PieceHashAlgorithm, noSync bool) (d DrpcUploader, err error) {
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, dh)
 	if err != nil {
 		return
 	}
 	d.OrderLimitCreator.(*KeySigner).action = pb.PieceAction_PUT
-	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
+
+	d.conn, err = dh.Connect(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
-	d.client = pb.NewDRPCPiecestoreClient(d.conn)
+	d.client = pb.NewDRPCReplaySafePiecestoreClient(d.conn)
 	d.noSync = noSync
 	d.hashAlgo = hashAlgo
 	return

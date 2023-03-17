@@ -3,6 +3,7 @@ package piece
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
 	"storj.io/common/pb"
@@ -19,7 +20,7 @@ func init() {
 		Use:  "scan <storagenode-address> <piecefile>",
 		Args: cobra.ExactArgs(2),
 	}
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
+	dh := util.NewDialerHelper(cmd.Flags())
 	w := cmd.Flags().IntP("worker", "w", 1, "Number of independent workers to use")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		start := time.Now()
@@ -38,7 +39,7 @@ func init() {
 					select {
 					case pieceID := <-work:
 						start := time.Now()
-						d, err := NewPieceScanner(ctx, args[0], *useQuic)
+						d, err := NewPieceScanner(ctx, args[0], dh)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -103,13 +104,13 @@ type PieceScanner struct {
 	client pb.DRPCPiecestoreClient
 }
 
-func NewPieceScanner(ctx context.Context, storagenodeURL string, useQuic bool) (d PieceScanner, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
+func NewPieceScanner(ctx context.Context, storagenodeURL string, dh *util.DialerHelper) (d PieceScanner, err error) {
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, util.NewDialerHelper(nil))
 	if err != nil {
 		return
 	}
 
-	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
+	d.conn, err = dh.Connect(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}

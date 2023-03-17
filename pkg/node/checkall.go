@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/jackc/pgx/v5"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
@@ -190,7 +191,7 @@ func createWorker(node storj.NodeID, address string, results chan TaskResult) ch
 	go func() {
 		connectionCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		d, connectionError := piece.NewDRPCDownloader(connectionCtx, node.String()+"@"+address, false, false)
+		d, connectionError := piece.NewDRPCDownloader(connectionCtx, node.String()+"@"+address, &util.DialerHelper{})
 		defer d.Close()
 		for {
 			select {

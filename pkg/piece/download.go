@@ -6,7 +6,6 @@ import (
 	"os"
 	"storj.io/common/grant"
 	"storj.io/common/identity"
-	"storj.io/common/rpc"
 	"storj.io/common/storj"
 )
 
@@ -15,11 +14,11 @@ type Downloader struct {
 	storagenodeURL    storj.NodeURL
 	fi                *identity.FullIdentity
 	OrderLimitCreator OrderLimitCreator
-	dialer            rpc.Dialer
+	dialer            *util.DialerHelper
 	grant             *grant.Access
 }
 
-func NewDownloader(ctx context.Context, storagenodeURL string, quic bool, pooled bool) (d Downloader, err error) {
+func NewDownloader(ctx context.Context, storagenodeURL string, dh *util.DialerHelper) (d Downloader, err error) {
 	gr := os.Getenv("UPLINK_ACCESS")
 	if gr != "" {
 		d.grant, err = grant.ParseAccess(gr)
@@ -45,10 +44,7 @@ func NewDownloader(ctx context.Context, storagenodeURL string, quic bool, pooled
 		return
 	}
 
-	d.dialer, err = util.GetDialer(ctx, quic, pooled)
-	if err != nil {
-		return
-	}
+	d.dialer = dh
 
 	d.OrderLimitCreator, err = NewKeySigner()
 	if err != nil {

@@ -3,6 +3,7 @@ package piece
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"os"
@@ -61,12 +62,12 @@ type TTFBDownloader struct {
 }
 
 func NewTTFBDownloader(ctx context.Context, storagenodeURL string, useQuic bool) (d TTFBDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, useQuic, false)
+	d.Downloader, err = NewDownloader(ctx, storagenodeURL, util.NewDialerHelper(nil))
 	if err != nil {
 		return
 	}
 
-	d.conn, err = d.dialer.DialNodeURL(ctx, d.storagenodeURL)
+	d.conn, err = d.dialer.Connect(ctx, d.storagenodeURL)
 	if err != nil {
 		return
 	}
