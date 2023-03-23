@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"os"
 	"path/filepath"
@@ -14,18 +13,7 @@ import (
 	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "reindex",
-		Short: "Denormalize piece information, creating piece->node list from metainfo DB.",
-	}
-
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return run()
-	}
-	NodeCmd.AddCommand(cmd)
-}
-
+// run denormalizes piece information, creating piece->node list from metainfo DB.
 func run() error {
 	writers := make(map[metabase.NodeAlias]writer)
 	defer func() {

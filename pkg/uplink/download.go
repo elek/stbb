@@ -3,7 +3,6 @@ package uplink
 import (
 	"context"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"io"
 	"os"
@@ -15,23 +14,16 @@ import (
 	//	"storj.io/uplink/private/testuplink"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "download <sj://bucket/encryptedpath> <dest>",
-		Args: cobra.ExactArgs(2),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	pool := cmd.Flags().IntP("pool", "p", 0, "Use pool: 0 - no, 1 - common, 2 - separated pool for satellite and storagenode")
-	poolSize := cmd.Flags().IntP("pool-size", "", 200, "Number of elements in the pool")
-
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return download(args[0], args[1], *samples, *verbose, *pool, *poolSize)
-	}
-	UplinkCmd.AddCommand(cmd)
+type Download struct {
+	util.Loop
+	Source   string `arg:"" name:"source"`
+	Target   string `arg:"" name:"target"`
+	Pool     int    `short:"p" help:"Use pool: 0 - no, 1 - common, 2 - separated pool for satellite and storagenode"`
+	PoolSize int    `default:"200" help:"size of the connection pool"`
 }
 
-func download(from string, to string, samples int, verbose bool, pool int, poolSize int) error {
+func (d *Download) Run() error {
+
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -40,24 +32,24 @@ func download(from string, to string, samples int, verbose bool, pool int, poolS
 		return err
 	}
 
-	p, err := ulloc.Parse(from)
+	p, err := ulloc.Parse(d.Source)
 	if err != nil {
 		return err
 	}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", to)
+		return errs.New("Path is not remote %s", d.Source)
 	}
 
 	cfg := uplink.Config{
 		UserAgent: "stbb",
 	}
 
-	if pool > 0 {
+	if d.Pool > 0 {
 		pool := rpcpool.New(rpcpool.Options{
 			Name:           "uplink",
-			Capacity:       poolSize,
+			Capacity:       d.PoolSize,
 			KeyCapacity:    5,
 			IdleExpiration: 20 * time.Minute,
 		})
@@ -68,7 +60,7 @@ func download(from string, to string, samples int, verbose bool, pool int, poolS
 		}
 	}
 
-	if pool > 1 {
+	if d.Pool > 1 {
 		//pool := rpcpool.New(rpcpool.Options{
 		//	Name:           "satellite",
 		//	Capacity:       200,
@@ -82,8 +74,8 @@ func download(from string, to string, samples int, verbose bool, pool int, poolS
 		//}
 	}
 
-	_, err = util.Loop(samples, verbose, func() error {
-		return downloadOne(ctx, cfg, access, bucket, key, to)
+	_, err = d.Loop.Run(func() error {
+		return downloadOne(ctx, cfg, access, bucket, key, d.Target)
 	})
 	return err
 }

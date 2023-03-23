@@ -4,130 +4,95 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"hash"
 	"os"
 	"storj.io/common/experiment"
 	"storj.io/common/pb"
-	"storj.io/common/rpc/rpcpool"
 	"storj.io/common/signing"
 	"storj.io/common/storj"
 	"strings"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "upload-drpc <storagenode-id> <file>",
-		Args: cobra.ExactArgs(2),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	pieceHashAlgo := cmd.Flags().StringP("hash", "", "SHA256", "Piece hash algorithm to use")
-	noSync := cmd.Flags().BoolP("nosync", "", false, "Disable file sync on upload")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose (print out piece hashes)")
+type UploadDrpc struct {
+	util.Loop
+	util.DialerHelper
+	NoSync  bool                  `help:"Disable file sync on upload"`
+	Hash    pb.PieceHashAlgorithm `default:"0" help:"Piece hash algorithm to use"`
+	NodeURL storj.NodeURL         `arg:"" name:"nodeurl"`
+	File    string                `arg:"" help:"file to upload as a piece"`
+	Keys    string                `help:"location of the identity files to sign orders"`
+}
 
-	dh := util.NewDialerHelper(cmd.Flags())
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+func (u *UploadDrpc) Run() error {
+	ctx := context.Background()
 
-		_, err := util.Loop(*samples, *verbose, func() error {
-			d, err := NewDRPCUploader(ctx, args[0], dh, hashAlgo(*pieceHashAlgo), *noSync)
-			if err != nil {
-				return err
-			}
-			_, h, err := d.Upload(ctx, args[1])
-			if *verbose {
-				fmt.Println("pieceHash:", h)
-			}
-			if err != nil {
-				return err
-			}
-			d.Close()
-			return nil
-		})
-
+	orderLimitCreator, err := NewKeySignerFromDir(u.Keys)
+	if err != nil {
 		return err
 	}
-	PieceCmd.AddCommand(cmd)
+	orderLimitCreator.Action = pb.PieceAction_PUT
+
+	_, err = u.Loop.Run(func() error {
+		_, _, err := u.ConnectAndUpload(ctx, orderLimitCreator)
+		return err
+	})
+	return err
 }
 
-func hashAlgo(s string) pb.PieceHashAlgorithm {
-	if s == "NONE" {
-		return pb.PieceHashAlgorithm(-1)
-	}
-	var available []string
-	for value, name := range pb.PieceHashAlgorithm_name {
-		available = append(available, name)
-		if name == s {
-			return pb.PieceHashAlgorithm(value)
-
-		}
-	}
-	panic("Piece hash algorithm is invalid. Available options: " + strings.Join(available, ","))
-}
-
-type DrpcUploader struct {
-	Downloader
-	conn     rpcpool.Conn
-	client   pb.DRPCReplaySafePiecestoreClient
-	hashAlgo pb.PieceHashAlgorithm
-	noSync   bool
-}
-
-func NewDRPCUploader(ctx context.Context, storagenodeURL string, dh *util.DialerHelper, hashAlgo pb.PieceHashAlgorithm, noSync bool) (d DrpcUploader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, dh)
+func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *KeySigner) (size int, id storj.PieceID, err error) {
+	conn, err := u.Connect(ctx, u.NodeURL)
 	if err != nil {
-		return
+		return 0, id, err
 	}
-	d.OrderLimitCreator.(*KeySigner).action = pb.PieceAction_PUT
+	defer conn.Close()
 
-	d.conn, err = dh.Connect(ctx, d.storagenodeURL)
+	client := pb.NewDRPCReplaySafePiecestoreClient(conn)
+
+	size, id, err = u.Upload(ctx, client, orderLimitCreator)
+	if u.Verbose {
+		fmt.Println("pieceHash:", u.Hash)
+	}
 	if err != nil {
-		return
+		return size, id, err
 	}
-	d.client = pb.NewDRPCReplaySafePiecestoreClient(d.conn)
-	d.noSync = noSync
-	d.hashAlgo = hashAlgo
-	return
+	return size, id, nil
 }
 
-func (d DrpcUploader) Close() error {
-	return d.conn.Close()
-}
-
-func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id storj.PieceID, err error) {
+func (d *UploadDrpc) Upload(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner) (uploaded int, id storj.PieceID, err error) {
 	defer mon.Task()(&ctx)(&err)
 	pieceID := storj.NewPieceID()
-	if d.noSync {
+
+	if d.NoSync {
 		ctx = experiment.With(ctx, "nosync")
 	}
 
-	stream, err := d.client.Upload(ctx)
+	stream, err := client.Upload(ctx)
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}
 	defer stream.Close()
 
-	stat, err := os.Stat(file)
+	stat, err := os.Stat(d.File)
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}
 
-	orderLimit, pk, sn, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, stat.Size(), d.satelliteURL.ID, d.storagenodeURL.ID)
+	orderLimit, pk, serialNo, err := creator.CreateOrderLimit(ctx, pieceID, stat.Size(), creator.GetSatelliteID(), d.NodeURL.ID)
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}
 
 	err = stream.Send(&pb.PieceUploadRequest{
 		Limit:         orderLimit,
-		HashAlgorithm: d.hashAlgo,
+		HashAlgorithm: d.Hash,
 	})
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}
 
 	order := &pb.Order{
-		SerialNumber: sn,
+		SerialNumber: serialNo,
 		Amount:       stat.Size(),
 	}
 
@@ -136,12 +101,12 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id
 		return 0, pieceID, errs.Wrap(err)
 	}
 
-	h := pb.NewHashFromAlgorithm(d.hashAlgo)
-	if d.hashAlgo == pb.PieceHashAlgorithm(-1) {
+	h := pb.NewHashFromAlgorithm(d.Hash)
+	if d.Hash == pb.PieceHashAlgorithm(-1) {
 		h = &NoHash{}
 	}
 
-	source, err := os.Open(file)
+	source, err := os.Open(d.File)
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}
@@ -159,7 +124,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id
 				Offset: int64(written),
 				Data:   buffer[0:n],
 			},
-			HashAlgorithm: d.hashAlgo,
+			HashAlgorithm: d.Hash,
 		})
 		order = nil
 		if err != nil {
@@ -181,7 +146,7 @@ func (d DrpcUploader) Upload(ctx context.Context, file string) (uploaded int, id
 		PieceSize:     stat.Size(),
 		Hash:          h.Sum(nil),
 		Timestamp:     orderLimit.OrderCreation,
-		HashAlgorithm: d.hashAlgo,
+		HashAlgorithm: d.Hash,
 	})
 
 	err = stream.Send(&pb.PieceUploadRequest{
@@ -222,3 +187,18 @@ func (n2 *NoHash) BlockSize() int {
 }
 
 var _ hash.Hash = &NoHash{}
+
+func hashAlgo(s string) pb.PieceHashAlgorithm {
+	if s == "NONE" {
+		return pb.PieceHashAlgorithm(-1)
+	}
+	var available []string
+	for value, name := range pb.PieceHashAlgorithm_name {
+		available = append(available, name)
+		if name == s {
+			return pb.PieceHashAlgorithm(value)
+
+		}
+	}
+	panic("Piece hash algorithm is invalid. Available options: " + strings.Join(available, ","))
+}

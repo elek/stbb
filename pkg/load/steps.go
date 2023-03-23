@@ -1,4 +1,4 @@
-package uplink
+package load
 
 import (
 	"bytes"
@@ -7,13 +7,13 @@ import (
 	"storj.io/uplink"
 )
 
-func Upload(ctx context.Context, cfg uplink.Config, access *uplink.Access, source []byte, bucket string, key string, ) error {
+func Upload(ctx context.Context, cfg uplink.Config, access *uplink.Access, source []byte, bucket string, key string) error {
 	project, err := cfg.OpenProject(ctx, access)
 	if err != nil {
 		return err
 	}
 	defer project.Close()
-	
+
 	dest, err := project.UploadObject(ctx, bucket, key, &uplink.UploadOptions{})
 	if err != nil {
 		return err

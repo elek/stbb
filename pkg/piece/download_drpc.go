@@ -3,115 +3,79 @@ package piece
 import (
 	"context"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"storj.io/common/pb"
-	"storj.io/common/rpc"
 	"storj.io/common/signing"
 	"storj.io/common/storj"
-	"strconv"
+	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "download-drpc <storagenode-id> <pieceid> <size>",
-		Args: cobra.ExactArgs(3),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	dh := util.NewDialerHelper(cmd.Flags())
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+type DownloadDRPC struct {
+	util.Loop
+	util.DialerHelper
+	NodeURL storj.NodeURL `arg:"" name:"nodeurl"`
+	Piece   string        `arg:"" help:"Piece hash to download"`
+	Size    int64         `arg:"" help:"size of bytes to download"`
+	Keys    string        `help:"location of the identity files to sign orders"`
+}
 
-		downloadedBytes := int64(0)
-		downloadedChunks := 0
-		size, err := strconv.Atoi(args[2])
-		if err != nil {
-			return err
-		}
-		max := *samples
-		_, err = util.Loop(max, *verbose, func() error {
-			d, err := NewDRPCDownloader(ctx, args[0], dh)
-			if err != nil {
-				return err
-			}
-			n, c, err := d.Download(ctx, args[1], int64(size), func(bytes []byte) {})
-			if err != nil {
-				return err
-			}
-			downloadedBytes += n
-			downloadedChunks += c
-			d.Close()
-			return nil
-		})
+func (d *DownloadDRPC) Run() error {
+	orderLimitCreator, err := NewKeySignerFromDir(d.Keys)
+	if err != nil {
+		return err
+	}
+	orderLimitCreator.Action = pb.PieceAction_GET
+
+	_, err = d.Loop.Run(func() error {
+
+		ctx, done := context.WithTimeout(context.Background(), 15*time.Second)
+		defer done()
+
+		err = d.ConnectAndDownload(ctx, orderLimitCreator)
 		if err != nil {
 			return err
 		}
 		return nil
-	}
-	PieceCmd.AddCommand(cmd)
+	})
+	return err
 }
 
-type DRPCDownloader struct {
-	Downloader
-	conn   *rpc.Conn
-	client pb.DRPCReplaySafePiecestoreClient
-}
-
-func NewDRPCDownloader(ctx context.Context, storagenodeURL string, dh *util.DialerHelper) (d DRPCDownloader, err error) {
-	d.Downloader, err = NewDownloader(ctx, storagenodeURL, dh)
+func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *KeySigner) error {
+	conn, err := d.Connect(ctx, d.NodeURL)
 	if err != nil {
-		return
+		return err
 	}
+	defer conn.Close()
 
-	d.conn, err = dh.Connect(ctx, d.storagenodeURL)
-	if err != nil {
-		return
-	}
-	d.client = pb.NewDRPCReplaySafePiecestoreClient(util.NewTracedConnection(d.conn))
-	return
+	client := pb.NewDRPCReplaySafePiecestoreClient(util.NewTracedConnection(conn))
+
+	_, _, err = d.Download(ctx, client, signer, func(bytes []byte) {})
+	return err
 }
-
-func (d DRPCDownloader) Close() error {
-	if d.conn != nil {
-		return d.conn.Close()
-	}
-	return nil
-}
-
-func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, size int64, handler func([]byte)) (downloaded int64, chunks int, err error) {
+func (d *DownloadDRPC) Download(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner, handler func([]byte)) (downloaded int64, chunks int, err error) {
 	defer mon.Task()(&ctx)(&err)
-	stream, err := d.client.Download(ctx)
+	stream, err := client.Download(ctx)
 	if err != nil {
 		return
 	}
 	defer stream.Close()
 
-	pieceID, err := storj.PieceIDFromString(pieceToDownload)
+	pieceID, err := storj.PieceIDFromString(d.Piece)
 	if err != nil {
 		return
 	}
 
-	orderLimit, priv, sn, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, size, d.satelliteURL.ID, d.storagenodeURL.ID)
+	orderLimit, priv, sn, err := creator.CreateOrderLimit(ctx, pieceID, d.Size, creator.GetSatelliteID(), d.NodeURL.ID)
 	if err != nil {
 		return
 	}
 
-	err = stream.Send(&pb.PieceDownloadRequest{
-		Limit: orderLimit,
-		Chunk: &pb.PieceDownloadRequest_Chunk{
-			Offset:    0,
-			ChunkSize: size,
-		},
-	})
-	if err != nil {
-		return
-	}
+	first := true
 
-	chunkSize := int64(size)
-	for downloaded < size {
+	chunkSize := d.Size
+	for downloaded < d.Size {
 		upperLimit := chunkSize + downloaded
-		if upperLimit > size {
-			upperLimit = size
+		if upperLimit > d.Size {
+			upperLimit = d.Size
 		}
 
 		order := &pb.Order{
@@ -123,9 +87,18 @@ func (d DRPCDownloader) Download(ctx context.Context, pieceToDownload string, si
 			return
 		}
 
-		err = stream.Send(&pb.PieceDownloadRequest{
+		req := &pb.PieceDownloadRequest{
 			Order: order,
-		})
+		}
+		if first {
+			req.Limit = orderLimit
+			req.Chunk = &pb.PieceDownloadRequest_Chunk{
+				Offset:    0,
+				ChunkSize: d.Size,
+			}
+		}
+		first = false
+		err = stream.Send(req)
 		if err != nil {
 			return
 		}

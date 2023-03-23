@@ -57,7 +57,7 @@ func init() {
 					}, err
 				}
 			}
-			_, err = util.Loop(*samples, *verbose, func() error {
+			_, err = util.RunLoop(*samples, *verbose, func() error {
 				return client(args[0], size, connHandler)
 			})
 			return err

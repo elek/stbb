@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"golang.org/x/exp/rand"
 	"os"
@@ -16,23 +15,15 @@ import (
 	//	"storj.io/uplink/private/testuplink"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "updown <file> <sj://bucket/encryptedpath> ",
-		Args: cobra.ExactArgs(2),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	pool := cmd.Flags().IntP("pool", "p", 0, "Use pool: 0 - no, 1 - common, 2 - separated pool for satellite and storagenode")
-	poolSize := cmd.Flags().IntP("pool-size", "", 200, "Number of elements in the pool")
-
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return updown(args[0], args[1], *samples, *verbose, *pool, *poolSize)
-	}
-	UplinkCmd.AddCommand(cmd)
+type UpDown struct {
+	util.Loop
+	Source   string `arg:"" name:"source"`
+	Target   string `arg:"" name:"target"`
+	Pool     int    `short:"p" help:"Use pool: 0 - no, 1 - common, 2 - separated pool for satellite and storagenode"`
+	PoolSize int    `default:"200" help:"size of the connection pool"`
 }
 
-func updown(fileName string, keyBucket string, samples int, verbose bool, pool int, poolSize int) error {
+func (u *UpDown) Run() error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
@@ -41,24 +32,24 @@ func updown(fileName string, keyBucket string, samples int, verbose bool, pool i
 		return err
 	}
 
-	p, err := ulloc.Parse(keyBucket)
+	p, err := ulloc.Parse(u.Target)
 	if err != nil {
 		return err
 	}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", keyBucket)
+		return errs.New("Path is not remote %s", u.Target)
 	}
 
 	cfg := uplink.Config{
 		UserAgent: "stbb",
 	}
 
-	if pool > 0 {
+	if u.Pool > 0 {
 		pool := rpcpool.New(rpcpool.Options{
 			Name:           "uplink",
-			Capacity:       poolSize,
+			Capacity:       u.PoolSize,
 			KeyCapacity:    5,
 			IdleExpiration: 20 * time.Minute,
 		})
@@ -69,7 +60,7 @@ func updown(fileName string, keyBucket string, samples int, verbose bool, pool i
 		}
 	}
 
-	if pool > 1 {
+	if u.PoolSize > 1 {
 		//pool := rpcpool.New(rpcpool.Options{
 		//	Name:           "satellite",
 		//	Capacity:       200,
@@ -83,17 +74,17 @@ func updown(fileName string, keyBucket string, samples int, verbose bool, pool i
 		//}
 	}
 
-	_, err = util.Loop(samples, verbose, func() error {
+	_, err = u.Loop.Run(func() error {
 		currentKey := fmt.Sprintf("%s-%d", key, rand.Int63())
-		if verbose {
+		if u.Verbose {
 			fmt.Println("Key name:", currentKey)
 		}
-		err := uploadOne(ctx, cfg, access, fileName, bucket, currentKey)
+		err := uploadOne(ctx, cfg, access, u.Source, bucket, currentKey)
 		if err != nil {
 			return err
 		}
 
-		err = downloadOne(ctx, cfg, access, bucket, currentKey, fileName+".down")
+		err = downloadOne(ctx, cfg, access, bucket, currentKey, u.Source+".down")
 		if err != nil {
 			return err
 		}

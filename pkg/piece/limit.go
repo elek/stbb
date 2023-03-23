@@ -18,13 +18,19 @@ type OrderLimitCreator interface {
 
 type KeySigner struct {
 	signer signing.Signer
-	action pb.PieceAction
+	Action pb.PieceAction
+	nodeID storj.NodeID
 }
 
 func NewKeySigner() (*KeySigner, error) {
-	d := KeySigner{}
-	d.action = pb.PieceAction_GET
 	keysDir := os.Getenv("STBB_KEYS")
+	return NewKeySignerFromDir(keysDir)
+}
+
+func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
+	d := KeySigner{}
+	d.Action = pb.PieceAction_GET
+
 	satelliteIdentityCfg := identity.Config{
 		CertPath: filepath.Join(keysDir, "identity.cert"),
 		KeyPath:  filepath.Join(keysDir, "identity.key"),
@@ -33,10 +39,14 @@ func NewKeySigner() (*KeySigner, error) {
 	if err != nil {
 		return nil, err
 	}
+	d.nodeID = id.ID
 	d.signer = signing.SignerFromFullIdentity(id)
 	return &d, nil
 }
 
+func (d *KeySigner) GetSatelliteID() storj.NodeID {
+	return d.nodeID
+}
 func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID, size int64, satellite storj.NodeID, sn storj.NodeID) (limit *pb.OrderLimit, pk storj.PiecePrivateKey, serial storj.SerialNumber, err error) {
 
 	pub, pk, err := storj.NewPieceKey()
@@ -53,7 +63,7 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 		SerialNumber:    serial,
 		SatelliteId:     satellite,
 		StorageNodeId:   sn,
-		Action:          d.action,
+		Action:          d.Action,
 		Limit:           size,
 		OrderCreation:   time.Now(),
 		OrderExpiration: time.Now().Add(24 * time.Hour),
@@ -67,62 +77,3 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 }
 
 //
-//func collectNodes(ctx context.Context, dialer rpc.Dialer, s string) (orderLimits map[string]downloadInfo, err error) {
-//	p, err := ulloc.Parse(s)
-//	if err != nil {
-//		return
-//	}
-//	bucket, key, ok := p.RemoteParts()
-//	if !ok {
-//		err = errs.New("Path is not remote %s", s)
-//		return
-//	}
-//
-//	gr := os.Getenv("UPLINK_ACCESS")
-//	access, err := grant.ParseAccess(gr)
-//	if err != nil {
-//		return
-//	}
-//
-//	metainfoClient, err := metaclient.DialNodeURL(ctx,
-//		dialer,
-//		access.SatelliteAddress,
-//		access.APIKey,
-//		"stbb")
-//	if err != nil {
-//		return
-//	}
-//	defer metainfoClient.Close()
-//
-//	decoded, err := base64.URLEncoding.DecodeString(key)
-//	if err != nil {
-//		return
-//	}
-//
-//	orderLimits = map[string]downloadInfo{}
-//
-//	for i := 0; i < 20; i++ {
-//		resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
-//			Bucket:             []byte(bucket),
-//			EncryptedObjectKey: decoded,
-//		})
-//		if err != nil {
-//			return orderLimits, err
-//		}
-//		for _, segment := range resp.DownloadedSegments {
-//			for _, l := range segment.Limits {
-//				if l != nil && l.StorageNodeAddress != nil {
-//					nodeID := l.Limit.StorageNodeId.String()
-//					if _, found := orderLimits[nodeID]; !found {
-//						orderLimits[nodeID] = downloadInfo{
-//							PrivateKey:  segment.Info.PiecePrivateKey,
-//							Limit:       l.Limit,
-//							NodeAddress: l.StorageNodeAddress,
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return
-//}

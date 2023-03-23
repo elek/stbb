@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/spf13/cobra"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
 	"os"
 	"storj.io/common/grant"
@@ -12,32 +12,25 @@ import (
 	"storj.io/uplink/private/metaclient"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "list <sj://bucket/encodedpath>",
-		Short: "Print out pieces for one particular object",
-		Args:  cobra.ExactArgs(1),
-	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return listPieces(args[0])
-	}
-	PieceCmd.AddCommand(cmd)
+type List struct {
+	util.DialerHelper
+	Path string `arg:"" help:"Key url (sj://bucket/.../key)"`
 }
 
-func listPieces(s string) error {
-	p, err := ulloc.Parse(s)
+func (l *List) Run() error {
+	p, err := ulloc.Parse(l.Path)
 	if err != nil {
 		return err
 	}
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", s)
+		return errs.New("Path is not remote %s", l.Path)
 	}
 
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
-	dialer, err := getTCPDialer(ctx)
+	dialer, err := l.CreateRPCDialer()
 	if err != nil {
 		return err
 	}

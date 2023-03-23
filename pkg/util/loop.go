@@ -5,7 +5,16 @@ import (
 	"time"
 )
 
-func Loop(n int, verbose bool, do func() error) (durationMs int64, err error) {
+type Loop struct {
+	Verbose bool `short:"v" help:"Print out more information"`
+	Sample  int  `short:"n"  default:"1" help:"Number of executions"`
+}
+
+func (l *Loop) Run(do func() error) (durationMs int64, err error) {
+	return RunLoop(l.Sample, l.Verbose, do)
+}
+
+func RunLoop(n int, verbose bool, do func() error) (durationMs int64, err error) {
 	for i := 0; i < n; i++ {
 		start := time.Now()
 		err = do()

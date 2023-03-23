@@ -3,28 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	stbb "github.com/elek/stbb/pkg"
-	_ "github.com/elek/stbb/pkg/access"
-	_ "github.com/elek/stbb/pkg/algo"
-	_ "github.com/elek/stbb/pkg/audit"
-	_ "github.com/elek/stbb/pkg/downloadng"
-	_ "github.com/elek/stbb/pkg/encoding"
-	_ "github.com/elek/stbb/pkg/load"
-	_ "github.com/elek/stbb/pkg/metainfo"
-	_ "github.com/elek/stbb/pkg/node"
-	_ "github.com/elek/stbb/pkg/piece"
-	_ "github.com/elek/stbb/pkg/rpc"
-	_ "github.com/elek/stbb/pkg/satellite"
-	_ "github.com/elek/stbb/pkg/store"
-	_ "github.com/elek/stbb/pkg/tls"
-	_ "github.com/elek/stbb/pkg/uplink"
+	"github.com/alecthomas/kong"
+	"github.com/elek/stbb/pkg/load"
+	"github.com/elek/stbb/pkg/node"
+	"github.com/elek/stbb/pkg/nodeid"
+	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
-	"log"
 	"os"
 	"os/signal"
+	"reflect"
 	"runtime"
 	"runtime/pprof"
+	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
 	"strings"
 	"sync"
@@ -123,10 +115,29 @@ func main() {
 			}
 		}
 	}()
-	err := stbb.RootCmd.Execute()
-	if err != nil {
-		log.Fatalf("%++v", err)
+
+	var cli struct {
+		Load   load.Load     `cmd:"" help:"Various load tests"`
+		Uplink uplink.Uplink `cmd:"" help:"Uplink based upload/download tests"`
+		Piece  piece.Piece   `cmd:""`
+		Nodeid nodeid.NodeID `cmd:""`
+		Node   node.Node     `cmd:""`
 	}
+
+	ctx := kong.Parse(&cli,
+		kong.TypeMapper(reflect.TypeOf(storj.NodeURL{}), kong.MapperFunc(func(ctx *kong.DecodeContext, target reflect.Value) error {
+			s := ctx.Scan.Pop().Value.(string)
+			url, err := storj.ParseNodeURL(s)
+			if err != nil {
+				return err
+			}
+			target.Set(reflect.ValueOf(url))
+			return nil
+		})),
+	)
+
+	err := ctx.Run()
+	ctx.FatalIfErrorf(err)
 }
 
 func readStack() []byte {

@@ -25,6 +25,8 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/alecthomas/kong v0.7.1 h1:azoTh0IOfwlAX3qN9sHWTxACE2oV8Bg2gAwBsMwDQY4=
+github.com/alecthomas/kong v0.7.1/go.mod h1:n1iCIO2xS46oE8ZfYCNDqdR0b0wZNrXAIAqro/2132U=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a h1:HbKu58rmZpUGpz5+4FfNmIU+FmZg2P3Xaj2v2bfNWmk=
@@ -855,5 +857,7 @@ storj.io/private v0.0.0-20230123202745-d3e63b336444 h1:qwjIC8HoYGH8H5jYWhxPVUqKK
 storj.io/private v0.0.0-20230123202745-d3e63b336444/go.mod h1:hc63X333SVJ3UrOxXpGN4VnwqnmbWgAHln3wYJ8AroI=
 storj.io/storj v1.74.4 h1:ddlQbQ/7Mm1meb7uBfGpiz26zSwOVc/3W7xWqIdF3gY=
 storj.io/storj v1.74.4/go.mod h1:7jQRT6b1wC6a4l/52EXtPfUcJEMx3l060FZzv/Kff/U=
+storj.io/storj v1.75.2 h1:0SYowKhQTSGN1C+qon5cs8BA/p5xyVUweN69UsxUtvA=
+storj.io/storj v1.75.2/go.mod h1:4Vnh9hufEzTC8hnlxnZP4rfFaOJXDBu7jLcfTXs0k28=
 storj.io/uplink v1.10.1-0.20230309101402-69bf6583b72d h1:/FELHeYGIO1H0wjqZTITM9v9avjzhxMUfv6nu18+MMM=
 storj.io/uplink v1.10.1-0.20230309101402-69bf6583b72d/go.mod h1:jz/Jx5F/tT7xzYU5M1muTtmPDl5RT/T1XLg3hYzFCsg=

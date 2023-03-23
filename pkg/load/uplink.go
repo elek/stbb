@@ -1,36 +1,25 @@
-package uplink
+package load
 
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"math/rand"
 	"os"
 	"storj.io/storj/cmd/uplink/ulloc"
 	"storj.io/uplink"
 	"sync"
-	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "uplink <sj://bucket/encryptedpath>",
-		Args: cobra.ExactArgs(1),
-	}
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		rand.Seed(time.Now().Unix())
-		return uplinkLoad(args[0], *verbose)
-	}
-	UplinkCmd.AddCommand(cmd)
+type Uplink struct {
+	Verbose bool   `help:"Print out more information"`
+	Path    string `arg:"" name:"path" help:"path to the file to be uploaded"`
+	Sample  int    `short:"n"  default:"10" help:"Number of executions ON EACH go rountie"`
+	Thread  int    `short:"t"  default:"1" help:"Number of parallel Go routines"`
+	Size    int    `short:"s" size:"4194304" help:"Size of the files to be uploaded"`
 }
 
-type UplinkLoad struct {
-	Verbose bool
-}
-
-func uplinkLoad(path string, verbose bool) error {
+func (u *Uplink) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	gr := os.Getenv("UPLINK_ACCESS")
@@ -40,14 +29,14 @@ func uplinkLoad(path string, verbose bool) error {
 		return err
 	}
 
-	p, err := ulloc.Parse(path)
+	p, err := ulloc.Parse(u.Path)
 	if err != nil {
 		return err
 	}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", path)
+		return errs.New("Path is not remote %s", u.Path)
 	}
 
 	cfg := uplink.Config{
@@ -55,20 +44,20 @@ func uplinkLoad(path string, verbose bool) error {
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(100)
-	for i := 0; i < 100; i++ {
+	wg.Add(u.Thread)
+	for i := 0; i < u.Thread; i++ {
 		go func() {
-			data := make([]byte, 4*1024*1024)
+			data := make([]byte, u.Size)
 			_, err := rand.Read(data)
 			if err != nil {
 				panic(err)
 			}
-			for {
+			for j := 0; j < u.Sample; j++ {
 				if ctx.Err() != nil {
 					return
 				}
 				keyInstance := fmt.Sprintf("%s-%d", key, rand.Int63())
-				if verbose {
+				if u.Verbose {
 					fmt.Println("Uploading / downloading " + keyInstance)
 				}
 				err := Upload(ctx, cfg, access, data, bucket, keyInstance)
@@ -83,9 +72,8 @@ func uplinkLoad(path string, verbose bool) error {
 				if err != nil {
 					fmt.Println(err)
 				}
-
-				wg.Done()
 			}
+			wg.Done()
 
 		}()
 	}

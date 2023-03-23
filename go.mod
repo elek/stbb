@@ -26,11 +26,12 @@ require (
 	storj.io/common v0.0.0-20230309151650-08e4a2ea886e
 	storj.io/drpc v0.0.33-0.20230224050324-1fd05d3459f8
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
-	storj.io/storj v1.74.4
+	storj.io/storj v1.75.2
 	storj.io/uplink v1.10.1-0.20230309101402-69bf6583b72d
 )
 
 require (
+	github.com/alecthomas/kong v0.7.1 // indirect
 	github.com/apache/thrift v0.12.0 // indirect
 	github.com/bmkessler/fastdiv v0.0.0-20190227075523-41d5178f2044 // indirect
 	github.com/calebcase/tmpfile v1.0.3 // indirect

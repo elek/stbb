@@ -1,14 +1,7 @@
 package uplink
 
-import (
-	stbb "github.com/elek/stbb/pkg"
-	"github.com/spf13/cobra"
-)
-
-var UplinkCmd = &cobra.Command{
-	Use: "uplink",
-}
-
-func init() {
-	stbb.RootCmd.AddCommand(UplinkCmd)
+type Uplink struct {
+	Upload   Upload   `cmd:"" help:"Upload a file with uplink"`
+	Download Download `cmd:"" help:"Download a file with uplink"`
+	UpDown   UpDown   `cmd:"" help:"Upload & Download a file with uplink"`
 }

@@ -3,7 +3,6 @@ package uplink
 import (
 	"context"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"io"
 	"os"
@@ -13,24 +12,17 @@ import (
 	//	"storj.io/uplink/private/testuplink"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "upload <source> <sj://bucket/encryptedpath>",
-		Args: cobra.ExactArgs(2),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	refactored := cmd.Flags().BoolP("refactored", "r", false, "User refactored code path")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return upload(args[0], args[1], *samples, *verbose, *refactored)
-	}
-	UplinkCmd.AddCommand(cmd)
+type Upload struct {
+	util.Loop
+	Refactored bool   `help:"Use code from upload code refactor"`
+	Source     string `arg:"" name:"source"`
+	Target     string `arg:"" name:"target"`
 }
 
-func upload(from string, to string, samples int, verbose bool, refactored bool) error {
+func (u *Upload) Run() error {
 	ctx := context.Background()
 
-	if refactored {
+	if u.Refactored {
 		ctx = testuplink.WithConcurrentSegmentUploadsDefaultConfig(ctx)
 	}
 	gr := os.Getenv("UPLINK_ACCESS")
@@ -40,22 +32,22 @@ func upload(from string, to string, samples int, verbose bool, refactored bool) 
 		return err
 	}
 
-	p, err := ulloc.Parse(to)
+	p, err := ulloc.Parse(u.Target)
 	if err != nil {
 		return err
 	}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", to)
+		return errs.New("Path is not remote %s", u.Target)
 	}
 
 	cfg := uplink.Config{
 		UserAgent: "stbb",
 	}
 
-	_, err = util.Loop(samples, verbose, func() error {
-		return uploadOne(ctx, cfg, access, from, bucket, key)
+	_, err = u.Loop.Run(func() error {
+		return uploadOne(ctx, cfg, access, u.Source, bucket, key)
 	})
 	return err
 }

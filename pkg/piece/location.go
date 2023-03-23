@@ -3,24 +3,16 @@ package piece
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"storj.io/storj/satellite/metabase"
 )
 
-func init() {
-	cmd := cobra.Command{
-		Use: "alias", RunE: func(cmd *cobra.Command, args []string) error {
-			return decodeAlias(args[0])
-		},
-		Short: "Decode piece alias (from the condensed format, stored in db)",
-	}
-
-	PieceCmd.AddCommand(&cmd)
+type Decode struct {
+	PieceAlias string `args:""`
 }
 
-func decodeAlias(pieceHashAlias string) error {
-	rawAlias, err := hex.DecodeString(pieceHashAlias)
+func (d *Decode) decodeAlias() error {
+	rawAlias, err := hex.DecodeString(d.PieceAlias)
 	if err != nil {
 		return errs.Wrap(err)
 	}

@@ -4,46 +4,42 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/spf13/cobra"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
 	"os"
 	"storj.io/common/grant"
-	"storj.io/common/identity"
-	"storj.io/common/peertls/tlsopts"
-	"storj.io/common/rpc"
-	"storj.io/common/rpc/quic"
+	"storj.io/common/pb"
+	"storj.io/common/storj"
 	"storj.io/storj/cmd/uplink/ulloc"
-	"storj.io/uplink/private/metaclient"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "nodes <sj://bucket/encryptedpath>",
-		Short: "Print out storagenodes which stores a specific object",
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	useQuic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic protocol")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return listLocations(args[0], *samples, *useQuic)
-	}
-	PieceCmd.AddCommand(cmd)
-
+type Nodes struct {
+	util.DialerHelper
+	Path         string `arg:"" help:"Key url (sj://bucket/encryptedpath)"`
+	DesiredNodes int
 }
 
-func listLocations(s string, samples int, useQuic bool) error {
+func (n *Nodes) Run() error {
+	return n.OnEachNode(func(url storj.NodeURL, id storj.PieceID, size int64) error {
+		fmt.Printf("%s %s %d\n", url, id, size)
+		return nil
+	})
+}
+
+func (n *Nodes) OnEachNode(f func(url storj.NodeURL, id storj.PieceID, size int64) error) error {
 	ctx := context.Background()
 	gr := os.Getenv("UPLINK_ACCESS")
 
-	p, err := ulloc.Parse(s)
+	p, err := ulloc.Parse(n.Path)
 	if err != nil {
 		return err
 	}
 	bucket, key, ok := p.RemoteParts()
 	if !ok {
-		return errs.New("Path is not remote %s", s)
+		return errs.New("Path is not remote %s", n.Path)
 	}
 
-	dialer, err := getDialer(ctx, useQuic)
+	dialer, err := n.CreateRPCDialer()
 	if err != nil {
 		return err
 	}
@@ -52,15 +48,19 @@ func listLocations(s string, samples int, useQuic bool) error {
 	if err != nil {
 		return err
 	}
-	metainfoClient, err := metaclient.DialNodeURL(ctx,
-		dialer,
-		access.SatelliteAddress,
-		access.APIKey,
-		"stbb")
+
+	satelliteURL, err := storj.ParseNodeURL(access.SatelliteAddress)
 	if err != nil {
 		return err
 	}
-	defer metainfoClient.Close()
+
+	conn, err := dialer.DialNodeURL(ctx, satelliteURL)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client := pb.NewDRPCMetainfoClient(conn)
 
 	decoded, err := base64.URLEncoding.DecodeString(key)
 	if err != nil {
@@ -69,79 +69,36 @@ func listLocations(s string, samples int, useQuic bool) error {
 
 	nodes := map[string]bool{}
 
-	for i := 0; i < samples; i++ {
-		resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
-			Bucket:             []byte(bucket),
-			EncryptedObjectKey: decoded,
-		})
-		if err != nil {
-			return err
-		}
-		fmt.Println(resp.Object.StreamID.String())
-		for _, k := range resp.DownloadedSegments {
-			for ix, l := range k.Limits {
-				if l != nil && l.StorageNodeAddress != nil {
-					nodeID := l.Limit.StorageNodeId.String()
-					if _, found := nodes[nodeID]; !found {
-						fmt.Println(ix, nodeID+"@"+l.StorageNodeAddress.Address, l.Limit.PieceId, l.Limit.Limit)
-						nodes[nodeID] = true
+	resp, err := client.DownloadObject(ctx, &pb.DownloadObjectRequest{
+		Bucket:             []byte(bucket),
+		EncryptedObjectKey: decoded,
+		DesiredNodes:       int32(n.DesiredNodes),
+		Header: &pb.RequestHeader{
+			ApiKey: access.APIKey.SerializeRaw(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, k := range resp.GetSegmentDownload() {
+		for _, l := range k.AddressedLimits {
+			if l != nil && l.StorageNodeAddress != nil {
+				if _, found := nodes[l.Limit.StorageNodeId.String()]; !found {
+					nodeURL := storj.NodeURL{
+						ID:        l.Limit.StorageNodeId,
+						Address:   l.StorageNodeAddress.Address,
+						NoiseInfo: l.StorageNodeAddress.NoiseInfo.Convert(),
 					}
+					err = f(nodeURL, l.Limit.PieceId, l.Limit.Limit)
+					if err != nil {
+						return err
+					}
+					nodes[l.Limit.StorageNodeId.String()] = true
 				}
 			}
 		}
 	}
 
 	return nil
-}
-
-func getDialer(ctx context.Context, forceQuic bool) (rpc.Dialer, error) {
-	ident, err := identity.NewFullIdentity(ctx, identity.NewCAOptions{
-		Difficulty:  0,
-		Concurrency: 1,
-	})
-	if err != nil {
-		return rpc.Dialer{}, err
-	}
-
-	tlsConfig := tlsopts.Config{
-		UsePeerCAWhitelist: false,
-		PeerIDVersions:     "0",
-	}
-
-	tlsOptions, err := tlsopts.NewOptions(ident, tlsConfig, nil)
-	if err != nil {
-		return rpc.Dialer{}, err
-	}
-	dialer := rpc.NewDefaultDialer(tlsOptions)
-	if forceQuic {
-		dialer.Connector = quic.NewDefaultConnector(nil)
-	} else {
-		dialer.Connector = rpc.NewDefaultTCPConnector(nil)
-	}
-
-	return dialer, nil
-}
-
-func getTCPDialer(ctx context.Context) (rpc.Dialer, error) {
-	ident, err := identity.NewFullIdentity(ctx, identity.NewCAOptions{
-		Difficulty:  0,
-		Concurrency: 1,
-	})
-	if err != nil {
-		return rpc.Dialer{}, err
-	}
-
-	tlsConfig := tlsopts.Config{
-		UsePeerCAWhitelist: false,
-		PeerIDVersions:     "0",
-	}
-
-	tlsOptions, err := tlsopts.NewOptions(ident, tlsConfig, nil)
-	if err != nil {
-		return rpc.Dialer{}, err
-	}
-	dialer := rpc.NewDefaultDialer(tlsOptions)
-	dialer.Connector = rpc.NewDefaultTCPConnector(nil)
-
-	return dialer, nil
 }

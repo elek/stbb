@@ -1,14 +1,5 @@
-package uplink
+package load
 
-import (
-	stbb "github.com/elek/stbb/pkg"
-	"github.com/spf13/cobra"
-)
-
-var UplinkCmd = &cobra.Command{
-	Use: "load",
-}
-
-func init() {
-	stbb.RootCmd.AddCommand(UplinkCmd)
+type Load struct {
+	Uplink Uplink `cmd:"" help:"Load generator with uplink upload/download"`
 }
