@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"os"
 	"storj.io/common/identity"
@@ -13,18 +12,11 @@ import (
 	"storj.io/common/storj"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "ping <storagenode>",
-		Short: "Send ping to the storagenode",
-	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return ping(args[0])
-	}
-	SatelliteCmd.AddCommand(cmd)
+type Ping struct {
+	URL string `arg:""`
 }
 
-func ping(url string) error {
+func (p Ping) Run() error {
 	ctx := context.Background()
 
 	cert, _ = os.ReadFile("identity.cert")
@@ -38,7 +30,7 @@ func ping(url string) error {
 	if err != nil {
 		return err
 	}
-	nodeURL, err := storj.ParseNodeURL(url)
+	nodeURL, err := storj.ParseNodeURL(p.URL)
 	if err != nil {
 		return err
 	}

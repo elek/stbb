@@ -4,24 +4,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "restore <storagenode>",
-		Short: "Send restore trash request to the storagenode",
-	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return restore(args[0])
-	}
-	SatelliteCmd.AddCommand(cmd)
+type Restore struct {
+	URL string `arg:""`
 }
 
-func restore(url string) error {
+func (r Restore) restore() error {
 	ctx := context.Background()
 
 	ident, err := identity.FullIdentityFromPEM(cert, key)
@@ -33,7 +25,7 @@ func restore(url string) error {
 	if err != nil {
 		return err
 	}
-	nodeURL, err := storj.ParseNodeURL(url)
+	nodeURL, err := storj.ParseNodeURL(r.URL)
 	if err != nil {
 		return err
 	}

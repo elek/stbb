@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"storj.io/common/bloomfilter"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
@@ -12,18 +11,11 @@ import (
 	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "gc <storagenode>",
-		Short: "Send gc request to the storagendoe",
-	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return gc(args[0])
-	}
-	SatelliteCmd.AddCommand(cmd)
+type GC struct {
+	URL string `arg:""`
 }
 
-func gc(url string) error {
+func (g GC) Run() error {
 	ctx := context.Background()
 
 	ident, err := identity.FullIdentityFromPEM(cert, key)
@@ -35,7 +27,7 @@ func gc(url string) error {
 	if err != nil {
 		return err
 	}
-	nodeURL, err := storj.ParseNodeURL(url)
+	nodeURL, err := storj.ParseNodeURL(g.URL)
 	if err != nil {
 		return err
 	}

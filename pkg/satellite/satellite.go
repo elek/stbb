@@ -1,15 +1,8 @@
 package satellite
 
-import (
-	stbb "github.com/elek/stbb/pkg"
-	"github.com/spf13/cobra"
-)
-
-var SatelliteCmd = &cobra.Command{
-	Use:   "satellite",
-	Short: "Mock satellite for testing real storagenode with satellite",
-}
-
-func init() {
-	stbb.RootCmd.AddCommand(SatelliteCmd)
+type Satellite struct {
+	Run     Run     `cmd:"" help:"Run mock satellite"`
+	Restore Restore `cmd:"" help:"Send restore trash request to the storagenode"`
+	Ping    Ping    `cmd:"" help:"Send ping to the storagenode"`
+	GC      GC      `cmd:"" help:"Send gc request to the storagenode"`
 }

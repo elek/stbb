@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"net"
 	"storj.io/common/identity"
@@ -25,17 +24,6 @@ var (
 	//go:embed identity.key
 	key []byte
 )
-
-func init() {
-	cmd := &cobra.Command{
-		Use:   "run",
-		Short: "Run mock satellite",
-	}
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return run()
-	}
-	SatelliteCmd.AddCommand(cmd)
-}
 
 type NodeEndpoint struct {
 	pb.DRPCNodeUnimplementedServer
@@ -127,7 +115,10 @@ func (o *OrdersEndpoint) SettlementWithWindow(stream pb.DRPCOrders_SettlementWit
 
 }
 
-func run() error {
+type Run struct {
+}
+
+func (r Run) Run() error {
 	ctx := context.Background()
 	ident, err := identity.FullIdentityFromPEM(cert, key)
 	fmt.Print("Starting ", ident.ID.String()+"@localhost:5656")
