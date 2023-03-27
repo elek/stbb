@@ -18,7 +18,7 @@ func measure(f func() error) (time.Duration, error) {
 	return time.Since(start), err
 }
 
-func forEachNode(file string, cb func(node storj.NodeURL) error) error {
+func forEachNode(file string, cb func(node storj.NodeURL, values map[string]string) error) error {
 	input, err := os.Open(file)
 	if err != nil {
 		return errs.Wrap(err)
@@ -65,8 +65,14 @@ func forEachNode(file string, cb func(node storj.NodeURL) error) error {
 			Address:   record[headers["address"]],
 			NoiseInfo: noise,
 		}
+		r := map[string]string{}
+		for k, v := range headers {
+			if v < len(record) {
+				r[k] = record[v]
+			}
+		}
 
-		err = cb(nodeURL)
+		err = cb(nodeURL, r)
 		if err != nil {
 			fmt.Println(nodeID, err)
 		}

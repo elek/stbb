@@ -1,5 +1,6 @@
 package node
 
 type Node struct {
-	Scan Scan `cmd:""`
+	Scan   Scan   `cmd:""`
+	Report Report `cmd:""`
 }

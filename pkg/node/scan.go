@@ -181,7 +181,7 @@ func (s Scan) Run() error {
 		}
 
 	}()
-	err := forEachNode(s.NodeFile, func(node storj.NodeURL) error {
+	err := forEachNode(s.NodeFile, func(node storj.NodeURL, _ map[string]string) error {
 		wg.Add(1)
 		tasks <- node
 		return nil

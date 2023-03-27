@@ -8,6 +8,7 @@ import (
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
@@ -117,11 +118,12 @@ func main() {
 	}()
 
 	var cli struct {
-		Load   load.Load     `cmd:"" help:"Various load tests"`
-		Uplink uplink.Uplink `cmd:"" help:"Uplink based upload/download tests"`
-		Piece  piece.Piece   `cmd:""`
-		Nodeid nodeid.NodeID `cmd:""`
-		Node   node.Node     `cmd:""`
+		Load      load.Load           `cmd:"" help:"Various load tests"`
+		Uplink    uplink.Uplink       `cmd:"" help:"Uplink based upload/download tests"`
+		Piece     piece.Piece         `cmd:""`
+		Nodeid    nodeid.NodeID       `cmd:""`
+		Node      node.Node           `cmd:""`
+		Satellite satellite.Satellite `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,
