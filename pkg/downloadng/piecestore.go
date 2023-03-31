@@ -31,12 +31,12 @@ type Download struct {
 	ecShare   int
 	segmentID storj.SegmentID
 
-	// before download, we send a message with startTime and size,
+	// before download, we send a message with startTime and size.
 	startTime time.Time
 	size      int64
 	cancel    func()
 
-	//after download, we send one with the response
+	// after download, we send one with the response.
 	response *pb.PieceDownloadResponse
 	sn       pb.NodeID
 }

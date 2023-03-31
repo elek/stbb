@@ -9,7 +9,7 @@ import (
 type ECDecoder struct {
 	fc     *infectious.FEC
 	inbox  chan *DecodeShares
-	outbox chan *DecodeShares
+	outbox chan *DecryptBuffer
 }
 
 type DecodeShares struct {
@@ -20,14 +20,15 @@ type DecodedShare struct {
 	encrypted []byte
 }
 
-func NewECDecoder(inbox chan *DecodeShares) (*ECDecoder, error) {
+func NewECDecoder(inbox chan *DecodeShares, outbox chan *DecryptBuffer) (*ECDecoder, error) {
 	fc, err := infectious.NewFEC(29, 119)
 	if err != nil {
 		return nil, err
 	}
 	return &ECDecoder{
-		fc:    fc,
-		inbox: inbox,
+		fc:     fc,
+		inbox:  inbox,
+		outbox: outbox,
 	}, nil
 }
 
@@ -36,15 +37,20 @@ func (e *ECDecoder) Run(ctx context.Context) error {
 	for {
 		select {
 		case req := <-e.inbox:
+			fmt.Println("Doing EC")
 			if req == nil {
 				return nil
 			}
-			decode, err := e.fc.Decode(dest, req.shares)
+			decoded, err := e.fc.Decode(dest, req.shares)
 			if err != nil {
 				//TODO: handle error?
 				return err
+
 			}
-			fmt.Println(len(decode))
+			e.outbox <- &DecryptBuffer{
+				encrypted: decoded,
+			}
+
 		case <-ctx.Done():
 			return nil
 		}

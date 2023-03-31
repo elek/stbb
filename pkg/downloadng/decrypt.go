@@ -16,7 +16,7 @@ type Decrypt struct {
 }
 
 type DecryptBuffer struct {
-	decrypted []byte
+	encrypted []byte
 }
 
 type InitDecryption struct {
@@ -24,11 +24,15 @@ type InitDecryption struct {
 	encryptionParameters storj.EncryptionParameters
 	bucket               []byte
 	unencryptedKey       []byte
+	encryptedKey         []byte
 	position             *metaclient.SegmentPosition
 }
 
 func NewDecrypt() (*Decrypt, error) {
-	return &Decrypt{}, nil
+	return &Decrypt{
+		inboxDecrypt: make(chan *DecryptBuffer),
+		inboxInit:    make(chan *InitDecryption),
+	}, nil
 }
 
 func (d *Decrypt) Run(ctx context.Context) error {
@@ -37,7 +41,6 @@ func (d *Decrypt) Run(ctx context.Context) error {
 		select {
 		case init := <-d.inboxInit:
 			store := encryption.NewStore()
-
 			derivedKey, err := encryption.DeriveContentKey(string(init.bucket), paths.NewUnencrypted("asd"), store)
 			if err != nil {
 				return err
@@ -57,9 +60,14 @@ func (d *Decrypt) Run(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			err = store.Add(string(init.bucket), paths.NewUnencrypted(string(init.unencryptedKey)), paths.Encrypted{}, *contentKey)
+			if err != nil {
+				return err
+			}
 		case req := <-d.inboxDecrypt:
-			out := []byte{}
-			transformed, err := decrypter.Transform(out, req.decrypted, 256)
+			fmt.Println("Decrypting")
+			var out []byte
+			transformed, err := decrypter.Transform(out, req.encrypted, 256)
 			if err != nil {
 				return err
 			}

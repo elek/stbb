@@ -2,6 +2,7 @@ package downloadng
 
 import (
 	"context"
+	"fmt"
 	"storj.io/common/storj"
 )
 
@@ -47,6 +48,7 @@ func (d *DownloadRouter) Run(ctx context.Context) (err error) {
 					// we should create and error responder worker
 					panic(err)
 				}
+				fmt.Println("Creating worker for", req.orderLimit.StorageNodeId)
 				d.connections[req.orderLimit.StorageNodeId] = ch
 				worker = d.connections[req.orderLimit.StorageNodeId]
 			}

@@ -57,7 +57,12 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 	}
 
 	for _, k := range resp.DownloadedSegments {
-
+		s.outboxEncryption <- &InitDecryption{
+			bucket:               req.bucket,
+			segmentEncryption:    k.Info.SegmentEncryption,
+			encryptionParameters: resp.Object.EncryptionParameters,
+			position:             k.Info.Position,
+		}
 		for ix, l := range k.Limits {
 			if l != nil && l.StorageNodeAddress != nil {
 				d := DownloadPiece{
@@ -67,13 +72,6 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 					size:       k.Info.EncryptedSize,
 					ecShare:    ix,
 					segmentID:  k.Info.SegmentID,
-				}
-
-				s.outboxEncryption <- &InitDecryption{
-					bucket:               req.bucket,
-					segmentEncryption:    k.Info.SegmentEncryption,
-					encryptionParameters: resp.Object.EncryptionParameters,
-					position:             k.Info.Position,
 				}
 				s.outboxDownload <- &d
 

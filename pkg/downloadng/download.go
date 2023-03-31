@@ -17,9 +17,15 @@ func download(bucket []byte, key []byte) error {
 
 	ctx := context.Background()
 
+	dc, err := NewDecrypt()
+	if err != nil {
+		return err
+	}
+
 	downloader := ObjectDownloader{
 		inbox:            make(chan *DownloadObject),
-		outboxDownload:   logSent(make(chan *DownloadPiece)),
+		outboxDownload:   logSent("outboxDownload", make(chan *DownloadPiece)),
+		outboxEncryption: logSent("outboxEncryption", dc.inboxInit),
 		satelliteAddress: access.SatelliteAddress,
 		APIKey:           access.APIKey,
 	}
@@ -36,16 +42,23 @@ func download(bucket []byte, key []byte) error {
 
 	p := NewParallel(result, downloader)
 
-	ec, err := NewECDecoder(p.Outbox())
+	ec, err := NewECDecoder(p.Outbox(), dc.inboxDecrypt)
 	if err != nil {
 		return err
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(4)
+	wg.Add(5)
 	go func() {
 		defer wg.Done()
 		err := downloader.Run(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		err := dc.Run(ctx)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -98,7 +111,7 @@ func logReceived[T any](outbox chan T) chan T {
 	}()
 	return c
 }
-func logSent[T any](outbox chan T) chan T {
+func logSent[T any](name string, outbox chan T) chan T {
 	c := make(chan T)
 	go func() {
 		for {
@@ -108,7 +121,7 @@ func logSent[T any](outbox chan T) chan T {
 					close(outbox)
 					return
 				}
-				fmt.Println(t)
+				fmt.Println(name, t)
 				outbox <- t
 			}
 		}
