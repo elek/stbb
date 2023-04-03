@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/elek/storj-badger-storage v0.0.0-20230120195724-f5d13c855444
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/klauspost/cpuid/v2 v2.2.4
 	github.com/minio/sha256-simd v1.0.0
@@ -27,11 +26,11 @@ require (
 	google.golang.org/protobuf v1.29.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20230309151650-08e4a2ea886e
-	storj.io/drpc v0.0.33-0.20230224050324-1fd05d3459f8
+	storj.io/common v0.0.0-20230320162442-624d95b0fa7f
+	storj.io/drpc v0.0.33-0.20230329154546-1af8c33020a2
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
-	storj.io/storj v1.75.2
-	storj.io/uplink v1.10.1-0.20230309101402-69bf6583b72d
+	storj.io/storj v0.12.1-0.20230402233435-60444d145c68
+	storj.io/uplink v1.10.1-0.20230331141033-1b3a2ee2cdbe
 )
 
 require (
@@ -88,5 +87,5 @@ require (
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	storj.io/picobuf v0.0.1 // indirect
-	storj.io/private v0.0.0-20230123202745-d3e63b336444 // indirect
+	storj.io/private v0.0.0-20230310092705-eeeca888b55b // indirect
 )
