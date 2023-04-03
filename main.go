@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
+	"github.com/elek/stbb/pkg/access"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/load"
@@ -132,6 +133,7 @@ func main() {
 		Encoding   encoding.Encoding      `cmd:""`
 		Telemetry  stbb.TelemetryReceiver `cmd:""`
 		Version    Version                `cmd:""`
+		Access     access.AccessCmd       `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,

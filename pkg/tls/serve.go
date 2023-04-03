@@ -4,27 +4,16 @@ import (
 	"bufio"
 	"crypto/tls"
 	"github.com/elek/stbb/pkg/piece"
-	"github.com/spf13/cobra"
 	"log"
 	"net"
 	"strconv"
 	"strings"
 )
 
-func init() {
-	{
-		cmd := cobra.Command{
-			Use: "serve",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return run()
-			},
-		}
-
-		TlsCmd.AddCommand(&cmd)
-	}
+type Server struct {
 }
 
-func run() (err error) {
+func (t Server) Run() (err error) {
 	cer, err := tls.X509KeyPair(piece.Cert, piece.Key)
 	if err != nil {
 		return

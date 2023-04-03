@@ -3,26 +3,17 @@ package audit
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"storj.io/common/pb"
 	"time"
 )
 
-func init() {
-	{
-		cmd := cobra.Command{
-			Use: "decode",
-		}
-		cmd.RunE = func(cmd *cobra.Command, args []string) error {
-			return decode(args[0])
-		}
-		AuditCmd.AddCommand(&cmd)
-	}
+type Decode struct {
+	Value string `arg:""`
 }
 
-func decode(str string) error {
-	bytes, err := hex.DecodeString(str)
+func (d Decode) Run() error {
+	bytes, err := hex.DecodeString(d.Value)
 	if err != nil {
 		return errs.Wrap(err)
 	}

@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"crypto/tls"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"net"
 	"storj.io/common/identity"
@@ -13,20 +12,6 @@ import (
 	"storj.io/drpc/drpcmux"
 	"storj.io/drpc/drpcserver"
 )
-
-func init() {
-
-	{
-		cmd := cobra.Command{
-			Use: "serve",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return serve(args[0])
-			},
-		}
-
-		RpcCmd.AddCommand(&cmd)
-	}
-}
 
 type handler struct {
 }

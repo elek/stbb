@@ -2,21 +2,9 @@ package stbb
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"os"
 )
-
-func init() {
-	cmd := cobra.Command{
-		Use: "convert-config",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return convertConfig(args[0])
-		},
-	}
-
-	RootCmd.AddCommand(&cmd)
-}
 
 type K8sEntry struct {
 	Name  string `yaml:"name"`
@@ -26,8 +14,12 @@ type K8sEnv struct {
 	Environment []K8sEntry `yaml:"env"`
 }
 
-func convertConfig(s string) error {
-	raw, err := os.ReadFile(s)
+type ConvertConfig struct {
+	File string `arg:""`
+}
+
+func (c ConvertConfig) Run() error {
+	raw, err := os.ReadFile(c.File)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package stbb
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"storj.io/common/paths"
 	"strings"
@@ -18,18 +17,16 @@ var (
 	escape01    = byte('\x01')
 )
 
-func init() {
-	cmd := cobra.Command{
-		Use: "decrypt-path", RunE: func(cmd *cobra.Command, args []string) error {
-			return decryptPath(args[0])
-		},
-	}
-
-	RootCmd.AddCommand(&cmd)
+type Path struct {
+	Decrypt Decrypt `cmd:""`
 }
 
-func decryptPath(encryptedPath string) error {
-	decodeString, err := hex.DecodeString(encryptedPath)
+type Decrypt struct {
+	Encrypted string `arg:""`
+}
+
+func (d Decrypt) Run() error {
+	decodeString, err := hex.DecodeString(d.Encrypted)
 	if err != nil {
 		return errs.Wrap(err)
 	}

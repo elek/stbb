@@ -3,25 +3,11 @@ package piece
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/spf13/cobra"
 	"storj.io/common/encryption"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 	"time"
 )
-
-func init() {
-	cmd := &cobra.Command{
-		Use:   "aes-gcm",
-		Short: "Test aes-gcm encryption speed",
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return AesGCM(*samples)
-	}
-	AlgoCmd.AddCommand(cmd)
-
-}
 
 func AesGCM(s int) error {
 	key, err := storj.NewKey([]byte("Welcome1"))

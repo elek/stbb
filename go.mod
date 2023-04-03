@@ -22,7 +22,6 @@ require (
 	go.etcd.io/bbolt v1.3.5
 	go.uber.org/zap v1.16.0
 	golang.org/x/benchmarks v0.0.0-20221122030604-0e4f958d02e0
-	golang.org/x/crypto v0.7.0
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	google.golang.org/protobuf v1.29.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -81,6 +80,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect

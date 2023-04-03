@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"github.com/zeebo/errs"
 	"os"
 	"storj.io/common/grant"
@@ -15,21 +14,6 @@ import (
 	"storj.io/uplink/private/metaclient"
 	"time"
 )
-
-func init() {
-	cmd := &cobra.Command{
-		Use:  "download <sj://bucket/encryptedpath>",
-		Args: cobra.ExactArgs(1),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	verbose := cmd.Flags().BoolP("verbose", "v", false, "Verbose")
-	pooled := cmd.Flags().BoolP("pool", "p", false, "Use connection pool")
-	quic := cmd.Flags().BoolP("quic", "q", false, "Force to use quic")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		return download(args[0], *samples, *pooled, *quic, *verbose)
-	}
-	MetainfoCmd.AddCommand(cmd)
-}
 
 func download(s string, samples int, pooled bool, quic bool, verbose bool) error {
 	ctx := context.Background()
