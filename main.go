@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/alecthomas/kong"
+	stbb "github.com/elek/stbb/pkg"
+	"github.com/elek/stbb/pkg/downloadng"
+	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
@@ -118,12 +121,15 @@ func main() {
 	}()
 
 	var cli struct {
-		Load      load.Load           `cmd:"" help:"Various load tests"`
-		Uplink    uplink.Uplink       `cmd:"" help:"Uplink based upload/download tests"`
-		Piece     piece.Piece         `cmd:""`
-		Nodeid    nodeid.NodeID       `cmd:""`
-		Node      node.Node           `cmd:""`
-		Satellite satellite.Satellite `cmd:""`
+		Load       load.Load              `cmd:"" help:"Various load tests"`
+		Uplink     uplink.Uplink          `cmd:"" help:"Uplink based upload/download tests"`
+		Piece      piece.Piece            `cmd:""`
+		Nodeid     nodeid.NodeID          `cmd:""`
+		Node       node.Node              `cmd:""`
+		Satellite  satellite.Satellite    `cmd:""`
+		Downloadng downloadng.DownloadCmd `cmd:""`
+		Encoding   encoding.Encoding      `cmd:""`
+		Telemetry  stbb.TelemetryReceiver `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,
@@ -138,7 +144,8 @@ func main() {
 		})),
 	)
 
-	err := ctx.Run()
+	kong.Bind(ctx)
+	err := ctx.Run(ctx)
 	ctx.FatalIfErrorf(err)
 }
 

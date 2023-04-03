@@ -3,12 +3,16 @@ module github.com/elek/stbb
 go 1.18
 
 require (
+	github.com/alecthomas/kong v0.7.1
 	github.com/elek/storj-badger-storage v0.0.0-20230120195724-f5d13c855444
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/klauspost/cpuid/v2 v2.2.4
 	github.com/minio/sha256-simd v1.0.0
+	github.com/oschwald/maxminddb-golang v1.10.0
+	github.com/pkg/errors v0.9.1
 	github.com/spacemonkeygo/monkit/v3 v3.0.20-0.20230227152157-d00b379de191
 	github.com/spf13/cobra v1.1.3
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
 	github.com/vivint/infectious v0.0.0-20200605153912-25a574ae18a3
 	github.com/zeebo/blake3 v0.2.3
@@ -31,7 +35,6 @@ require (
 )
 
 require (
-	github.com/alecthomas/kong v0.7.1 // indirect
 	github.com/apache/thrift v0.12.0 // indirect
 	github.com/bmkessler/fastdiv v0.0.0-20190227075523-41d5178f2044 // indirect
 	github.com/calebcase/tmpfile v1.0.3 // indirect
@@ -66,14 +69,14 @@ require (
 	github.com/jtolio/noiseconn v0.0.0-20230301220541-88105e6c8ac6 // indirect
 	github.com/klauspost/compress v1.15.10 // indirect
 	github.com/onsi/ginkgo/v2 v2.2.0 // indirect
-	github.com/oschwald/maxminddb-golang v1.10.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qtls-go1-18 v0.2.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.2.0 // indirect
 	github.com/quic-go/qtls-go1-20 v0.1.0 // indirect
 	github.com/quic-go/quic-go v0.32.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/zeebo/admission/v3 v3.0.3 // indirect
+	github.com/zeebo/float16 v0.1.0 // indirect
+	github.com/zeebo/incenc v0.0.0-20180505221441-0d92902eec54 // indirect
 	github.com/zeebo/mwc v0.0.4 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
