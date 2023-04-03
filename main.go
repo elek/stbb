@@ -19,6 +19,7 @@ import (
 	"os/signal"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"runtime/pprof"
 	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
@@ -130,6 +131,7 @@ func main() {
 		Downloadng downloadng.DownloadCmd `cmd:""`
 		Encoding   encoding.Encoding      `cmd:""`
 		Telemetry  stbb.TelemetryReceiver `cmd:""`
+		Version    Version                `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,
@@ -174,4 +176,23 @@ func tracked(ctx context.Context, cb func(context.Context)) (done func()) {
 		cancel()
 		wg.Wait()
 	}
+}
+
+type Version struct {
+}
+
+func (v Version) Run() error {
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		for _, s := range bi.Settings {
+			if strings.HasPrefix(s.Key, "vcs.") {
+				fmt.Printf("%+v\n", s.Key+"="+s.Value)
+			}
+		}
+		for _, m := range bi.Deps {
+			if strings.Contains(m.Path, "storj.io") {
+				fmt.Println(m.Path, m.Version)
+			}
+		}
+	}
+	return nil
 }

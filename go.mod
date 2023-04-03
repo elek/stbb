@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/alecthomas/kong v0.7.1
+	github.com/elek/storj-badger-storage v0.0.0-20230205082807-b3e3566d3769
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/klauspost/cpuid/v2 v2.2.4
 	github.com/minio/sha256-simd v1.0.0
@@ -29,7 +30,7 @@ require (
 	storj.io/common v0.0.0-20230320162442-624d95b0fa7f
 	storj.io/drpc v0.0.33-0.20230329154546-1af8c33020a2
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
-	storj.io/storj v0.12.1-0.20230402233435-60444d145c68
+	storj.io/storj v1.70.2
 	storj.io/uplink v1.10.1-0.20230331141033-1b3a2ee2cdbe
 )
 
