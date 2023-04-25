@@ -27,6 +27,6 @@ func RunLoop(n int, verbose bool, do func() error) (durationMs int64, err error)
 		}
 		durationMs += elapsed.Milliseconds()
 	}
-	fmt.Printf("Executed %d times during %d ms (average: %f ms) %f req/sec", n, durationMs, float64(durationMs)/float64(n), float64(n*1000)/float64(durationMs))
+	fmt.Printf("Executed %d times during %d ms (average: %f ms) %f req/sec\n", n, durationMs, float64(durationMs)/float64(n), float64(n*1000)/float64(durationMs))
 	return
 }

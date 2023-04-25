@@ -6,12 +6,14 @@ import (
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
+	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/rpc"
 	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
@@ -134,6 +136,8 @@ func main() {
 		Telemetry  stbb.TelemetryReceiver `cmd:""`
 		Version    Version                `cmd:""`
 		Access     access.AccessCmd       `cmd:""`
+		RPC        rpc.RPC                `cmd:""`
+		Crypto     crypto.Crypto          `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,
