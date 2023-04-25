@@ -2,31 +2,31 @@ package rpc
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+	"github.com/elek/stbb/pkg/util"
+	"io"
 	"net"
-	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:   "connect-tcp <address>",
-		Short: "Connect to an address with pure TCP",
-		Args:  cobra.ExactArgs(1),
-	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+type TCPClient struct {
+	util.Loop
+	Address string `arg:""`
+}
 
-		start := time.Now()
-
-		for i := 0; i < *samples; i++ {
-			dial, err := net.Dial("tcp", args[0])
-			if err != nil {
-				return err
-			}
-			dial.Close()
+func (c TCPClient) Run() error {
+	_, err := c.Loop.Run(func() error {
+		conn, err := net.Dial("tcp", c.Address)
+		if err != nil {
+			return err
 		}
-		fmt.Printf("%d", time.Since(start).Milliseconds()/int64(*samples))
+		all, err := io.ReadAll(conn)
+		if err != nil {
+			return err
+		}
+		if c.Verbose {
+			fmt.Println("Downloaded", len(all), "bytes")
+		}
+		conn.Close()
 		return nil
-	}
-	RpcCmd.AddCommand(cmd)
+	})
+	return err
 }

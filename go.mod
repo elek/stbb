@@ -30,7 +30,7 @@ require (
 	storj.io/drpc v0.0.33-0.20230329154546-1af8c33020a2
 	storj.io/monkit-jaeger v0.0.0-20220915074555-d100d7589f41
 	storj.io/storj v1.70.2
-	storj.io/uplink v1.10.1-0.20230331141033-1b3a2ee2cdbe
+	storj.io/uplink v1.10.1-0.20230413192940-d37f89e8219e
 )
 
 require (
@@ -90,3 +90,5 @@ require (
 	storj.io/picobuf v0.0.1 // indirect
 	storj.io/private v0.0.0-20230310092705-eeeca888b55b // indirect
 )
+
+replace storj.io/uplink => ../../jr/uplink

@@ -35,7 +35,6 @@ func init() {
 		fmt.Printf("%d\n", time.Since(start).Milliseconds()/int64(*samples))
 		return nil
 	}
-	RpcCmd.AddCommand(cmd)
 }
 
 func tlsOpenClose(args []string, conf *tls.Config) error {

@@ -6,11 +6,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
+	"storj.io/common/base58"
 	"storj.io/common/identity"
+	"storj.io/common/pb"
 	"storj.io/common/peertls"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/pkcrypto"
 	"storj.io/common/rpc"
+	"storj.io/common/rpc/noise"
 	"storj.io/common/socket"
 	"storj.io/common/storj"
 	"storj.io/drpc"
@@ -24,6 +28,7 @@ type NodeID struct {
 	Encode   Encode   `cmd:"" help:"encode raw nodeid to base64"`
 	Remote   Remote   `cmd:"" help:"read nodeid from remote DRPC port"`
 	Generate Generate `cmd:""`
+	Noise    Noise    `cmd:""`
 }
 
 type Decode struct {
@@ -51,6 +56,29 @@ func (r *Read) Run() error {
 	fmt.Println(hex.EncodeToString(id.Bytes()))
 	fmt.Println(id.String())
 	return nil
+}
+
+type Noise struct {
+	Path string `arg:"" default:"."`
+}
+
+func (n *Noise) Run() error {
+	satelliteIdentityCfg := identity.Config{
+		CertPath: filepath.Join(n.Path, "identity.cert"),
+		KeyPath:  filepath.Join(n.Path, "identity.key"),
+	}
+	id, err := satelliteIdentityCfg.Load()
+	if err != nil {
+		return err
+	}
+	attestation, err := noise.GenerateKeyAttestation(context.Background(), id, &pb.NoiseInfo{})
+	if err != nil {
+		return err
+	}
+	fmt.Println(hex.EncodeToString(attestation.NoisePublicKey))
+	fmt.Println(base58.CheckEncode([]byte(attestation.NoisePublicKey), 0))
+	return nil
+
 }
 
 type Encode struct {

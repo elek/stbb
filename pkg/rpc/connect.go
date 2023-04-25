@@ -45,7 +45,6 @@ func init() {
 		fmt.Printf("%d", time.Since(start).Milliseconds()/int64(*samples))
 		return nil
 	}
-	RpcCmd.AddCommand(cmd)
 }
 
 func getDialer(ctx context.Context) (rpc.Dialer, error) {

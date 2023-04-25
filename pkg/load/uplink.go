@@ -56,7 +56,7 @@ func (u *Uplink) Run() error {
 				if ctx.Err() != nil {
 					return
 				}
-				keyInstance := fmt.Sprintf("%s-%d", key, rand.Int63())
+				keyInstance := fmt.Sprintf("%s-%d", key, 0)
 				if u.Verbose {
 					fmt.Println("Uploading / downloading " + keyInstance)
 				}
