@@ -15,6 +15,8 @@ type Encoding struct {
 	Base32Encode Base32Encode `cmd:"" name:"base32-encode"`
 	Base64Decode Base64Decode `cmd:"" name:"base64-decode"`
 	Base64Encode Base64Encode `cmd:"" name:"base64-encode"`
+	HexEncode    HexEncode    `cmd:"" name:"hex-encode"`
+	HexDecode    HexDecode    `cmd:"" name:"hex-decode"`
 }
 
 type Base58Decode struct {
@@ -99,5 +101,29 @@ func (b Base64Encode) Run() error {
 	result := base64.URLEncoding.EncodeToString(raw)
 
 	fmt.Println(result)
+	return nil
+}
+
+type HexEncode struct {
+	Data string `arg:""`
+}
+
+func (b HexEncode) Run() error {
+	result := hex.EncodeToString([]byte(b.Data))
+	fmt.Println(result)
+	return nil
+}
+
+type HexDecode struct {
+	Data string `arg:""`
+}
+
+func (b HexDecode) Run() error {
+	result, err := hex.DecodeString(b.Data)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	fmt.Println(string(result))
 	return nil
 }
