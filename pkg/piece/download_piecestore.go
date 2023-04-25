@@ -5,98 +5,68 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
-	"github.com/spf13/cobra"
 	"io"
+	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"storj.io/uplink/private/piecestore"
-	"strconv"
 	"time"
 )
 
-func init() {
-	cmd := &cobra.Command{
-		Use:  "download-ps <storagenodeid> <piece-id> <size>",
-		Args: cobra.ExactArgs(3),
+type DownloadPieceStore struct {
+	util.Loop
+	util.DialerHelper
+	NodeURL storj.NodeURL `arg:"" name:"nodeurl"`
+	Piece   string        `arg:"" help:"Piece hash to download"`
+	Size    int64         `arg:"" help:"size of bytes to download"`
+	Keys    string        `help:"location of the identity files to sign orders"`
+}
+
+func (d *DownloadPieceStore) Run() error {
+	orderLimitCreator, err := NewKeySignerFromDir(d.Keys)
+	if err != nil {
+		return err
 	}
-	samples := cmd.Flags().IntP("samples", "n", 1, "Number of tests to be executed")
-	dh := util.NewDialerHelper(cmd.Flags())
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		start := time.Now()
+	orderLimitCreator.Action = pb.PieceAction_GET
 
-		ctx := context.Background()
-		d, err := NewPieceDownloader(ctx, args[0], dh)
+	_, err = d.Loop.Run(func() error {
+
+		ctx, done := context.WithTimeout(context.Background(), 15*time.Second)
+		defer done()
+
+		_, err = d.Download(ctx, orderLimitCreator)
 		if err != nil {
 			return err
 		}
-		defer d.Close()
-
-		size, err := strconv.Atoi(args[2])
-		if err != nil {
-			return err
-		}
-
-		downloaded := int64(0)
-		for i := 0; i < *samples; i++ {
-			n, err := d.Download(ctx, args[1], int64(size))
-			if err != nil {
-				return err
-			}
-			downloaded += n
-		}
-		seconds := time.Now().Sub(start).Seconds()
-		fmt.Printf("%d Mbytes are downloaded under %f sec, which is %f Mbytes/sec\n", downloaded/1024/1024, seconds, float64(downloaded)/seconds/1024/1024)
 		return nil
-	}
-	PieceCmd.AddCommand(cmd)
+	})
+	return err
 }
 
-type PieceDownloader struct {
-	Downloader
-	client *piecestore.Client
-}
-
-func NewPieceDownloader(ctx context.Context, storagenodeID string, dh *util.DialerHelper) (PieceDownloader, error) {
-	d, err := NewDownloader(ctx, storagenodeID, dh)
-	if err != nil {
-		return PieceDownloader{}, err
-	}
-	p := PieceDownloader{
-		Downloader: d,
-	}
-	return p, nil
-
-}
-
-func (d PieceDownloader) Close() error {
-	return nil
-}
-
-func (d PieceDownloader) Download(ctx context.Context, pieceId string, size int64) (downloaded int64, err error) {
+func (d *DownloadPieceStore) Download(ctx context.Context, signer *KeySigner) (downloaded int64, err error) {
 	config := piecestore.DefaultConfig
-	//config.DownloadBufferSize = 1024 * 1024
-	//config.InitialStep = 1024 * 1024
-	//config.MaximumStep = 1024 * 1024
-	dialer, err := d.dialer.CreateRPCDialer()
+	//config.InitialStep = 64 * memory.KiB.Int64()
+	//config.MaximumStep = 256 * memory.KiB.Int64()
+	dialer, err := d.DialerHelper.CreateRPCDialer()
 	if err != nil {
 		return
 	}
-	d.client, err = piecestore.Dial(ctx, dialer, d.storagenodeURL, config)
+	client, err := piecestore.Dial(ctx, dialer, d.NodeURL, config)
 	if err != nil {
 		return
 	}
-	defer d.client.Close()
+	defer client.Close()
 
-	pieceID, err := storj.PieceIDFromString(pieceId)
-	if err != nil {
-		return
-	}
-
-	orderLimit, priv, _, err := d.OrderLimitCreator.CreateOrderLimit(ctx, pieceID, size, d.satelliteURL.ID, d.storagenodeURL.ID)
+	pieceID, err := storj.PieceIDFromString(d.Piece)
 	if err != nil {
 		return
 	}
 
-	download, err := d.client.Download(ctx, orderLimit, priv, 0, size)
+	orderLimit, priv, _, err := signer.CreateOrderLimit(ctx, pieceID, d.Size, signer.GetSatelliteID(), d.NodeURL.ID)
+	if err != nil {
+		return
+	}
+
+	download, err := client.Download(ctx, orderLimit, priv, 0, d.Size)
 	if err != nil {
 		return
 	}
@@ -105,6 +75,9 @@ func (d PieceDownloader) Download(ctx context.Context, pieceId string, size int6
 	downloaded, err = io.Copy(&buf, download)
 	if err != nil {
 		return
+	}
+	if d.Verbose {
+		fmt.Println("Downloaded", downloaded, "bytes")
 	}
 	return
 

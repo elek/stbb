@@ -19,10 +19,10 @@ import (
 
 var (
 	//go:embed identity.cert
-	cert []byte
+	Certificate []byte
 
 	//go:embed identity.key
-	key []byte
+	Key []byte
 )
 
 type NodeEndpoint struct {
@@ -120,7 +120,7 @@ type Run struct {
 
 func (r Run) Run() error {
 	ctx := context.Background()
-	ident, err := identity.FullIdentityFromPEM(cert, key)
+	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
 	fmt.Print("Starting ", ident.ID.String()+"@localhost:5656")
 	if err != nil {
 		return errs.Wrap(err)

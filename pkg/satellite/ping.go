@@ -19,9 +19,9 @@ type Ping struct {
 func (p Ping) Run() error {
 	ctx := context.Background()
 
-	cert, _ = os.ReadFile("identity.cert")
-	key, _ = os.ReadFile("identity.key")
-	ident, err := identity.FullIdentityFromPEM(cert, key)
+	Certificate, _ = os.ReadFile("identity.cert")
+	Key, _ = os.ReadFile("identity.key")
+	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ type Restore struct {
 func (r Restore) restore() error {
 	ctx := context.Background()
 
-	ident, err := identity.FullIdentityFromPEM(cert, key)
+	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
 	if err != nil {
 		return err
 	}

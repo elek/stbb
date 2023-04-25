@@ -12,10 +12,11 @@ var PieceCmd = &cobra.Command{
 }
 
 type Piece struct {
-	UploadDrpc   UploadDrpc   `cmd:"" help:"Upload piece to the Storagenode"`
-	DownloadDrpc DownloadDRPC `cmd:"" help:"Download piece from the Storagenode"`
-	List         List         `cmd:"" help:"Print out pieces for one particular object"`
-	Nodes        Nodes        `cmd:"" help:"Print out piece locations with pieceID and node ID"`
-	NodeSpeed    NodeSpeed    `cmd:"" help:"Download one piece from all the nodes"`
-	Decode       Decode       `cmd:"" help:"Decode piece alias (from the condensed format, stored in db)"`
+	UploadDrpc   UploadDrpc         `cmd:"" help:"Upload piece to the Storagenode"`
+	DownloadDrpc DownloadDRPC       `cmd:"" help:"Download piece from the Storagenode"`
+	List         List               `cmd:"" help:"Print out pieces for one particular object"`
+	Nodes        Nodes              `cmd:"" help:"Print out piece locations with pieceID and node ID"`
+	NodeSpeed    NodeSpeed          `cmd:"" help:"Download one piece from all the nodes"`
+	Decode       Decode             `cmd:"" help:"Decode piece alias (from the condensed format, stored in db)"`
+	DownloadPs   DownloadPieceStore `cmd:"" help:"Download piece from the Storagenode using piece store"`
 }

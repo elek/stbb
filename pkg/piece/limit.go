@@ -3,6 +3,8 @@ package piece
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
+	"github.com/elek/stbb/pkg/satellite"
 	"os"
 	"path/filepath"
 	"storj.io/common/identity"
@@ -31,14 +33,25 @@ func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
 	d := KeySigner{}
 	d.Action = pb.PieceAction_GET
 
-	satelliteIdentityCfg := identity.Config{
-		CertPath: filepath.Join(keysDir, "identity.cert"),
-		KeyPath:  filepath.Join(keysDir, "identity.key"),
+	var id *identity.FullIdentity
+	keyPath := filepath.Join(keysDir, "identity.key")
+	if _, err := os.Stat(keyPath); err == nil {
+		satelliteIdentityCfg := identity.Config{
+			CertPath: filepath.Join(keysDir, "identity.cert"),
+			KeyPath:  keyPath,
+		}
+		id, err = satelliteIdentityCfg.Load()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		fmt.Println("identity.key is missing (and not specified with STBB_KEYS) using internal one")
+		id, err = identity.FullIdentityFromPEM(satellite.Certificate, satellite.Key)
+		if err != nil {
+			return nil, err
+		}
 	}
-	id, err := satelliteIdentityCfg.Load()
-	if err != nil {
-		return nil, err
-	}
+
 	d.nodeID = id.ID
 	d.signer = signing.SignerFromFullIdentity(id)
 	return &d, nil

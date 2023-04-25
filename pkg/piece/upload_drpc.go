@@ -50,11 +50,13 @@ func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *Ke
 	client := pb.NewDRPCReplaySafePiecestoreClient(conn)
 
 	size, id, err = u.Upload(ctx, client, orderLimitCreator)
-	if u.Verbose {
-		fmt.Println("pieceHash:", u.Hash)
-	}
 	if err != nil {
 		return size, id, err
+	}
+	if u.Verbose {
+		fmt.Println("id:", id)
+		fmt.Println("pieceHashAlgo:", u.Hash)
+
 	}
 	return size, id, nil
 }
