@@ -83,17 +83,36 @@ func (h HeldAmountEndpoint) GetAllPaystubs(ctx context.Context, request *pb.GetA
 }
 
 func (h HeldAmountEndpoint) GetPayment(ctx context.Context, request *pb.GetPaymentRequest) (*pb.GetPaymentResponse, error) {
+	n := time.Now()
 	return &pb.GetPaymentResponse{
 		NodeId:    h.nodeID,
-		CreatedAt: time.Now(),
+		CreatedAt: time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.Local),
 		Period:    request.Period,
-		Amount:    0,
+		Amount:    44444,
 	}, nil
 }
 
 func (h HeldAmountEndpoint) GetAllPayments(ctx context.Context, request *pb.GetAllPaymentsRequest) (*pb.GetAllPaymentsResponse, error) {
+	n := time.Now()
 	return &pb.GetAllPaymentsResponse{
-		Payment: []*pb.GetPaymentResponse{},
+		Payment: []*pb.GetPaymentResponse{
+			{
+				NodeId:    h.nodeID,
+				CreatedAt: time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.Local),
+				Period:    time.Date(n.Year(), n.Month()-1, n.Day(), 0, 0, 0, 0, time.Local),
+				Amount:    100000000000000,
+				Receipt:   "zksync-era:0x85ab6c8f8240a005ef90c1b477e6e61ccf1e6d5463672e0d1c166075ded92c0b",
+				Id:        1234,
+			},
+			{
+				NodeId:    h.nodeID,
+				CreatedAt: time.Date(n.Year(), n.Month()-1, n.Day(), 0, 0, 0, 0, time.Local),
+				Period:    time.Date(n.Year(), n.Month()-2, n.Day(), 0, 0, 0, 0, time.Local),
+				Amount:    100000000000000,
+				Receipt:   "zkwithdraw:0x85ab6c8f8240a005ef90c1b477e6e61ccf1e6d5463672e0d1c166075ded92c0b",
+				Id:        1233,
+			},
+		},
 	}, nil
 }
 
