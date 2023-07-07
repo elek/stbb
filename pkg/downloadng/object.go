@@ -2,7 +2,9 @@ package downloadng
 
 import (
 	"context"
+	"storj.io/common/encryption"
 	"storj.io/common/macaroon"
+	"storj.io/common/paths"
 	"storj.io/uplink/private/metaclient"
 )
 
@@ -12,11 +14,12 @@ type ObjectDownloader struct {
 	outboxEncryption chan *InitDecryption
 	satelliteAddress string
 	APIKey           *macaroon.APIKey
+	store            *encryption.Store
 }
 
 type DownloadObject struct {
-	bucket       []byte
-	encryptedKey []byte
+	bucket string
+	key    string
 }
 
 func (s *ObjectDownloader) Run(ctx context.Context) error {
@@ -48,9 +51,14 @@ func (s *ObjectDownloader) Run(ctx context.Context) error {
 }
 
 func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metaclient.Client, req *DownloadObject) error {
+
+	encPath, err := encryption.EncryptPathWithStoreCipher(req.bucket, paths.NewUnencrypted(req.key), s.store)
+	if err != nil {
+		return err
+	}
 	resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
-		Bucket:             req.bucket,
-		EncryptedObjectKey: req.encryptedKey,
+		Bucket:             []byte(req.bucket),
+		EncryptedObjectKey: []byte(encPath.Raw()),
 	})
 	if err != nil {
 		return err
@@ -62,6 +70,7 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 			segmentEncryption:    k.Info.SegmentEncryption,
 			encryptionParameters: resp.Object.EncryptionParameters,
 			position:             k.Info.Position,
+			unencryptedKey:       req.key,
 		}
 		for ix, l := range k.Limits {
 			if l != nil && l.StorageNodeAddress != nil {
@@ -75,40 +84,6 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 				}
 				s.outboxDownload <- &d
 
-			}
-		}
-	}
-	return nil
-}
-
-// this is a hack and depends on having only one segment
-func (s *ObjectDownloader) Download49(ctx context.Context, metainfoClient *metaclient.Client, req *DownloadObject) error {
-	used := map[int]bool{}
-	for i := 0; i < 2; i++ {
-		resp, err := metainfoClient.DownloadObject(ctx, metaclient.DownloadObjectParams{
-			Bucket:             req.bucket,
-			EncryptedObjectKey: req.encryptedKey,
-		})
-		if err != nil {
-			return err
-		}
-		for _, k := range resp.DownloadedSegments {
-			for ix, l := range k.Limits {
-				if l != nil && l.StorageNodeAddress != nil {
-					if !used[ix] {
-						d := DownloadPiece{
-							orderLimit: l.Limit,
-							pk:         k.Info.PiecePrivateKey,
-							sn:         l.StorageNodeAddress,
-							size:       k.Info.EncryptedSize,
-							ecShare:    ix,
-							segmentID:  k.Info.SegmentID,
-						}
-						s.outboxDownload <- &d
-						used[ix] = true
-					}
-
-				}
 			}
 		}
 	}

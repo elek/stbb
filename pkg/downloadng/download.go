@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-func download(bucket []byte, key []byte) error {
+func download(bucket string, key string) error {
 	access, err := grant.ParseAccess(os.Getenv("UPLINK_ACCESS"))
 	if err != nil {
 		return err
@@ -17,7 +17,7 @@ func download(bucket []byte, key []byte) error {
 
 	ctx := context.Background()
 
-	dc, err := NewDecrypt()
+	dc, err := NewDecrypt(access.EncAccess.Store)
 	if err != nil {
 		return err
 	}
@@ -28,6 +28,7 @@ func download(bucket []byte, key []byte) error {
 		outboxEncryption: logSent("outboxEncryption", dc.inboxInit),
 		satelliteAddress: access.SatelliteAddress,
 		APIKey:           access.APIKey,
+		store:            access.EncAccess.Store,
 	}
 
 	result := make(chan *Download)
@@ -60,7 +61,7 @@ func download(bucket []byte, key []byte) error {
 		defer wg.Done()
 		err := dc.Run(ctx)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("decryption is failed", err)
 		}
 	}()
 	go func() {
@@ -86,8 +87,8 @@ func download(bucket []byte, key []byte) error {
 	}()
 
 	downloader.inbox <- &DownloadObject{
-		bucket:       bucket,
-		encryptedKey: key,
+		bucket: bucket,
+		key:    key,
 	}
 
 	wg.Wait()

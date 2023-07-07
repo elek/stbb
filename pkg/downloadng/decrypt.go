@@ -13,6 +13,7 @@ import (
 type Decrypt struct {
 	inboxInit    chan *InitDecryption
 	inboxDecrypt chan *DecryptBuffer
+	store        *encryption.Store
 }
 
 type DecryptBuffer struct {
@@ -22,14 +23,15 @@ type DecryptBuffer struct {
 type InitDecryption struct {
 	segmentEncryption    metaclient.SegmentEncryption
 	encryptionParameters storj.EncryptionParameters
-	bucket               []byte
-	unencryptedKey       []byte
+	bucket               string
+	unencryptedKey       string
 	encryptedKey         []byte
 	position             *metaclient.SegmentPosition
 }
 
-func NewDecrypt() (*Decrypt, error) {
+func NewDecrypt(store *encryption.Store) (*Decrypt, error) {
 	return &Decrypt{
+		store:        store,
 		inboxDecrypt: make(chan *DecryptBuffer),
 		inboxInit:    make(chan *InitDecryption),
 	}, nil
@@ -40,8 +42,7 @@ func (d *Decrypt) Run(ctx context.Context) error {
 	for {
 		select {
 		case init := <-d.inboxInit:
-			store := encryption.NewStore()
-			derivedKey, err := encryption.DeriveContentKey(string(init.bucket), paths.NewUnencrypted("asd"), store)
+			derivedKey, err := encryption.DeriveContentKey(string(init.bucket), paths.NewUnencrypted(init.unencryptedKey), d.store)
 			if err != nil {
 				return err
 			}
@@ -56,11 +57,19 @@ func (d *Decrypt) Run(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+
+			fmt.Println(ep.BlockSize)
 			decrypter, err = encryption.NewDecrypter(ep.CipherSuite, contentKey, &nonce, int(ep.BlockSize))
 			if err != nil {
 				return err
 			}
-			err = store.Add(string(init.bucket), paths.NewUnencrypted(string(init.unencryptedKey)), paths.Encrypted{}, *contentKey)
+
+			encPath, err := encryption.EncryptPathWithStoreCipher(init.bucket, paths.NewUnencrypted(init.unencryptedKey), d.store)
+			if err != nil {
+				return err
+			}
+
+			err = d.store.Add(string(init.bucket), paths.NewUnencrypted(string(init.unencryptedKey)), encPath, *contentKey)
 			if err != nil {
 				return err
 			}
