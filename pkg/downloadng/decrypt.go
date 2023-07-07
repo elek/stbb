@@ -14,6 +14,7 @@ type Decrypt struct {
 	inboxInit    chan *InitDecryption
 	inboxDecrypt chan *DecryptBuffer
 	store        *encryption.Store
+	counter      int64
 }
 
 type DecryptBuffer struct {
@@ -73,13 +74,15 @@ func (d *Decrypt) Run(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			d.counter = 0
 		case req := <-d.inboxDecrypt:
 			fmt.Println("Decrypting")
 			var out []byte
-			transformed, err := decrypter.Transform(out, req.encrypted, 256)
+			transformed, err := decrypter.Transform(out, req.encrypted, d.counter)
 			if err != nil {
 				return err
 			}
+			d.counter++
 			fmt.Println(len(transformed))
 
 		case <-ctx.Done():
