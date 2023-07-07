@@ -77,7 +77,7 @@ func (u *UpDown) Run() error {
 	_, err = u.Loop.Run(func() error {
 		currentKey := fmt.Sprintf("%s-%d", key, rand.Int63())
 		if u.Verbose {
-			fmt.Println("Key name:", currentKey)
+			fmt.Println("key name:", currentKey)
 		}
 		err := uploadOne(ctx, cfg, access, u.Source, bucket, currentKey)
 		if err != nil {

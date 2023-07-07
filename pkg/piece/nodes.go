@@ -15,7 +15,7 @@ import (
 
 type Nodes struct {
 	util.DialerHelper
-	Path         string `arg:"" help:"Key url (sj://bucket/encryptedpath)"`
+	Path         string `arg:"" help:"key url (sj://bucket/encryptedpath)"`
 	DesiredNodes int
 }
 

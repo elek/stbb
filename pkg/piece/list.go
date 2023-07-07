@@ -14,7 +14,7 @@ import (
 
 type List struct {
 	util.DialerHelper
-	Path string `arg:"" help:"Key url (sj://bucket/.../key)"`
+	Path string `arg:"" help:"key url (sj://bucket/.../key)"`
 }
 
 func (l *List) Run() error {

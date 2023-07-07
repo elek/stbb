@@ -9,7 +9,7 @@ import (
 type NodeSpeed struct {
 	util.DialerHelper
 	Keys string `help:"location of the identity files to sign orders"`
-	Path string `arg:"" help:"Key url (sj://bucket/encryptedpath)"`
+	Path string `arg:"" help:"key url (sj://bucket/encryptedpath)"`
 }
 
 func (n *NodeSpeed) Run() error {
