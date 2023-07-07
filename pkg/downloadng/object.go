@@ -9,9 +9,8 @@ import (
 )
 
 type ObjectDownloader struct {
-	inbox            chan *DownloadObject
-	outboxDownload   chan *DownloadPiece
-	outboxEncryption chan *InitDecryption
+	inbox            chan any
+	outbox           chan any
 	satelliteAddress string
 	APIKey           *macaroon.APIKey
 	store            *encryption.Store
@@ -23,7 +22,7 @@ type DownloadObject struct {
 }
 
 func (s *ObjectDownloader) Run(ctx context.Context) error {
-	defer close(s.outboxDownload)
+	defer close(s.outbox)
 	dialer, err := getDialer(ctx, false)
 	if err != nil {
 		return err
@@ -39,10 +38,14 @@ func (s *ObjectDownloader) Run(ctx context.Context) error {
 			if req == nil {
 				return nil
 			}
-			err = s.Download(ctx, metainfoClient, req)
-			if err != nil {
-				return err
+			switch r := req.(type) {
+			case *DownloadObject:
+				err = s.Download(ctx, metainfoClient, r)
+				if err != nil {
+					return err
+				}
 			}
+
 		case <-ctx.Done():
 			return nil
 		}
@@ -65,7 +68,7 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 	}
 
 	for _, k := range resp.DownloadedSegments {
-		s.outboxEncryption <- &InitDecryption{
+		s.outbox <- &InitDecryption{
 			bucket:               req.bucket,
 			segmentEncryption:    k.Info.SegmentEncryption,
 			encryptionParameters: resp.Object.EncryptionParameters,
@@ -82,7 +85,7 @@ func (s *ObjectDownloader) Download(ctx context.Context, metainfoClient *metacli
 					ecShare:    ix,
 					segmentID:  k.Info.SegmentID,
 				}
-				s.outboxDownload <- &d
+				s.outbox <- &d
 
 			}
 		}

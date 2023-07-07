@@ -10,30 +10,19 @@ import (
 )
 
 type Parallel struct {
-	inbox    chan *Download
-	outbox   chan *DecodeShares
+	inbox    chan any
+	outbox   chan any
 	segments map[string]*segmentBuffer
 	finish   func()
 }
 
-func NewParallel(inbox chan *Download, downloader ObjectDownloader) Parallel {
-	return Parallel{
-		inbox:    inbox,
-		outbox:   make(chan *DecodeShares),
-		segments: map[string]*segmentBuffer{},
-		finish: func() {
-			close(downloader.inbox)
-		},
-	}
-}
-
-func (b *Parallel) Add(req *Download) *segmentBuffer {
-	if _, found := b.segments[req.segmentID.String()]; !found {
-		b.segments[req.segmentID.String()] = &segmentBuffer{
+func (p *Parallel) Add(req *Download) *segmentBuffer {
+	if _, found := p.segments[req.segmentID.String()]; !found {
+		p.segments[req.segmentID.String()] = &segmentBuffer{
 			results: map[storj.NodeID]*pieceBuffer{},
 		}
 	}
-	return b.segments[req.segmentID.String()]
+	return p.segments[req.segmentID.String()]
 }
 
 type pieceBuffer struct {
@@ -110,7 +99,7 @@ func (b *segmentBuffer) Cancel() {
 	}
 }
 
-func (b *segmentBuffer) ForwardDownloaded(outbox chan *DecodeShares) {
+func (b *segmentBuffer) ForwardDownloaded(outbox chan any) {
 	// check if we can have at least 29 pieces from the next stripe
 	for {
 		pieces := make([]*pieceBuffer, 0)
@@ -143,33 +132,41 @@ func (b *segmentBuffer) ForwardDownloaded(outbox chan *DecodeShares) {
 	}
 }
 
-func (ec *Parallel) Run(ctx context.Context) error {
+func (p *Parallel) Run(ctx context.Context) error {
 	for {
 		select {
-		case req := <-ec.inbox:
+		case req := <-p.inbox:
 			if req == nil {
 				return nil
 			}
 
-			segment := ec.Add(req)
-			segment.Add(req)
+			switch r := req.(type) {
+			case *Download:
+				segment := p.Add(r)
+				segment.Add(r)
 
-			segment.ForwardDownloaded(ec.outbox)
+				segment.ForwardDownloaded(p.outbox)
 
-			if segment.finished {
-				segment.Cancel()
-				// todo: finish only if this is the last segment
-				ec.finish()
-				fmt.Printf("Segment is downloaded during %d ms using %d storagenode\n", segment.duration, len(segment.results))
-				close(ec.inbox)
+				if segment.finished {
+					segment.Cancel()
+					// todo: finish only if this is the last segment
+					p.finish()
+					fmt.Printf("Segment is downloaded during %d ms using %d storagenode\n", segment.duration, len(segment.results))
+					close(p.inbox)
+
+				}
+			case FatalFailure:
+				p.outbox <- r
+				return nil
+			case Done:
+				p.outbox <- r
+				return nil
+			default:
+				p.outbox <- r
 			}
 
 		case <-ctx.Done():
 			return nil
 		}
 	}
-}
-
-func (ec *Parallel) Outbox() chan *DecodeShares {
-	return ec.outbox
 }

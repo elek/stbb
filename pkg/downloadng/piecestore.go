@@ -10,13 +10,6 @@ import (
 	"time"
 )
 
-type PieceStoreClient struct {
-	inbox  chan *DownloadPiece
-	outbox chan *Download
-	dialer rpc.Dialer
-	sn     storj.NodeURL
-}
-
 type DownloadPiece struct {
 	orderLimit *pb.OrderLimit
 	pk         storj.PiecePrivateKey
@@ -41,21 +34,24 @@ type Download struct {
 	sn       pb.NodeID
 }
 
-func NewPieceStoreClient(node storj.NodeURL, outbox chan *Download) (*PieceStoreClient, error) {
+type PieceStoreClient struct {
+	inbox  chan any
+	outbox chan any
+	dialer rpc.Dialer
+	sn     storj.NodeURL
+}
+
+func NewPieceStoreClient(node storj.NodeURL, outbox chan any) (*PieceStoreClient, error) {
 	dialer, err := getDialer(context.Background(), true)
 	if err != nil {
 		return nil, err
 	}
 	return &PieceStoreClient{
-		inbox:  make(chan *DownloadPiece),
+		inbox:  make(chan any),
 		dialer: dialer,
 		sn:     node,
 		outbox: outbox,
 	}, nil
-}
-
-func (d *PieceStoreClient) Inbox() chan *DownloadPiece {
-	return d.inbox
 }
 
 func (d *PieceStoreClient) Run(ctx context.Context) {
@@ -72,8 +68,21 @@ func (d *PieceStoreClient) Run(ctx context.Context) {
 			if req == nil {
 				return
 			}
-			_, err = d.Download(ctx, client, req)
-			fmt.Println(err)
+			switch r := req.(type) {
+			case *DownloadPiece:
+				_, err = d.Download(ctx, client, r)
+				// we need to send out errors and count them
+				fmt.Println(err)
+			case FatalFailure:
+				d.outbox <- d
+				return
+			case Done:
+				d.outbox <- d
+				return
+			default:
+				d.outbox <- d
+			}
+
 		case <-ctx.Done():
 			return
 		}

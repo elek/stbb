@@ -9,6 +9,13 @@ import (
 	"sync"
 )
 
+type FatalFailure struct {
+	Error error
+}
+
+type Done struct {
+}
+
 func download(bucket string, key string) error {
 	access, err := grant.ParseAccess(os.Getenv("UPLINK_ACCESS"))
 	if err != nil {
@@ -17,39 +24,50 @@ func download(bucket string, key string) error {
 
 	ctx := context.Background()
 
-	dc, err := NewDecrypt(access.EncAccess.Store)
-	if err != nil {
-		return err
-	}
-
+	first := make(chan any)
 	downloader := ObjectDownloader{
-		inbox:            make(chan *DownloadObject),
-		outboxDownload:   logSent("outboxDownload", make(chan *DownloadPiece)),
-		outboxEncryption: logSent("outboxEncryption", dc.inboxInit),
+		inbox:            first,
+		outbox:           make(chan any),
 		satelliteAddress: access.SatelliteAddress,
 		APIKey:           access.APIKey,
 		store:            access.EncAccess.Store,
 	}
 
-	result := make(chan *Download)
-	sd := NewDownloadRouter(downloader.outboxDownload, func(url storj.NodeURL) (chan *DownloadPiece, error) {
-		client, err := NewPieceStoreClient(url, result)
-		if err != nil {
-			return nil, err
-		}
-		go client.Run(context.Background())
-		return client.Inbox(), nil
-	})
+	sd := &DownloadRouter{
+		inbox:       logReceived("DownloadRouter", downloader.outbox),
+		outbox:      make(chan any),
+		connections: make(map[storj.NodeID]chan any),
+		factory: func(url storj.NodeURL, outbox chan any) (chan any, error) {
+			client, err := NewPieceStoreClient(url, outbox)
+			if err != nil {
+				return nil, err
+			}
+			go client.Run(context.Background())
+			return client.inbox, nil
+		},
+	}
 
-	p := NewParallel(result, downloader)
+	p := Parallel{
+		inbox:    logReceived("Parallel", sd.outbox),
+		outbox:   make(chan any),
+		segments: map[string]*segmentBuffer{},
+		finish: func() {
+			close(downloader.inbox)
+		},
+	}
 
-	ec, err := NewECDecoder(p.Outbox(), dc.inboxDecrypt)
+	ec, err := NewECDecoder(p.outbox)
+	if err != nil {
+		return err
+	}
+
+	dc, err := NewDecrypt(ec.outbox, access.EncAccess.Store)
 	if err != nil {
 		return err
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(5)
+	wg.Add(6)
 	go func() {
 		defer wg.Done()
 		err := downloader.Run(ctx)
@@ -85,6 +103,24 @@ func download(bucket string, key string) error {
 			fmt.Println(err)
 		}
 	}()
+	go func() {
+		defer wg.Done()
+		out, err := os.Create("/tmp/out")
+		if err != nil {
+			panic(err)
+		}
+		defer out.Close()
+
+		for {
+			select {
+			case msg := <-dc.outbox:
+				switch r := msg.(type) {
+				case []byte:
+					out.Write(r)
+				}
+			}
+		}
+	}()
 
 	downloader.inbox <- &DownloadObject{
 		bucket: bucket,
@@ -95,65 +131,20 @@ func download(bucket string, key string) error {
 	return nil
 }
 
-func logReceived[T any](outbox chan T) chan T {
+func logReceived[T any](name string, outbox chan T) chan T {
 	c := make(chan T)
 	go func() {
 		for {
 			select {
 			case t, ok := <-outbox:
 				if !ok {
-					close(c)
+					//close(c)
 					return
 				}
-				fmt.Println(t)
+				fmt.Printf("%s: %T\n", name, t)
 				c <- t
 			}
 		}
 	}()
 	return c
-}
-func logSent[T any](name string, outbox chan T) chan T {
-	c := make(chan T)
-	go func() {
-		for {
-			select {
-			case t, ok := <-c:
-				if !ok {
-					close(outbox)
-					return
-				}
-				fmt.Println(name, t)
-				outbox <- t
-			}
-		}
-	}()
-	return c
-}
-
-func simulatedDownloader(downloader ObjectDownloader) {
-	for {
-		select {
-		case out := <-downloader.outboxDownload:
-			if out == nil {
-				return
-			}
-			fmt.Println(out.sn)
-		}
-	}
-}
-
-func simulatedSegmentDownloader(node storj.NodeURL) (chan *DownloadPiece, error) {
-	c := make(chan *DownloadPiece)
-	go func() {
-		for {
-			select {
-			case task := <-c:
-				if task == nil {
-					return
-				}
-				fmt.Println("Download " + task.orderLimit.String())
-			}
-		}
-	}()
-	return c, nil
 }

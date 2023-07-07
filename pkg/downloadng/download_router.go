@@ -2,34 +2,18 @@ package downloadng
 
 import (
 	"context"
-	"fmt"
 	"storj.io/common/storj"
 )
 
 type DownloadRouter struct {
-	inbox       chan *DownloadPiece
-	connections map[storj.NodeID]chan *DownloadPiece
-	factory     func(url storj.NodeURL) (chan *DownloadPiece, error)
-}
-
-func NewDownloadRouter(inbox chan *DownloadPiece, factory func(url storj.NodeURL) (chan *DownloadPiece, error)) *DownloadRouter {
-	return &DownloadRouter{
-		inbox:       inbox,
-		connections: make(map[storj.NodeID]chan *DownloadPiece),
-		factory:     factory,
-	}
-}
-
-func (d *DownloadRouter) Inbox() chan *DownloadPiece {
-	return d.inbox
+	inbox       chan any
+	outbox      chan any
+	connections map[storj.NodeID]chan any
+	factory     func(url storj.NodeURL, outbox chan any) (chan any, error)
 }
 
 func (d *DownloadRouter) Run(ctx context.Context) (err error) {
-	defer func() {
-		for _, c := range d.connections {
-			close(c)
-		}
-	}()
+	defer close(d.outbox)
 
 	for {
 		select {
@@ -37,25 +21,42 @@ func (d *DownloadRouter) Run(ctx context.Context) (err error) {
 			if req == nil {
 				return
 			}
-			worker, found := d.connections[req.orderLimit.StorageNodeId]
-			if !found {
-				ch, err := d.factory(storj.NodeURL{
-					ID:      req.orderLimit.StorageNodeId,
-					Address: req.sn.Address,
-				})
+			switch r := req.(type) {
+			case *DownloadPiece:
+				err := d.pieceDownloader(r)
 				if err != nil {
-					// we couldn't create anything which is connecting to this specific data
-					// we should create and error responder worker
-					panic(err)
+					// not a problem if we have enough connections. Probably count it.
 				}
-				fmt.Println("Creating worker for", req.orderLimit.StorageNodeId)
-				d.connections[req.orderLimit.StorageNodeId] = ch
-				worker = d.connections[req.orderLimit.StorageNodeId]
+			case FatalFailure:
+				d.outbox <- r
+				return nil
+			case Done:
+				d.outbox <- r
+				return nil
+			default:
+				d.outbox <- r
 			}
-			worker <- req
+
 		case <-ctx.Done():
 			return
 		}
 
 	}
+}
+
+func (d *DownloadRouter) pieceDownloader(req *DownloadPiece) error {
+	worker, found := d.connections[req.orderLimit.StorageNodeId]
+	if !found {
+		ch, err := d.factory(storj.NodeURL{
+			ID:      req.orderLimit.StorageNodeId,
+			Address: req.sn.Address,
+		}, d.outbox)
+		if err != nil {
+			return err
+		}
+		d.connections[req.orderLimit.StorageNodeId] = ch
+		worker = d.connections[req.orderLimit.StorageNodeId]
+	}
+	worker <- req
+	return nil
 }

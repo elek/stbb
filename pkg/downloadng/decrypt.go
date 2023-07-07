@@ -11,10 +11,10 @@ import (
 )
 
 type Decrypt struct {
-	inboxInit    chan *InitDecryption
-	inboxDecrypt chan *DecryptBuffer
-	store        *encryption.Store
-	counter      int64
+	inbox   chan any
+	outbox  chan any
+	store   *encryption.Store
+	counter int64
 }
 
 type DecryptBuffer struct {
@@ -30,11 +30,11 @@ type InitDecryption struct {
 	position             *metaclient.SegmentPosition
 }
 
-func NewDecrypt(store *encryption.Store) (*Decrypt, error) {
+func NewDecrypt(inbox chan any, store *encryption.Store) (*Decrypt, error) {
 	return &Decrypt{
-		store:        store,
-		inboxDecrypt: make(chan *DecryptBuffer),
-		inboxInit:    make(chan *InitDecryption),
+		store:  store,
+		inbox:  inbox,
+		outbox: make(chan any),
 	}, nil
 }
 
@@ -42,49 +42,41 @@ func (d *Decrypt) Run(ctx context.Context) error {
 	var decrypter encryption.Transformer
 	for {
 		select {
-		case init := <-d.inboxInit:
-			derivedKey, err := encryption.DeriveContentKey(string(init.bucket), paths.NewUnencrypted(init.unencryptedKey), d.store)
-			if err != nil {
-				return err
-			}
+		case req := <-d.inbox:
+			switch r := req.(type) {
+			case *InitDecryption:
+				derivedKey, err := encryption.DeriveContentKey(string(r.bucket), paths.NewUnencrypted(r.unencryptedKey), d.store)
+				if err != nil {
+					return err
+				}
 
-			ep := init.encryptionParameters
-			contentKey, err := encryption.DecryptKey(init.segmentEncryption.EncryptedKey, ep.CipherSuite, derivedKey, &init.segmentEncryption.EncryptedKeyNonce)
-			if err != nil {
-				return err
-			}
+				ep := r.encryptionParameters
+				contentKey, err := encryption.DecryptKey(r.segmentEncryption.EncryptedKey, ep.CipherSuite, derivedKey, &r.segmentEncryption.EncryptedKeyNonce)
+				if err != nil {
+					return err
+				}
 
-			nonce, err := deriveContentNonce(init.position.PartNumber, init.position.Index)
-			if err != nil {
-				return err
-			}
+				nonce, err := deriveContentNonce(r.position.PartNumber, r.position.Index)
+				if err != nil {
+					return err
+				}
 
-			fmt.Println(ep.BlockSize)
-			decrypter, err = encryption.NewDecrypter(ep.CipherSuite, contentKey, &nonce, int(ep.BlockSize))
-			if err != nil {
-				return err
-			}
+				decrypter, err = encryption.NewDecrypter(ep.CipherSuite, contentKey, &nonce, int(ep.BlockSize))
+				if err != nil {
+					return err
+				}
 
-			encPath, err := encryption.EncryptPathWithStoreCipher(init.bucket, paths.NewUnencrypted(init.unencryptedKey), d.store)
-			if err != nil {
-				return err
+				d.counter = 0
+			case *DecryptBuffer:
+				fmt.Println("Decrypting")
+				var out []byte
+				transformed, err := decrypter.Transform(out, r.encrypted, d.counter)
+				if err != nil {
+					return err
+				}
+				d.counter++
+				d.outbox <- transformed
 			}
-
-			err = d.store.Add(string(init.bucket), paths.NewUnencrypted(string(init.unencryptedKey)), encPath, *contentKey)
-			if err != nil {
-				return err
-			}
-			d.counter = 0
-		case req := <-d.inboxDecrypt:
-			fmt.Println("Decrypting")
-			var out []byte
-			transformed, err := decrypter.Transform(out, req.encrypted, d.counter)
-			if err != nil {
-				return err
-			}
-			d.counter++
-			fmt.Println(len(transformed))
-
 		case <-ctx.Done():
 			return nil
 		}
