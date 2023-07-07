@@ -15,7 +15,6 @@ import (
 	"storj.io/common/pkcrypto"
 	"storj.io/common/rpc"
 	"storj.io/common/rpc/noise"
-	"storj.io/common/socket"
 	"storj.io/common/storj"
 	"storj.io/drpc"
 	"strings"
@@ -172,10 +171,11 @@ func GetSatelliteID(ctx context.Context, address string) (string, error) {
 	dialer.Pool = rpc.NewDefaultConnectionPool()
 
 	dialer.DialTimeout = 10 * time.Second
-	dialContext := socket.BackgroundDialer().DialContext
-
-	//lint:ignore SA1019 it's safe to use TCP here instead of QUIC + TCP
-	dialer.Connector = rpc.NewDefaultTCPConnector(&rpc.ConnectorAdapter{DialContext: dialContext}) //nolint:staticcheck
+	// TODO
+	//dialContext := socket.BackgroundDialer().DialContext
+	//
+	////lint:ignore SA1019 it's safe to use TCP here instead of QUIC + TCP
+	//dialer.Connector = rpc.NewDefaultTCPConnector(&rpc.ConnectorAdapter{DialContext: dialContext}) //nolint:staticcheck
 
 	conn, err := dialer.DialAddressInsecure(ctx, address)
 	if err != nil {
