@@ -2,6 +2,7 @@ package downloadng
 
 import (
 	"github.com/zeebo/errs"
+	"runtime"
 	"storj.io/storj/cmd/uplink/ulloc"
 )
 
@@ -10,7 +11,6 @@ type DownloadCmd struct {
 }
 
 func (d DownloadCmd) Run() error {
-
 	p, err := ulloc.Parse(d.Path)
 	if err != nil {
 		return err
@@ -23,4 +23,14 @@ func (d DownloadCmd) Run() error {
 
 	return download(bucket, key)
 
+}
+func readStack() []byte {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, 2*len(buf))
+	}
 }

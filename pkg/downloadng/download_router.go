@@ -28,9 +28,15 @@ func (d *DownloadRouter) Run(ctx context.Context) (err error) {
 					// not a problem if we have enough connections. Probably count it.
 				}
 			case FatalFailure:
+				for _, c := range d.connections {
+					c <- r
+				}
 				d.outbox <- r
 				return nil
 			case Done:
+				for _, c := range d.connections {
+					c <- r
+				}
 				d.outbox <- r
 				return nil
 			default:

@@ -2,7 +2,6 @@ package downloadng
 
 import (
 	"context"
-	"fmt"
 	"storj.io/common/pb"
 	"storj.io/common/rpc"
 	"storj.io/common/signing"
@@ -20,7 +19,7 @@ type DownloadPiece struct {
 	segmentID  storj.SegmentID
 }
 
-type Download struct {
+type DownloadSegment struct {
 	ecShare   int
 	segmentID storj.SegmentID
 
@@ -42,7 +41,7 @@ type PieceStoreClient struct {
 }
 
 func NewPieceStoreClient(node storj.NodeURL, outbox chan any) (*PieceStoreClient, error) {
-	dialer, err := getDialer(context.Background(), true)
+	dialer, err := getDialer(context.Background(), false)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +71,10 @@ func (d *PieceStoreClient) Run(ctx context.Context) {
 			case *DownloadPiece:
 				_, err = d.Download(ctx, client, r)
 				// we need to send out errors and count them
-				fmt.Println(err)
+				//fmt.Println(err)
 			case FatalFailure:
-				d.outbox <- d
 				return
 			case Done:
-				d.outbox <- d
 				return
 			default:
 				d.outbox <- d
@@ -96,7 +93,7 @@ func (d *PieceStoreClient) Download(ctx context.Context, client pb.DRPCPiecestor
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	d.outbox <- &Download{
+	d.outbox <- &DownloadSegment{
 		startTime: time.Now(),
 		size:      size,
 		ecShare:   req.ecShare,
@@ -151,12 +148,13 @@ func (d *PieceStoreClient) Download(ctx context.Context, client pb.DRPCPiecestor
 			return
 		}
 
-		d.outbox <- &Download{
+		d.outbox <- &DownloadSegment{
 			response:  resp,
 			ecShare:   req.ecShare,
 			segmentID: req.segmentID,
 			sn:        req.orderLimit.StorageNodeId,
 		}
+		downloaded += int64(len(resp.Chunk.Data))
 	}
 
 	return

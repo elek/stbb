@@ -22,7 +22,7 @@ type DownloadObject struct {
 }
 
 func (s *ObjectDownloader) Run(ctx context.Context) error {
-	defer close(s.outbox)
+	//defer close(s.outbox)
 	dialer, err := getDialer(ctx, false)
 	if err != nil {
 		return err
@@ -44,8 +44,13 @@ func (s *ObjectDownloader) Run(ctx context.Context) error {
 				if err != nil {
 					return err
 				}
+			case Done:
+				s.outbox <- req
+				return nil
+			case FatalFailure:
+				s.outbox <- req
+				return nil
 			}
-
 		case <-ctx.Done():
 			return nil
 		}

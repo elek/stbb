@@ -2,7 +2,6 @@ package downloadng
 
 import (
 	"context"
-	"fmt"
 	"github.com/vivint/infectious"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
@@ -10,13 +9,13 @@ import (
 )
 
 type Parallel struct {
+	global   chan any
 	inbox    chan any
 	outbox   chan any
 	segments map[string]*segmentBuffer
-	finish   func()
 }
 
-func (p *Parallel) Add(req *Download) *segmentBuffer {
+func (p *Parallel) Add(req *DownloadSegment) *segmentBuffer {
 	if _, found := p.segments[req.segmentID.String()]; !found {
 		p.segments[req.segmentID.String()] = &segmentBuffer{
 			results: map[storj.NodeID]*pieceBuffer{},
@@ -36,13 +35,12 @@ type pieceBuffer struct {
 	chunks       []*pb.PieceDownloadResponse
 }
 
-func (b *pieceBuffer) Add(req *Download) {
+func (b *pieceBuffer) Add(req *DownloadSegment) {
 	if req.response != nil {
 		b.chunks = append(b.chunks, req.response)
 		b.size += int64(len(req.response.Chunk.Data))
 		if b.size == b.expectedSize {
 			b.duration = time.Since(b.start)
-			fmt.Printf("Data #%d is downloaded %d %d during %d ms\n", req.ecShare, len(req.response.Chunk.Data), req.response.Chunk.Offset, b.duration.Milliseconds())
 		}
 	} else {
 		b.expectedSize = req.size
@@ -64,7 +62,7 @@ type segmentBuffer struct {
 	processedOffset int64
 }
 
-func (b *segmentBuffer) Add(req *Download) {
+func (b *segmentBuffer) Add(req *DownloadSegment) {
 	if _, found := b.results[req.sn]; !found {
 		b.results[req.sn] = &pieceBuffer{
 			chunks: []*pb.PieceDownloadResponse{},
@@ -133,6 +131,7 @@ func (b *segmentBuffer) ForwardDownloaded(outbox chan any) {
 }
 
 func (p *Parallel) Run(ctx context.Context) error {
+	done := false
 	for {
 		select {
 		case req := <-p.inbox:
@@ -141,19 +140,17 @@ func (p *Parallel) Run(ctx context.Context) error {
 			}
 
 			switch r := req.(type) {
-			case *Download:
+			case *DownloadSegment:
 				segment := p.Add(r)
 				segment.Add(r)
 
 				segment.ForwardDownloaded(p.outbox)
 
-				if segment.finished {
+				if segment.finished && !done {
 					segment.Cancel()
 					// todo: finish only if this is the last segment
-					p.finish()
-					fmt.Printf("Segment is downloaded during %d ms using %d storagenode\n", segment.duration, len(segment.results))
-					close(p.inbox)
-
+					p.global <- Done{}
+					done = true
 				}
 			case FatalFailure:
 				p.outbox <- r

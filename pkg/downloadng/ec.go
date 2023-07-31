@@ -50,6 +50,9 @@ func (e *ECDecoder) Run(ctx context.Context) error {
 				e.outbox <- &DecryptBuffer{
 					encrypted: decoded,
 				}
+			case Done:
+				e.outbox <- r
+				return nil
 			default:
 				e.outbox <- r
 			}

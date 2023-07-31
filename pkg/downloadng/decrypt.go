@@ -2,7 +2,6 @@ package downloadng
 
 import (
 	"context"
-	"fmt"
 	"storj.io/common/encryption"
 	"storj.io/common/paths"
 	"storj.io/common/pb"
@@ -34,7 +33,7 @@ func NewDecrypt(inbox chan any, store *encryption.Store) (*Decrypt, error) {
 	return &Decrypt{
 		store:  store,
 		inbox:  inbox,
-		outbox: make(chan any),
+		outbox: logReceived("final", make(chan any)),
 	}, nil
 }
 
@@ -68,7 +67,6 @@ func (d *Decrypt) Run(ctx context.Context) error {
 
 				d.counter = 0
 			case *DecryptBuffer:
-				fmt.Println("Decrypting")
 				var out []byte
 				transformed, err := decrypter.Transform(out, r.encrypted, d.counter)
 				if err != nil {
@@ -76,6 +74,9 @@ func (d *Decrypt) Run(ctx context.Context) error {
 				}
 				d.counter++
 				d.outbox <- transformed
+			case Done:
+				d.outbox <- req
+				return nil
 			}
 		case <-ctx.Done():
 			return nil

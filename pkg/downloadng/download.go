@@ -48,12 +48,10 @@ func download(bucket string, key string) error {
 	}
 
 	p := Parallel{
+		global:   first,
 		inbox:    logReceived("Parallel", sd.outbox),
 		outbox:   make(chan any),
 		segments: map[string]*segmentBuffer{},
-		finish: func() {
-			close(downloader.inbox)
-		},
 	}
 
 	ec, err := NewECDecoder(p.outbox)
@@ -117,7 +115,10 @@ func download(bucket string, key string) error {
 				switch r := msg.(type) {
 				case []byte:
 					out.Write(r)
+				case Done:
+					return
 				}
+
 			}
 		}
 	}()
