@@ -13,6 +13,7 @@ import (
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/placement"
 	"github.com/elek/stbb/pkg/rpc"
 	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/uplink"
@@ -138,6 +139,8 @@ func main() {
 		Access     access.AccessCmd       `cmd:""`
 		RPC        rpc.RPC                `cmd:""`
 		Crypto     crypto.Crypto          `cmd:""`
+		Placement  placement.Placement    `cmd:""`
+		GeoIP      GeoIP                  `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,

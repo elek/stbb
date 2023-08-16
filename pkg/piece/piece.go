@@ -19,4 +19,5 @@ type Piece struct {
 	NodeSpeed    NodeSpeed          `cmd:"" help:"Download one piece from all the nodes"`
 	Decode       Decode             `cmd:"" help:"Decode piece alias (from the condensed format, stored in db)"`
 	DownloadPs   DownloadPieceStore `cmd:"" help:"Download piece from the Storagenode using piece store"`
+	Unalias      Unalias            `cmd:"" help:"Decode node aliases"`
 }
