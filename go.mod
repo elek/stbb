@@ -72,5 +72,3 @@ require (
 	storj.io/picobuf v0.0.1 // indirect
 	storj.io/private v0.0.0-20230703113355-ccd4db5ae659 // indirect
 )
-
-replace storj.io/common => ../../jr/common
