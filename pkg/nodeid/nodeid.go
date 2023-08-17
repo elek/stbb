@@ -52,7 +52,6 @@ func (r *Read) Run() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(hex.EncodeToString(id.Bytes()))
 	fmt.Println(id.String())
 	return nil
 }
