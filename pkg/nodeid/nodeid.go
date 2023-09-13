@@ -44,7 +44,8 @@ func (d *Decode) Run() error {
 }
 
 type Read struct {
-	ID string `arg:""`
+	ID     string `arg:""`
+	Output string
 }
 
 func (r *Read) Run() error {
@@ -53,6 +54,17 @@ func (r *Read) Run() error {
 		return err
 	}
 	fmt.Println(id.String())
+	if r.Output != "" {
+		out, err := os.Create(r.Output)
+		if err != nil {
+			return err
+		}
+		_, err = out.Write(id.Bytes())
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	return nil
 }
 

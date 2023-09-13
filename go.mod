@@ -33,6 +33,7 @@ require (
 
 require (
 	github.com/apache/thrift v0.12.0 // indirect
+	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/bmkessler/fastdiv v0.0.0-20190227075523-41d5178f2044 // indirect
 	github.com/calebcase/tmpfile v1.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
