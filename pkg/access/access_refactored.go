@@ -164,15 +164,17 @@ func parseNodeURL(address string) (storj.NodeURL, error) {
 //
 // To revoke an access grant see the Project.RevokeAccess method.
 func (access *Access) Share(permission Permission, prefixes ...SharePrefix) (*Access, error) {
-	internalPrefixes := make([]grant.SharePrefix, 0, len(prefixes))
-	for _, prefix := range prefixes {
-		internalPrefixes = append(internalPrefixes, grant.SharePrefix(prefix))
-	}
-	rv, err := access.toInternal().Restrict(grant.Permission(permission), internalPrefixes...)
-	if err != nil {
-		return nil, err
-	}
-	return accessFromInternal(rv)
+	//internalPrefixes := make([]grant.SharePrefix, 0, len(prefixes))
+	//for _, prefix := range prefixes {
+	//	internalPrefixes = append(internalPrefixes, grant.SharePrefix(prefix))
+	//}
+	//rv, err := access.toInternal().Restrict(grant.Permission(permission), internalPrefixes...)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return accessFromInternal(rv)
+	//TODO
+	return nil, nil
 }
 
 func (access *Access) toInternal() *grant.Access {

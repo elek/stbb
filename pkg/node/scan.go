@@ -20,6 +20,7 @@ type result struct {
 	action   string
 }
 
+// Scan uploads/downloads one piece to each node and records the time.
 type Scan struct {
 	util.DialerHelper
 	NodeFile     string `arg:""`
@@ -34,7 +35,7 @@ func (s Scan) Run() error {
 	results := make(chan result)
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 10; i++ {
 		go func() {
 
 			for {

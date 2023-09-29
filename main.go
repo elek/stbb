@@ -13,12 +13,15 @@ import (
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
-	"github.com/elek/stbb/pkg/placement"
+	"github.com/elek/stbb/pkg/rangedloop"
 	"github.com/elek/stbb/pkg/rpc"
+	"github.com/elek/stbb/pkg/sandbox"
 	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
+	"log"
+	"net"
 	"os"
 	"os/signal"
 	"reflect"
@@ -27,12 +30,18 @@ import (
 	"runtime/pprof"
 	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
+	dbg "storj.io/private/debug"
 	"strings"
 	"sync"
 	"syscall"
 )
 
 func main() {
+
+	zapLog, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
 
 	if os.Getenv("STBB_JAEGER") != "" {
 		// agent.tracing.datasci.storj.io:5775
@@ -110,6 +119,21 @@ func main() {
 		}()
 	}
 
+	if os.Getenv("STBB_DEBUG") != "" {
+		listener, err := net.Listen("tcp", os.Getenv("STBB_DEBUG"))
+		if err != nil {
+			panic(err)
+		}
+		dbgServer := dbg.NewServer(zapLog, listener, monkit.Default, dbg.Config{})
+		go func() {
+			err := dbgServer.Run(context.Background())
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
+		defer dbgServer.Close()
+	}
+
 	usr1 := make(chan os.Signal, 1)
 	defer close(usr1)
 	signal.Notify(usr1, syscall.SIGUSR1)
@@ -139,8 +163,9 @@ func main() {
 		Access     access.AccessCmd       `cmd:""`
 		RPC        rpc.RPC                `cmd:""`
 		Crypto     crypto.Crypto          `cmd:""`
-		Placement  placement.Placement    `cmd:""`
 		GeoIP      GeoIP                  `cmd:""`
+		RangedLoop rangedloop.RangedLoop  `cmd:""`
+		Sandbox    sandbox.Sandbox        `cmd:"-"`
 	}
 
 	ctx := kong.Parse(&cli,
@@ -156,8 +181,10 @@ func main() {
 	)
 
 	kong.Bind(ctx)
-	err := ctx.Run(ctx)
-	ctx.FatalIfErrorf(err)
+	err = ctx.Run(ctx)
+	if err != nil {
+		log.Fatalf("%+v", err)
+	}
 }
 
 func readStack() []byte {

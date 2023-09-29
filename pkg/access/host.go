@@ -7,9 +7,10 @@ import (
 )
 
 type Host struct {
+	ReplacementHost string `arg:""`
 }
 
-func (h Host) changeHost(hostNew string) error {
+func (h Host) Run() error {
 	gr := os.Getenv("UPLINK_ACCESS")
 	access, err := ParseAccess(gr)
 	if err != nil {
@@ -17,7 +18,7 @@ func (h Host) changeHost(hostNew string) error {
 	}
 	access.SatelliteURL = storj.NodeURL{
 		ID:      access.SatelliteURL.ID,
-		Address: hostNew,
+		Address: h.ReplacementHost,
 	}
 
 	serialized, err := access.Serialize()

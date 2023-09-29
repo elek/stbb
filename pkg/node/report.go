@@ -17,7 +17,7 @@ type Report struct {
 
 func (r Report) Run() error {
 
-	geoIP, err := maxminddb.Open("/tmp/geolite2-city/GeoLite2-City.mmdb")
+	geoIP, err := maxminddb.Open("GeoLite2-City.mmdb")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -31,6 +31,7 @@ func (r Report) Run() error {
 		"last_ip_port",
 		"latitude",
 		"longitude",
+		"city",
 	})
 	if err != nil {
 		return err
@@ -52,6 +53,13 @@ func (r Report) Run() error {
 			}
 			return fmt.Sprintf("%f", val)
 		}
+		city := ""
+		if res["city"] != nil {
+			names := res["city"].(map[string]interface{})["names"]
+			if names != nil {
+				city = names.(map[string]interface{})["en"].(string)
+			}
+		}
 		return c.Write([]string{
 			node.ID.String(),
 			values["last_net"],
@@ -59,6 +67,7 @@ func (r Report) Run() error {
 			values["last_ip_port"],
 			safe(location["latitude"]),
 			safe(location["longitude"]),
+			city,
 		})
 
 	})
