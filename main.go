@@ -10,6 +10,7 @@ import (
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/load"
+	"github.com/elek/stbb/pkg/metainfo"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
@@ -17,6 +18,7 @@ import (
 	"github.com/elek/stbb/pkg/rpc"
 	"github.com/elek/stbb/pkg/sandbox"
 	"github.com/elek/stbb/pkg/satellite"
+	"github.com/elek/stbb/pkg/segment"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
@@ -165,7 +167,9 @@ func main() {
 		Crypto     crypto.Crypto          `cmd:""`
 		GeoIP      GeoIP                  `cmd:""`
 		RangedLoop rangedloop.RangedLoop  `cmd:""`
-		Sandbox    sandbox.Sandbox        `cmd:"-"`
+		Sandbox    sandbox.Sandbox        `cmd:""`
+		Segment    segment.Segment        `cmd:""`
+		Metainfo   metainfo.Metainfo      `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,

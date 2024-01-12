@@ -4,19 +4,30 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
+	"path/filepath"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
 )
 
 type Restore struct {
-	URL string `arg:""`
+	URL  string `arg:""`
+	Keys string
 }
 
-func (r Restore) restore() error {
+func (r Restore) Run() error {
 	ctx := context.Background()
-
-	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
+	var err error
+	var ident *identity.FullIdentity
+	if r.Keys == "" {
+		ident, err = identity.FullIdentityFromPEM(Certificate, Key)
+	} else {
+		satelliteIdentityCfg := identity.Config{
+			CertPath: filepath.Join(r.Keys, "identity.cert"),
+			KeyPath:  filepath.Join(r.Keys, "identity.key"),
+		}
+		ident, err = satelliteIdentityCfg.Load()
+	}
 	if err != nil {
 		return err
 	}
@@ -40,6 +51,6 @@ func (r Restore) restore() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(restored)
+	fmt.Println("called", restored)
 	return nil
 }

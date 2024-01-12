@@ -8,6 +8,7 @@ import (
 
 type Host struct {
 	ReplacementHost string `arg:""`
+	ReplacementID   string
 }
 
 func (h Host) Run() error {
@@ -16,8 +17,15 @@ func (h Host) Run() error {
 	if err != nil {
 		return err
 	}
+	id := access.SatelliteURL.ID
+	if h.ReplacementID != "" {
+		id, err = storj.NodeIDFromString(h.ReplacementID)
+		if err != nil {
+			return err
+		}
+	}
 	access.SatelliteURL = storj.NodeURL{
-		ID:      access.SatelliteURL.ID,
+		ID:      id,
 		Address: h.ReplacementHost,
 	}
 

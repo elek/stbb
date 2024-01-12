@@ -6,4 +6,7 @@ type Node struct {
 	NodeStat    NodeStat    `cmd:""`
 	Export      Export      `cmd:""`
 	UnsentOrder UnsentOrder `cmd:""`
+	Paystub     Paystub     `cmd:""`
+	Checkin     Checkin     `cmd:""`
+	PieceList   PieceList   `cmd:""`
 }

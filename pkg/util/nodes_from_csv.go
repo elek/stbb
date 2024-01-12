@@ -1,4 +1,4 @@
-package node
+package util
 
 import (
 	"encoding/csv"
@@ -9,16 +9,9 @@ import (
 	"io"
 	"os"
 	"storj.io/common/storj"
-	"time"
 )
 
-func measure(f func() error) (time.Duration, error) {
-	start := time.Now()
-	err := f()
-	return time.Since(start), err
-}
-
-func forEachNode(file string, cb func(node storj.NodeURL, values map[string]string) error) error {
+func ForEachNodeCSV(file string, cb func(node storj.NodeURL) error) error {
 	input, err := os.Open(file)
 	if err != nil {
 		return errs.Wrap(err)
@@ -65,14 +58,8 @@ func forEachNode(file string, cb func(node storj.NodeURL, values map[string]stri
 			Address:   record[headers["address"]],
 			NoiseInfo: noise,
 		}
-		r := map[string]string{}
-		for k, v := range headers {
-			if v < len(record) {
-				r[k] = record[v]
-			}
-		}
 
-		err = cb(nodeURL, r)
+		err = cb(nodeURL)
 		if err != nil {
 			fmt.Println(nodeID, err)
 		}

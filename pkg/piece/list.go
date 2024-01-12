@@ -57,7 +57,6 @@ func (l *List) Run() error {
 	resp, err := metainfoClient.GetObjectIPs(ctx, metaclient.GetObjectIPsParams{
 		Bucket:             []byte(bucket),
 		EncryptedObjectKey: decoded,
-		Version:            0,
 	})
 	if err != nil {
 		return err

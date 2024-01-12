@@ -60,7 +60,7 @@ func (s Scan) Run() error {
 
 						ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 						defer cancel()
-						duration, err := measure(func() error {
+						duration, err := util.Measure(func() error {
 							upload := piece.UploadDrpc{
 								DialerHelper: s.DialerHelper,
 								Keys:         s.Keys,
@@ -88,7 +88,7 @@ func (s Scan) Run() error {
 						defer cancel()
 						var size int
 						var pieceID storj.PieceID
-						duration, err := measure(func() error {
+						duration, err := util.Measure(func() error {
 							upload := piece.UploadDrpc{
 								DialerHelper: s.DialerHelper,
 								Keys:         s.Keys,
@@ -111,7 +111,7 @@ func (s Scan) Run() error {
 								panic(err)
 							}
 							signer.Action = pb.PieceAction_GET
-							duration, err := measure(func() error {
+							duration, err := util.Measure(func() error {
 								download := piece.DownloadDRPC{
 									DialerHelper: s.DialerHelper,
 									Keys:         s.Keys,
@@ -182,7 +182,7 @@ func (s Scan) Run() error {
 		}
 
 	}()
-	err := forEachNode(s.NodeFile, func(node storj.NodeURL, _ map[string]string) error {
+	err := util.ForEachNodeCSV(s.NodeFile, func(node storj.NodeURL) error {
 		wg.Add(1)
 		tasks <- node
 		return nil

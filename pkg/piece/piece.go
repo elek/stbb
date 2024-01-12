@@ -20,4 +20,5 @@ type Piece struct {
 	Decode       Decode             `cmd:"" help:"Decode piece alias (from the condensed format, stored in db)"`
 	DownloadPs   DownloadPieceStore `cmd:"" help:"Download piece from the Storagenode using piece store"`
 	Unalias      Unalias            `cmd:"" help:"Decode node aliases"`
+	Exist        Exist              `cmd:"" help:"check if piece id is on SN"`
 }

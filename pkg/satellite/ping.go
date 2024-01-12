@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
-	"os"
-	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/rpc"
 	"storj.io/common/storj"
@@ -14,22 +12,13 @@ import (
 
 type Ping struct {
 	URL string `arg:""`
+	util.DialerHelper
 }
 
 func (p Ping) Run() error {
 	ctx := context.Background()
 
-	Certificate, _ = os.ReadFile("identity.cert")
-	Key, _ = os.ReadFile("identity.key")
-	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
-	if err != nil {
-		return err
-	}
-
-	dialer, err := util.GetDialerForIdentity(ctx, ident, false, false)
-	if err != nil {
-		return err
-	}
+	dialer, err := p.CreateRPCDialer()
 	nodeURL, err := storj.ParseNodeURL(p.URL)
 	if err != nil {
 		return err

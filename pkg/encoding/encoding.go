@@ -8,6 +8,8 @@ import (
 	"storj.io/common/base58"
 )
 
+var pathEncoding = base32.NewEncoding("abcdefghijklmnopqrstuvwxyz234567").WithPadding(base32.NoPadding)
+
 type Encoding struct {
 	Base58Decode Base58Decode `cmd:"" name:"base58-decode"`
 	Base58Encode Base58Encode `cmd:"" name:"base58-encode"`
@@ -15,6 +17,8 @@ type Encoding struct {
 	Base32Encode Base32Encode `cmd:"" name:"base32-encode"`
 	Base64Decode Base64Decode `cmd:"" name:"base64-decode"`
 	Base64Encode Base64Encode `cmd:"" name:"base64-encode"`
+	PathEncode   PathEncode   `cmd:"" name:"path-encode"`
+	PathDecode   PathDecode   `cmd:"" name:"path-decode"`
 	HexEncode    HexEncode    `cmd:"" name:"hex-encode"`
 	HexDecode    HexDecode    `cmd:"" name:"hex-decode"`
 }
@@ -73,6 +77,36 @@ func (b Base32Encode) Run() error {
 		return err
 	}
 	fmt.Println(encoded)
+	return nil
+}
+
+type PathEncode struct {
+	Data string `arg:""`
+}
+
+func (b PathEncode) Run() error {
+	raw, err := hex.DecodeString(b.Data)
+	if err != nil {
+		return err
+	}
+	encoded := pathEncoding.WithPadding(base32.NoPadding).EncodeToString(raw)
+	if err != nil {
+		return err
+	}
+	fmt.Println(encoded)
+	return nil
+}
+
+type PathDecode struct {
+	Data string `arg:""`
+}
+
+func (b PathDecode) Run() error {
+	result, err := pathEncoding.DecodeString(b.Data)
+	if err != nil {
+		return err
+	}
+	fmt.Println(hex.EncodeToString(result))
 	return nil
 }
 

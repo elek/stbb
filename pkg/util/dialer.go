@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	flag "github.com/spf13/pflag"
+	"os"
 	"storj.io/common/identity"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/rpc"
@@ -37,10 +38,24 @@ func (d *DialerHelper) Connect(ctx context.Context, nodeURL storj.NodeURL) (*rpc
 }
 
 func (d *DialerHelper) CreateRPCDialer() (rpc.Dialer, error) {
-	ident, err := identity.NewFullIdentity(context.Background(), identity.NewCAOptions{
-		Difficulty:  0,
-		Concurrency: 1,
-	})
+	var err error
+	var ident *identity.FullIdentity
+	if _, err := os.Stat("identity.cert"); err == nil {
+		satelliteIdentityCfg := identity.Config{
+			CertPath: "identity.cert",
+			KeyPath:  "identity.key",
+		}
+		ident, err = satelliteIdentityCfg.Load()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		ident, err = identity.NewFullIdentity(context.Background(), identity.NewCAOptions{
+			Difficulty:  0,
+			Concurrency: 1,
+		})
+	}
+
 	if err != nil {
 		return rpc.Dialer{}, err
 	}

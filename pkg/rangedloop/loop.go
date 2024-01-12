@@ -46,11 +46,6 @@ func (r RangedLoop) Run() error {
 		ApplicationName: "stbb",
 	})
 
-	nodes, err := GetParticipatingNodes(ctx, satelliteDB.Testing().RawDB())
-	if err != nil {
-		return errs.New("Error creating satellite connection: %+v", err)
-	}
-
 	defer func() {
 		_ = satelliteDB.Close()
 	}()
@@ -62,20 +57,6 @@ func (r RangedLoop) Run() error {
 	}
 
 	var observers []rangedloop.Observer
-	observers = append(observers, NewDurability(nodes, []GroupClassifier{
-		func(node *FullSelectedNode) string {
-			return "net:" + node.LastNet
-		},
-		func(node *FullSelectedNode) string {
-			return "email:" + node.Email
-		},
-		func(node *FullSelectedNode) string {
-			return "wallet:" + node.Wallet
-		},
-		func(node *FullSelectedNode) string {
-			return "country:" + node.CountryCode.String()
-		},
-	}))
 
 	observers = append(observers, NewCount())
 	observers = append(observers, metrics.NewObserver())

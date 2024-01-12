@@ -12,15 +12,12 @@ import (
 	"time"
 )
 
-type Sandbox struct {
-	Repro Repro `cmd:""`
-	Stat  Stat  `cmd:""`
-}
-type Repro struct {
-	Path string `arg:"" name:"path" help:"path to the file to be downloaded"`
+type Stat struct {
+	Path      string `arg:"" name:"path" help:"path to the file to be uploaded"`
+	MaxPeriod int    `arg:"max time between two request in minutes"`
 }
 
-func (u *Repro) Run() error {
+func (u *Stat) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	gr := os.Getenv("UPLINK_ACCESS")
@@ -44,9 +41,9 @@ func (u *Repro) Run() error {
 	}
 
 	err = transport.SetSatelliteConnectionPool(context.TODO(), &cfg, rpcpool.New(rpcpool.Options{
-		Capacity:       10,
-		KeyCapacity:    10,
-		IdleExpiration: 30 * time.Second,
+		Capacity:       200,
+		KeyCapacity:    0,
+		IdleExpiration: 0,
 		Name:           "satellite",
 	}))
 	if err != nil {
@@ -56,35 +53,36 @@ func (u *Repro) Run() error {
 	err = transport.SetConnectionPool(context.TODO(), &cfg, rpcpool.New(rpcpool.Options{
 		Capacity:       10,
 		KeyCapacity:    10,
-		IdleExpiration: 30 * time.Second,
+		IdleExpiration: 30,
 		Name:           "pool",
 	}))
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < 10; i++ {
-		project, err := cfg.OpenProject(ctx, access)
-		if err != nil {
-			return errs.Wrap(err)
+	period := 5 * time.Second
+	for i := 0; i < 100; i++ {
+		u.stat(cfg, ctx, access, bucket, key)
+		time.Sleep(period)
+		period = period * 3 / 2
+		if period > time.Duration(u.MaxPeriod)*time.Minute {
+			period = time.Duration(u.MaxPeriod) * time.Minute
 		}
-		defer project.Close()
-
-		cctx, cancel := context.WithCancel(ctx)
-		object, err := project.DownloadObject(cctx, bucket, key, nil)
-		if err != nil {
-			return errs.Wrap(err)
-		}
-
-		all, err := object.Read(make([]byte, 800))
-		if err != nil {
-			return errs.Wrap(err)
-		}
-		cancel()
-		fmt.Println(all)
-		object.Close()
 	}
-	time.Sleep(1 * time.Hour)
 
 	return nil
+}
+
+func (u *Stat) stat(cfg uplink.Config, ctx context.Context, access *uplink.Access, bucket string, key string) {
+	project, err := cfg.OpenProject(ctx, access)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer project.Close()
+	fmt.Println(time.Now(), "executing stat")
+	_, err = project.StatObject(ctx, bucket, key)
+	fmt.Println(time.Now(), "stat done")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
