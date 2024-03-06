@@ -97,8 +97,7 @@ func (s *Classify) Run() error {
 		map[location.CountryCode]struct{}{},
 		true,
 		true,
-		def[segment.Placement],
-		[]storj.NodeID{})
+		def[segment.Placement])
 	pattern := "%-20s %d\n"
 	fmt.Printf(pattern, "healthy", result.Healthy.Count())
 	fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Count())
