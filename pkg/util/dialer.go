@@ -2,8 +2,10 @@ package util
 
 import (
 	"context"
+	"fmt"
 	flag "github.com/spf13/pflag"
 	"os"
+	"path/filepath"
 	"storj.io/common/identity"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/rpc"
@@ -15,7 +17,7 @@ type DialerHelper struct {
 	Quic        bool
 	Pooled      bool
 	Noise       bool
-	IdentityDir string
+	IdentityDir string `default:"."`
 }
 
 type Dialer func(ctx context.Context, nodeURL storj.NodeURL) (_ *rpc.Conn, err error)
@@ -40,15 +42,16 @@ func (d *DialerHelper) Connect(ctx context.Context, nodeURL storj.NodeURL) (*rpc
 func (d *DialerHelper) CreateRPCDialer() (rpc.Dialer, error) {
 	var err error
 	var ident *identity.FullIdentity
-	if _, err := os.Stat("identity.cert"); err == nil {
+	if _, err := os.Stat(filepath.Join(d.IdentityDir, "identity.cert")); err == nil || d.IdentityDir != "." {
 		satelliteIdentityCfg := identity.Config{
-			CertPath: "identity.cert",
-			KeyPath:  "identity.key",
+			CertPath: filepath.Join(d.IdentityDir, "identity.cert"),
+			KeyPath:  filepath.Join(d.IdentityDir, "identity.key"),
 		}
 		ident, err = satelliteIdentityCfg.Load()
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("identity is loaded ", ident.ID.String())
 	} else {
 		ident, err = identity.NewFullIdentity(context.Background(), identity.NewCAOptions{
 			Difficulty:  0,

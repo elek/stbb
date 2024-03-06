@@ -93,6 +93,10 @@ func serve() error {
 type pieceStore struct {
 }
 
+func (p *pieceStore) RetainBig(stream pb.DRPCPiecestore_RetainBigStream) error {
+	return nil
+}
+
 func (p *pieceStore) Upload(stream pb.DRPCPiecestore_UploadStream) error {
 	//TODO implement me
 	panic("implement me")

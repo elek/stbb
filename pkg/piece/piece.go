@@ -21,4 +21,7 @@ type Piece struct {
 	DownloadPs   DownloadPieceStore `cmd:"" help:"Download piece from the Storagenode using piece store"`
 	Unalias      Unalias            `cmd:"" help:"Decode node aliases"`
 	Exist        Exist              `cmd:"" help:"check if piece id is on SN"`
+	Audit        Audit              `cmd:"" help:"audit pieces on node"`
+	Derive       Derive             `cmd:"" help:"derive piece id"`
+	Checksum     Checksum           `cmd:"" help:"download piece and checks if stored checksum is fine"`
 }

@@ -27,7 +27,7 @@ type UploadDrpc struct {
 func (u *UploadDrpc) Run() error {
 	ctx := context.Background()
 
-	orderLimitCreator, err := NewKeySignerFromDir(u.Keys)
+	orderLimitCreator, err := util.NewKeySignerFromDir(u.Keys)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (u *UploadDrpc) Run() error {
 	return err
 }
 
-func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *KeySigner) (size int, id storj.PieceID, err error) {
+func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *util.KeySigner) (size int, id storj.PieceID, err error) {
 	conn, err := u.Connect(ctx, u.NodeURL)
 	if err != nil {
 		return 0, id, err
@@ -61,7 +61,7 @@ func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *Ke
 	return size, id, nil
 }
 
-func (d *UploadDrpc) Upload(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner) (uploaded int, id storj.PieceID, err error) {
+func (d *UploadDrpc) Upload(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *util.KeySigner) (uploaded int, id storj.PieceID, err error) {
 	defer mon.Task()(&ctx)(&err)
 	pieceID := storj.NewPieceID()
 

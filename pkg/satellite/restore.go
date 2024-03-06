@@ -20,7 +20,7 @@ func (r Restore) Run() error {
 	var err error
 	var ident *identity.FullIdentity
 	if r.Keys == "" {
-		ident, err = identity.FullIdentityFromPEM(Certificate, Key)
+		ident, err = identity.FullIdentityFromPEM(util.Certificate, util.Key)
 	} else {
 		satelliteIdentityCfg := identity.Config{
 			CertPath: filepath.Join(r.Keys, "identity.cert"),

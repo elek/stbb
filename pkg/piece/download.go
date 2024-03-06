@@ -13,7 +13,7 @@ type Downloader struct {
 	satelliteURL      storj.NodeURL
 	storagenodeURL    storj.NodeURL
 	fi                *identity.FullIdentity
-	OrderLimitCreator OrderLimitCreator
+	OrderLimitCreator util.OrderLimitCreator
 	dialer            *util.DialerHelper
 	grant             *grant.Access
 }
@@ -46,7 +46,7 @@ func NewDownloader(ctx context.Context, storagenodeURL string, dh *util.DialerHe
 
 	d.dialer = dh
 
-	d.OrderLimitCreator, err = NewKeySigner()
+	d.OrderLimitCreator, err = util.NewKeySigner()
 	if err != nil {
 		return
 	}

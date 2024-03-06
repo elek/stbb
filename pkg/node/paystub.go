@@ -3,7 +3,6 @@ package node
 import (
 	"context"
 	"fmt"
-	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"os"
@@ -54,9 +53,9 @@ type Paystub struct {
 func (g Paystub) Run() error {
 	ctx := context.Background()
 
-	satellite.Certificate, _ = os.ReadFile("identity.cert")
-	satellite.Key, _ = os.ReadFile("identity.key")
-	ident, err := identity.FullIdentityFromPEM(satellite.Certificate, satellite.Key)
+	util.Certificate, _ = os.ReadFile("identity.cert")
+	util.Key, _ = os.ReadFile("identity.key")
+	ident, err := identity.FullIdentityFromPEM(util.Certificate, util.Key)
 	if err != nil {
 		return err
 	}

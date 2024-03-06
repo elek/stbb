@@ -18,7 +18,7 @@ type GC struct {
 func (g GC) Run() error {
 	ctx := context.Background()
 
-	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
+	ident, err := identity.FullIdentityFromPEM(util.Certificate, util.Key)
 	if err != nil {
 		return err
 	}

@@ -22,7 +22,7 @@ type DownloadPieceStore struct {
 }
 
 func (d *DownloadPieceStore) Run() error {
-	orderLimitCreator, err := NewKeySignerFromDir(d.Keys)
+	orderLimitCreator, err := util.NewKeySignerFromDir(d.Keys)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (d *DownloadPieceStore) Run() error {
 	return err
 }
 
-func (d *DownloadPieceStore) Download(ctx context.Context, signer *KeySigner) (downloaded int64, err error) {
+func (d *DownloadPieceStore) Download(ctx context.Context, signer *util.KeySigner) (downloaded int64, err error) {
 	config := piecestore.DefaultConfig
 	//config.InitialStep = 64 * memory.KiB.Int64()
 	//config.MaximumStep = 256 * memory.KiB.Int64()

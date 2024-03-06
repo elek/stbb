@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
@@ -13,8 +14,6 @@ import (
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/repair"
 	"storj.io/storj/satellite/satellitedb"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -47,17 +46,7 @@ func (s *Classify) Run() error {
 		return err
 	}
 
-	sp := metabase.SegmentPosition{}
-	parts := strings.Split(s.StreamID, "/")
-
-	if len(parts) > 1 {
-		part, err := strconv.Atoi(parts[1])
-		if err != nil {
-			return err
-		}
-		sp = metabase.SegmentPositionFromEncoded(uint64(part))
-	}
-	su, err := ParseUUID(parts[0])
+	su, sp, err := util.ParseSegmentPosition(s.StreamID)
 	if err != nil {
 		return err
 	}
@@ -92,17 +81,12 @@ func (s *Classify) Run() error {
 		}
 	}
 
-	var filter nodeselection.NodeFilter
-	{
-		c := nodeselection.ConfigurablePlacementRule{
-			s.PlacementFile,
-		}
-		def, err := c.Parse()
-		if err != nil {
-			return err
-		}
-		filter = def.CreateFilters(segment.Placement)
+	c := nodeselection.ConfigurablePlacementRule{
+		s.PlacementFile,
 	}
+	def, err := c.Parse(func() (nodeselection.Placement, error) {
+		panic("default placement shouldn't be used")
+	})
 
 	fmt.Println("segment", segment.StreamID)
 	fmt.Println("placement", segment.Placement)
@@ -113,19 +97,19 @@ func (s *Classify) Run() error {
 		map[location.CountryCode]struct{}{},
 		true,
 		true,
-		filter,
+		def[segment.Placement],
 		[]storj.NodeID{})
 	pattern := "%-20s %d\n"
-	fmt.Printf(pattern, "healthy", result.Healthy.Size())
-	fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Size())
-	fmt.Printf(pattern, "uhealthy", result.Unhealthy.Size())
-	fmt.Printf(pattern, "suspended", result.Suspended.Size())
-	fmt.Printf(pattern, "existing", result.Exiting.Size())
-	fmt.Printf(pattern, "missing", result.Missing.Size())
-	fmt.Printf(pattern, "unhealhty-retrvb.", result.UnhealthyRetrievable.Size())
-	fmt.Printf(pattern, "missing", result.Missing.Size())
-	fmt.Printf(pattern, "clumped", result.Clumped.Size())
-	fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Size())
+	fmt.Printf(pattern, "healthy", result.Healthy.Count())
+	fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Count())
+	fmt.Printf(pattern, "uhealthy", result.Unhealthy.Count())
+	fmt.Printf(pattern, "suspended", result.Suspended.Count())
+	fmt.Printf(pattern, "existing", result.Exiting.Count())
+	fmt.Printf(pattern, "missing", result.Missing.Count())
+	fmt.Printf(pattern, "unhealhty-retrvb.", result.UnhealthyRetrievable.Count())
+	fmt.Printf(pattern, "missing", result.Missing.Count())
+	fmt.Printf(pattern, "clumped", result.Clumped.Count())
+	fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Count())
 
 	return nil
 }

@@ -8,21 +8,23 @@ import (
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
+	"path/filepath"
 	"storj.io/common/dbutil"
 	"storj.io/common/dbutil/pgutil"
+	"storj.io/common/identity"
+	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/satellitedb/dbx"
 )
 
-// PieceList reports the status / availability of one single segment.
-type PieceList struct {
+type Download struct {
 	StreamID string `arg:""`
 	util.DialerHelper
-	Keys string
+	Keys string `required:""`
 }
 
-func (s *PieceList) Run() error {
+func (s *Download) Run() error {
 	log, err := zap.NewDevelopment()
 	if err != nil {
 		return errors.WithStack(err)
@@ -57,6 +59,7 @@ func (s *PieceList) Run() error {
 	if err != nil {
 		return err
 	}
+
 	segment, err := metabaseDB.GetSegmentByPosition(ctx, metabase.GetSegmentByPosition{
 		StreamID: su,
 		Position: sp,
@@ -64,11 +67,28 @@ func (s *PieceList) Run() error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("segment", segment.StreamID)
 	fmt.Println("placement", segment.Placement)
+	//fmt.Println("size", segment.EncryptedSize/int32(segment.Redundancy.RequiredShares))
 
-	for ix, piece := range segment.Pieces {
+	satelliteIdentityCfg := identity.Config{
+		CertPath: filepath.Join(s.Keys, "identity.cert"),
+		KeyPath:  filepath.Join(s.Keys, "identity.key"),
+	}
+	ident, err := satelliteIdentityCfg.Load()
+	if err != nil {
+		return err
+	}
+
+	dialer, err := util.GetDialerForIdentity(ctx, ident, false, false)
+	if err != nil {
+		return err
+	}
+
+	keySigner := util.NewKeySignerFromFullIdentity(ident, pb.PieceAction_GET)
+
+	outDir := fmt.Sprintf("segment_%s_%d", su, sp.Encode())
+	_ = os.MkdirAll(outDir, 0777)
+	for _, piece := range segment.Pieces {
 		node, err := satelliteDBX.Get_Node_By_Id(ctx, dbx.Node_Id(piece.StorageNode.Bytes()))
 		if err != nil {
 			return err
@@ -76,11 +96,39 @@ func (s *PieceList) Run() error {
 
 		pieceID := segment.RootPieceID.Derive(piece.StorageNode, int32(piece.Number))
 
+		outFile := filepath.Join(outDir, fmt.Sprintf("%d_%s", piece.Number, pieceID))
+		if _, err := os.Stat(outFile); err == nil {
+			continue
+		}
+
 		snURL, err := storj.ParseNodeURL(fmt.Sprintf("%s@%s", piece.StorageNode.String(), safeStr(node.LastIpPort)))
 		if err != nil {
 			return err
 		}
-		fmt.Println(ix, pieceID, snURL, *node.CountryCode, node.Email, node.Wallet)
+
+		conn, err := dialer.DialNodeURL(ctx, snURL)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		client := pb.NewDRPCPiecestoreClient(util.NewTracedConnection(conn))
+
+		_, _, err = util.DownloadPiece(ctx, client, keySigner, util.DownloadRequest{
+			PieceID:     pieceID,
+			Storagenode: snURL,
+			Size:        int64(segment.EncryptedSize / 29),
+			SatelliteID: ident.ID,
+		}, func(bytes []byte) {
+			err := os.WriteFile(outFile, bytes, 0644)
+			fmt.Println(err)
+		})
+		_ = conn.Close()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		fmt.Println(pieceID, "is downloaded from", snURL)
 
 	}
 	return nil

@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
+	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
@@ -14,28 +15,28 @@ import (
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
 	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/placement"
 	"github.com/elek/stbb/pkg/rangedloop"
 	"github.com/elek/stbb/pkg/rpc"
 	"github.com/elek/stbb/pkg/sandbox"
 	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/segment"
+	"github.com/elek/stbb/pkg/store"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
 	"log"
 	"net"
 	"os"
-	"os/signal"
 	"reflect"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
 	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
-	dbg "storj.io/private/debug"
+	dbg "storj.io/common/debug"
 	"strings"
 	"sync"
-	"syscall"
 )
 
 func main() {
@@ -122,6 +123,7 @@ func main() {
 	}
 
 	if os.Getenv("STBB_DEBUG") != "" {
+		fmt.Println("stating debug server")
 		listener, err := net.Listen("tcp", os.Getenv("STBB_DEBUG"))
 		if err != nil {
 			panic(err)
@@ -136,20 +138,7 @@ func main() {
 		defer dbgServer.Close()
 	}
 
-	usr1 := make(chan os.Signal, 1)
-	defer close(usr1)
-	signal.Notify(usr1, syscall.SIGUSR1)
-	go func() {
-		for {
-			select {
-			case _, ok := <-usr1:
-				if !ok {
-					return
-				}
-				fmt.Println(string(readStack()))
-			}
-		}
-	}()
+	defer initSignal()()
 
 	var cli struct {
 		Load       load.Load              `cmd:"" help:"Various load tests"`
@@ -170,6 +159,10 @@ func main() {
 		Sandbox    sandbox.Sandbox        `cmd:""`
 		Segment    segment.Segment        `cmd:""`
 		Metainfo   metainfo.Metainfo      `cmd:""`
+		Bloom      bloom.Bloom            `cmd:""`
+		Store      store.Store            `cmd:""`
+		IOTest     IOTest                 `cmd:""`
+		Placement  placement.Placement    `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,

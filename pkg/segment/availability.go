@@ -11,11 +11,11 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"storj.io/common/dbutil"
+	"storj.io/common/dbutil/pgutil"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
-	"storj.io/private/dbutil"
-	"storj.io/private/dbutil/pgutil"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/satellitedb/dbx"
 	"strconv"
@@ -27,7 +27,7 @@ import (
 type Availability struct {
 	StreamID string `arg:""`
 	util.DialerHelper
-	Keys string
+	Keys string `required:""`
 }
 
 func (s *Availability) Run() error {
@@ -63,7 +63,7 @@ func (s *Availability) Run() error {
 
 	sp := metabase.SegmentPosition{}
 	parts := strings.Split(s.StreamID, "/")
-	su, err := ParseUUID(parts[0])
+	su, err := util.ParseUUID(parts[0])
 	if err != nil {
 		return err
 	}

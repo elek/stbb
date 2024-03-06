@@ -1,7 +1,6 @@
 package node
 
 type Node struct {
-	Scan        Scan        `cmd:""`
 	Report      Report      `cmd:""`
 	NodeStat    NodeStat    `cmd:""`
 	Export      Export      `cmd:""`
@@ -9,4 +8,7 @@ type Node struct {
 	Paystub     Paystub     `cmd:""`
 	Checkin     Checkin     `cmd:""`
 	PieceList   PieceList   `cmd:""`
+	GeoIP       GeoIP       `cmd:""`
+	Convert     Convert     `cmd:""`
+	Usage       Usage       `cmd:"" help:"calls the info endpoint of the satellite in the name of the storagenode"`
 }

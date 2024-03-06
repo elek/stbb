@@ -1,10 +1,9 @@
-package piece
+package util
 
 import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"github.com/elek/stbb/pkg/satellite"
 	"os"
 	"path/filepath"
 	"storj.io/common/identity"
@@ -29,6 +28,13 @@ func NewKeySigner() (*KeySigner, error) {
 	return NewKeySignerFromDir(keysDir)
 }
 
+func NewKeySignerFromFullIdentity(id *identity.FullIdentity, action pb.PieceAction) *KeySigner {
+	return &KeySigner{
+		signer: signing.SignerFromFullIdentity(id),
+		nodeID: id.ID,
+		Action: action,
+	}
+}
 func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
 	d := KeySigner{}
 	d.Action = pb.PieceAction_GET
@@ -46,7 +52,7 @@ func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
 		}
 	} else {
 		fmt.Println("identity.key is missing (and not specified with STBB_KEYS) using internal one")
-		id, err = identity.FullIdentityFromPEM(satellite.Certificate, satellite.Key)
+		id, err = identity.FullIdentityFromPEM(Certificate, Key)
 		if err != nil {
 			return nil, err
 		}

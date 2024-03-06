@@ -2,7 +2,6 @@ package satellite
 
 import (
 	"context"
-	"fmt"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
 	"storj.io/common/pb"
@@ -32,10 +31,9 @@ func (p Ping) Run() error {
 	defer conn.Close()
 
 	client := pb.NewDRPCContactClient(util.NewTracedConnection(conn))
-	pong, err := client.PingNode(ctx, &pb.ContactPingRequest{})
+	_, err = client.PingNode(ctx, &pb.ContactPingRequest{})
 	if err != nil {
 		return errs.Wrap(err)
 	}
-	fmt.Println(pong)
 	return nil
 }

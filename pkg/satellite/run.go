@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs/v2"
 	"net"
 	"storj.io/common/identity"
@@ -15,14 +16,6 @@ import (
 	"storj.io/drpc/drpcmux"
 	"storj.io/drpc/drpcserver"
 	"time"
-)
-
-var (
-	//go:embed identity.cert
-	Certificate []byte
-
-	//go:embed identity.key
-	Key []byte
 )
 
 type NodeEndpoint struct {
@@ -139,7 +132,7 @@ type Run struct {
 
 func (r Run) Run() error {
 	ctx := context.Background()
-	ident, err := identity.FullIdentityFromPEM(Certificate, Key)
+	ident, err := identity.FullIdentityFromPEM(util.Certificate, util.Key)
 	fmt.Print("Starting ", ident.ID.String()+"@localhost:5656")
 	if err != nil {
 		return errs.Wrap(err)

@@ -22,7 +22,7 @@ type DownloadDRPC struct {
 }
 
 func (d *DownloadDRPC) Run() error {
-	orderLimitCreator, err := NewKeySignerFromDir(d.Keys)
+	orderLimitCreator, err := util.NewKeySignerFromDir(d.Keys)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (d *DownloadDRPC) Run() error {
 	return err
 }
 
-func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *KeySigner) error {
+func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *util.KeySigner) error {
 	conn, err := d.Connect(ctx, d.NodeURL)
 	if err != nil {
 		return err
@@ -71,7 +71,8 @@ func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *KeySigner
 	_, _, err = d.Download(ctx, client, signer, out)
 	return err
 }
-func (d *DownloadDRPC) Download(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner, handler func([]byte)) (downloaded int64, chunks int, err error) {
+
+func (d *DownloadDRPC) Download(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *util.KeySigner, handler func([]byte)) (downloaded int64, chunks int, err error) {
 	defer mon.Task()(&ctx)(&err)
 	stream, err := client.Download(ctx)
 	if err != nil {
