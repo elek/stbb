@@ -27,7 +27,7 @@ func (n *NodeSpeed) Run() error {
 			},
 			DialerHelper: n.DialerHelper,
 			NodeURL:      url,
-			Piece:        id.String(),
+			Piece:        id,
 			Size:         size,
 		}
 		err := d.Run()

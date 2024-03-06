@@ -84,7 +84,7 @@ func (s *Download) Run() error {
 		return err
 	}
 
-	keySigner := util.NewKeySignerFromFullIdentity(ident, pb.PieceAction_GET)
+	keySigner := util.NewKeySignerFromFullIdentity(ident, pb.PieceAction_GET_REPAIR)
 
 	outDir := fmt.Sprintf("segment_%s_%d", su, sp.Encode())
 	_ = os.MkdirAll(outDir, 0777)
@@ -119,9 +119,18 @@ func (s *Download) Run() error {
 			Storagenode: snURL,
 			Size:        int64(segment.EncryptedSize / 29),
 			SatelliteID: ident.ID,
-		}, func(bytes []byte) {
+		}, func(bytes []byte, hash *pb.PieceHash, ol *pb.OrderLimit) {
+			fmt.Println(hash.HashAlgorithm.String())
 			err := os.WriteFile(outFile, bytes, 0644)
-			fmt.Println(err)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if hash != nil {
+				err = os.WriteFile(outFile+"."+hash.HashAlgorithm.String(), hash.Hash, 0644)
+			}
+			if err != nil {
+				fmt.Println(err)
+			}
 		})
 		_ = conn.Close()
 		if err != nil {

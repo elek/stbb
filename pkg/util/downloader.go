@@ -15,7 +15,7 @@ type DownloadRequest struct {
 	Size        int64
 }
 
-func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner, req DownloadRequest, handler func([]byte)) (downloaded int64, chunks int, err error) {
+func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *KeySigner, req DownloadRequest, handler func(data []byte, hash *pb.PieceHash, limit *pb.OrderLimit)) (downloaded int64, chunks int, err error) {
 	defer mon.Task()(&ctx)(&err)
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -29,6 +29,11 @@ func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient
 	if err != nil {
 		return
 	}
+
+	var hash *pb.PieceHash
+	var originalOrderLimit *pb.OrderLimit
+
+	orderLimit.Action = pb.PieceAction_GET_REPAIR
 
 	first := true
 
@@ -70,10 +75,19 @@ func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient
 		if err != nil {
 			return
 		}
+		if resp.Hash != nil {
+			// GET_REPAIR sends the hash and the order limit first
+			hash = resp.Hash
+			originalOrderLimit = resp.Limit
+			resp, err = stream.Recv()
+			if err != nil {
+				return
+			}
+		}
 
 		chunks++
 		downloaded += int64(len(resp.Chunk.Data))
-		handler(resp.Chunk.Data)
+		handler(resp.Chunk.Data, hash, originalOrderLimit)
 	}
 
 	return
