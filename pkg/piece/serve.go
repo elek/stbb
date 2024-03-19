@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/zeebo/errs/v2"
 	"net"
@@ -20,14 +21,6 @@ import (
 	jaeger "storj.io/monkit-jaeger"
 )
 
-var (
-	//go:embed identity.cert
-	Cert []byte
-
-	//go:embed identity.key
-	Key []byte
-)
-
 func init() {
 	cmd := &cobra.Command{
 		Use: "serve",
@@ -41,7 +34,7 @@ func init() {
 func serve() error {
 	ctx := context.Background()
 
-	ident, err := identity.FullIdentityFromPEM(Cert, Key)
+	ident, err := identity.FullIdentityFromPEM(util.Certificate, util.Key)
 	fmt.Println("Starting ", ident.ID.String()+"@localhost:28567")
 	if err != nil {
 		return errs.Wrap(err)
