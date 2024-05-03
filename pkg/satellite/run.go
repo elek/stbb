@@ -169,6 +169,11 @@ func (r Run) Run() error {
 		return errs.Wrap(err)
 	}
 
+	err = pb.DRPCRegisterMetainfo(m, NewMetainfo(ident))
+	if err != nil {
+		return errs.Wrap(err)
+	}
+
 	err = pb.DRPCRegisterOrders(m, &OrdersEndpoint{})
 	if err != nil {
 		return errs.Wrap(err)
