@@ -47,7 +47,8 @@ func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *ut
 	}
 	defer conn.Close()
 
-	client := pb.NewDRPCReplaySafePiecestoreClient(conn)
+	//client := pb.NewDRPCReplaySafePiecestoreClient(conn)
+	client := pb.NewDRPCPiecestoreClient(conn)
 
 	size, id, err = u.Upload(ctx, client, orderLimitCreator)
 	if err != nil {

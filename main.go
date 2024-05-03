@@ -6,11 +6,14 @@ import (
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
+	"github.com/elek/stbb/pkg/authservice"
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/crypto"
+	"github.com/elek/stbb/pkg/dir"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/load"
+	"github.com/elek/stbb/pkg/metabase"
 	"github.com/elek/stbb/pkg/metainfo"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
@@ -32,9 +35,9 @@ import (
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
+	dbg "storj.io/common/debug"
 	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
-	dbg "storj.io/common/debug"
 	"strings"
 	"sync"
 )
@@ -163,6 +166,9 @@ func main() {
 		Store      store.Store            `cmd:""`
 		IOTest     IOTest                 `cmd:""`
 		Placement  placement.Placement    `cmd:""`
+		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
+		Metabase   metabase.Metabase      `cmd:"" usage:"Raw metabase db related helpers"`
+		Dir        dir.Dir                `cmd:""`
 	}
 
 	ctx := kong.Parse(&cli,

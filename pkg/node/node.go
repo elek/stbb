@@ -7,8 +7,8 @@ type Node struct {
 	UnsentOrder UnsentOrder `cmd:""`
 	Paystub     Paystub     `cmd:""`
 	Checkin     Checkin     `cmd:""`
-	PieceList   PieceList   `cmd:""`
+	PieceList   PieceList   `cmd:"" help:"generate list of pieces for one node"`
 	GeoIP       GeoIP       `cmd:""`
 	Convert     Convert     `cmd:""`
-	Usage       Usage       `cmd:"" help:"calls the info endpoint of the satellite in the name of the storagenode"`
+	Usage       Usage       `cmd:"" help:"calls the info endpoint of the satellite in the name of the storagenode (sn->satellite)"`
 }

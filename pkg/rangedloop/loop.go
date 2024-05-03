@@ -59,6 +59,7 @@ func (r RangedLoop) Run() error {
 	var observers []rangedloop.Observer
 
 	observers = append(observers, NewCount())
+	//observers = append(observers, metrics.NewObserver(zap.NewNop()))
 	observers = append(observers, metrics.NewObserver())
 	var provider rangedloop.RangeSplitter
 
