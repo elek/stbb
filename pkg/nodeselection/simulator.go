@@ -55,11 +55,28 @@ func (s *Simulator) Run() error {
 		return errors.WithStack(err)
 	}
 
+	for _, node := range nodes {
+		s.used[node.ID] = 0
+		s.selected[node.ID] = 0
+	}
+
 	err = s.ReadPerformanceData(nodes)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
+	//// TODO: remove this part
+	//uploadTimes := make(map[storj.NodeID]int)
+	//for _, node := range nodes {
+	//	uploadTimes[node.ID] = s.getUploadTimeMs(node.ID)
+	//}
+	//
+	//slices.SortFunc(nodes, func(a, b *nodeselection.SelectedNode) int {
+	//	if uploadTimes[a.ID] > uploadTimes[b.ID] {
+	//		return -1
+	//	}
+	//	return 1
+	//})
+	//nodes = nodes[:len(nodes)*5/10]
 	var filter nodeselection.NodeFilter
 
 	selector := selectorInit(nodes, filter)
