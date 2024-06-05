@@ -86,7 +86,7 @@ func (p *PieceList) check(entry metabase.LoopSegmentEntry) error {
 	for _, alias := range p.Aliases {
 		for _, pieceAlias := range entry.AliasPieces {
 			if int32(pieceAlias.Alias) == alias {
-				_, err := p.writers[alias].Write([]byte(fmt.Sprintf("%s,%d,%d,%d,%d\n", entry.RootPieceID, pieceAlias.Number, entry.PlainSize, entry.EncryptedSize, entry.Placement)))
+				_, err := p.writers[alias].Write([]byte(fmt.Sprintf("%s,%d,%s,%d,%d,%d,%d\n", entry.StreamID, entry.Position.Encode(), entry.RootPieceID, pieceAlias.Number, entry.PlainSize, entry.EncryptedSize, entry.Placement)))
 				if err != nil {
 					return err
 				}

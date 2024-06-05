@@ -41,7 +41,7 @@ func (g Generate) Run() error {
 		out, err := f.Create(ctx, blobstore.BlobRef{
 			Namespace: ns,
 			Key:       id.Bytes(),
-		}, int64(len(data)))
+		})
 		if err != nil {
 			return errors.WithStack(err)
 		}

@@ -9,13 +9,13 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
-	"storj.io/common/dbutil"
-	"storj.io/common/dbutil/pgutil"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/satellitedb/dbx"
+	"storj.io/storj/shared/dbutil"
+	"storj.io/storj/shared/dbutil/pgutil"
 )
 
 type Download struct {

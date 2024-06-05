@@ -86,7 +86,7 @@ func (s *Classify) Run() error {
 	}
 	def, err := c.Parse(func() (nodeselection.Placement, error) {
 		panic("default placement shouldn't be used")
-	})
+	}, nodeselection.NewPlacementConfigEnvironment(nil))
 
 	fmt.Println("segment", segment.StreamID)
 	fmt.Println("placement", segment.Placement)

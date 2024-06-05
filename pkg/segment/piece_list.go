@@ -8,11 +8,11 @@ import (
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
-	"storj.io/common/dbutil"
-	"storj.io/common/dbutil/pgutil"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/satellitedb/dbx"
+	"storj.io/storj/shared/dbutil"
+	"storj.io/storj/shared/dbutil/pgutil"
 )
 
 // PieceList reports the status / availability of one single segment.
