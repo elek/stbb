@@ -5,8 +5,8 @@ import (
 	"github.com/pkg/errors"
 	"storj.io/common/storj"
 	"storj.io/common/storj/location"
-	"storj.io/common/tagsql"
 	"storj.io/storj/satellite/metabase"
+	"storj.io/storj/shared/tagsql"
 	"time"
 )
 

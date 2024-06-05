@@ -17,6 +17,7 @@ import (
 	"github.com/elek/stbb/pkg/metainfo"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
+	"github.com/elek/stbb/pkg/nodeselection"
 	"github.com/elek/stbb/pkg/piece"
 	"github.com/elek/stbb/pkg/placement"
 	"github.com/elek/stbb/pkg/rangedloop"
@@ -144,31 +145,32 @@ func main() {
 	defer initSignal()()
 
 	var cli struct {
-		Load       load.Load              `cmd:"" help:"Various load tests"`
-		Uplink     uplink.Uplink          `cmd:"" help:"Uplink based upload/download tests"`
-		Piece      piece.Piece            `cmd:""`
-		Nodeid     nodeid.NodeID          `cmd:""`
-		Node       node.Node              `cmd:""`
-		Satellite  satellite.Satellite    `cmd:""`
-		Downloadng downloadng.DownloadCmd `cmd:""`
-		Encoding   encoding.Encoding      `cmd:""`
-		Telemetry  stbb.TelemetryReceiver `cmd:""`
-		Version    Version                `cmd:""`
-		Access     access.AccessCmd       `cmd:""`
-		RPC        rpc.RPC                `cmd:""`
-		Crypto     crypto.Crypto          `cmd:""`
-		GeoIP      GeoIP                  `cmd:""`
-		RangedLoop rangedloop.RangedLoop  `cmd:""`
-		Sandbox    sandbox.Sandbox        `cmd:""`
-		Segment    segment.Segment        `cmd:""`
-		Metainfo   metainfo.Metainfo      `cmd:""`
-		Bloom      bloom.Bloom            `cmd:""`
-		Store      store.Store            `cmd:""`
-		IOTest     IOTest                 `cmd:""`
-		Placement  placement.Placement    `cmd:""`
-		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
-		Metabase   metabase.Metabase      `cmd:"" usage:"Raw metabase db related helpers"`
-		Dir        dir.Dir                `cmd:""`
+		Load          load.Load                   `cmd:"" help:"Various load tests"`
+		Uplink        uplink.Uplink               `cmd:"" help:"Uplink based upload/download tests"`
+		Piece         piece.Piece                 `cmd:""`
+		Nodeid        nodeid.NodeID               `cmd:""`
+		Node          node.Node                   `cmd:""`
+		Satellite     satellite.Satellite         `cmd:""`
+		Downloadng    downloadng.DownloadCmd      `cmd:""`
+		Encoding      encoding.Encoding           `cmd:""`
+		Telemetry     stbb.TelemetryReceiver      `cmd:""`
+		Version       Version                     `cmd:""`
+		Access        access.AccessCmd            `cmd:""`
+		RPC           rpc.RPC                     `cmd:""`
+		Crypto        crypto.Crypto               `cmd:""`
+		GeoIP         GeoIP                       `cmd:""`
+		RangedLoop    rangedloop.RangedLoop       `cmd:""`
+		Sandbox       sandbox.Sandbox             `cmd:""`
+		Segment       segment.Segment             `cmd:""`
+		Metainfo      metainfo.Metainfo           `cmd:""`
+		Bloom         bloom.Bloom                 `cmd:""`
+		Store         store.Store                 `cmd:""`
+		IOTest        IOTest                      `cmd:""`
+		Placement     placement.Placement         `cmd:""`
+		BadgerGet     authservice.ReadAuth        `cmd:"" help:"read grant from Badger based authservice database"`
+		Metabase      metabase.Metabase           `cmd:"" usage:"Raw metabase db related helpers"`
+		Dir           dir.Dir                     `cmd:""`
+		Nodeselection nodeselection.Nodeselection `cmd:"" help:"utilities to play with the node selections (see also placement)"`
 	}
 
 	ctx := kong.Parse(&cli,

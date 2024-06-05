@@ -12,7 +12,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/outcaste-io/badger/v3 v3.2202.1-0.20220426173331-b25bc764af0d
 	github.com/pkg/errors v0.9.1
-	github.com/spacemonkeygo/monkit/v3 v3.0.22
+	github.com/spacemonkeygo/monkit/v3 v3.0.23
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
@@ -27,13 +27,13 @@ require (
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20240518150223-7d06fbeb16be
+	storj.io/common v0.0.0-20240604135716-f2973a8daad1
 	storj.io/drpc v0.0.34
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd
-	storj.io/storj v1.91.0-alpha.0.20240529121755-d26e8012947f
-	storj.io/uplink v1.12.3-0.20240417071044-72c1ade6e3bd
+	storj.io/storj v1.91.0-alpha.0.20240605082007-1c857a2fa460
+	storj.io/uplink v1.13.0
 )
 
 require (
@@ -159,6 +159,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	storj.io/eventkit v0.0.0-20240306141230-6cb545e5f892 // indirect
+	storj.io/eventkit v0.0.0-20240415002644-1d9596fee086 // indirect
 	storj.io/picobuf v0.0.3 // indirect
 )

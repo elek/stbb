@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"storj.io/common/storj"
 	"storj.io/common/uuid"
-	"storj.io/common/tagsql"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
+	"storj.io/storj/shared/tagsql"
 )
 
 type FullScan struct {
