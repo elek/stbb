@@ -42,7 +42,7 @@ func (s Select) Run() error {
 		satelliteDB.Close()
 	}()
 
-	d, err := nodeselection.LoadConfig(s.PlacementConfig)
+	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -72,6 +72,7 @@ func (s Select) Run() error {
 		nodes, err := cache.GetNodes(ctx, overlay.FindStorageNodesRequest{
 			RequestedCount: s.NodeNo,
 			Placement:      storj.PlacementConstraint(s.Placement),
+			Requester:      storj.NodeID{},
 		})
 		selector, err := nodeselection.CreateNodeAttribute(s.Selector)
 		if err != nil {
@@ -80,7 +81,7 @@ func (s Select) Run() error {
 		pieces, invNodes := convert(nodes)
 		oop := d[storj.PlacementConstraint(s.Placement)].Invariant(pieces, invNodes)
 		util.PrintHistogram(nodes, selector)
-		fmt.Println(oop.Count())
+		fmt.Println("Out of placement nodes", oop.Count())
 	}
 
 	return nil
