@@ -36,8 +36,11 @@ func (m *Metainfo) CreateBucket(ctx context.Context, request *pb.CreateBucketReq
 }
 
 func (m *Metainfo) GetBucket(ctx context.Context, request *pb.GetBucketRequest) (*pb.GetBucketResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &pb.GetBucketResponse{
+		Bucket: &pb.Bucket{
+			Name: request.Name,
+		},
+	}, nil
 }
 
 func (m *Metainfo) GetBucketLocation(ctx context.Context, request *pb.GetBucketLocationRequest) (*pb.GetBucketLocationResponse, error) {
@@ -192,18 +195,15 @@ func (m *Metainfo) SetObjectRetention(ctx context.Context, request *pb.SetObject
 }
 
 func (m *Metainfo) BeginSegment(ctx context.Context, request *pb.BeginSegmentRequest) (*pb.BeginSegmentResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &pb.BeginSegmentResponse{}, nil
 }
 
 func (m *Metainfo) RetryBeginSegmentPieces(ctx context.Context, request *pb.RetryBeginSegmentPiecesRequest) (*pb.RetryBeginSegmentPiecesResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &pb.RetryBeginSegmentPiecesResponse{}, nil
 }
 
 func (m *Metainfo) CommitSegment(ctx context.Context, request *pb.CommitSegmentRequest) (*pb.CommitSegmentResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	return &pb.CommitSegmentResponse{}, nil
 }
 
 func (m *Metainfo) MakeInlineSegment(ctx context.Context, request *pb.MakeInlineSegmentRequest) (*pb.MakeInlineSegmentResponse, error) {
