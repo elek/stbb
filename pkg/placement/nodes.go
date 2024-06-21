@@ -46,7 +46,7 @@ func (s Nodes) Run() error {
 
 	oldNodes, newNodes, err := satelliteDB.OverlayCache().SelectAllStorageNodesUpload(ctx, overlay.NodeSelectionConfig{
 		OnlineWindow:     4 * time.Hour,
-		MinimumDiskSpace: memory.MB * 500,
+		MinimumDiskSpace: memory.GB * 5,
 	})
 
 	if err != nil {

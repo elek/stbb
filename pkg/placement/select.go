@@ -19,7 +19,7 @@ import (
 type Select struct {
 	PlacementConfig string
 	Placement       int
-	NodeNo          int    `default:"80"`
+	NodeNo          int    `default:"110"`
 	Selector        string `default:"id"`
 	Number          int    `default:"1"`
 }
@@ -50,7 +50,7 @@ func (s Select) Run() error {
 	cache, err := overlay.NewUploadSelectionCache(log, satelliteDB.OverlayCache(), 60*time.Minute, overlay.NodeSelectionConfig{
 		NewNodeFraction:  0.01,
 		OnlineWindow:     4 * time.Hour,
-		MinimumDiskSpace: memory.MB * 500,
+		MinimumDiskSpace: 5 * memory.GB,
 	}, nil, d)
 	if err != nil {
 		return errors.WithStack(err)
