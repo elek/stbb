@@ -18,8 +18,9 @@ import (
 )
 
 type Classify struct {
-	StreamID      string `arg:""`
-	PlacementFile string
+	StreamID              string `arg:""`
+	PlacementFile         string
+	UseParticipatingNodes bool
 }
 
 func (s *Classify) Run() error {
@@ -59,6 +60,7 @@ func (s *Classify) Run() error {
 	}
 
 	selectedNodes := make([]nodeselection.SelectedNode, len(segment.Pieces))
+
 	{
 		nodeInfo := map[storj.NodeID]nodeselection.SelectedNode{}
 		nodeIDs := storj.NodeIDList{}
@@ -66,10 +68,26 @@ func (s *Classify) Run() error {
 			nodeIDs = append(nodeIDs, piece.StorageNode)
 		}
 
-		selected, err := satelliteDB.OverlayCache().GetNodes(ctx, nodeIDs, 30*24*time.Hour, -5*time.Minute)
+		var selected []nodeselection.SelectedNode
+		//if s.UseParticipatingNodes {
+		//	participatingNodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 5*time.Minute)
+		//	for _, n := range participatingNodes {
+		//		for _, id := range nodeIDs {
+		//			if id == n.ID {
+		//				selected = append(selected, n)
+		//			}
+		//		}
+		//	}
+		//	if err != nil {
+		//		return err
+		//	}
+		//} else {
+		selected, err = satelliteDB.OverlayCache().GetNodes(ctx, nodeIDs, 4*time.Hour, -5*time.Minute)
 		if err != nil {
 			return err
 		}
+		//}
+
 		for _, sn := range selected {
 			nodeInfo[sn.ID] = sn
 		}
@@ -102,11 +120,16 @@ func (s *Classify) Run() error {
 	fmt.Printf(pattern, "healthy", result.Healthy.Count())
 	fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Count())
 	fmt.Printf(pattern, "uhealthy", result.Unhealthy.Count())
+	fmt.Printf(pattern, "in-excluded-country", result.InExcludedCountry.Count())
 	fmt.Printf(pattern, "suspended", result.Suspended.Count())
-	fmt.Printf(pattern, "existing", result.Exiting.Count())
+	fmt.Printf(pattern, "exiting", result.Exiting.Count())
 	fmt.Printf(pattern, "missing", result.Missing.Count())
+	for _, piece := range segment.Pieces {
+		if result.Missing.Contains(int(piece.Number)) {
+			fmt.Println("   ", piece.StorageNode)
+		}
+	}
 	fmt.Printf(pattern, "unhealhty-retrvb.", result.UnhealthyRetrievable.Count())
-	fmt.Printf(pattern, "missing", result.Missing.Count())
 	fmt.Printf(pattern, "clumped", result.Clumped.Count())
 	fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Count())
 

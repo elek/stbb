@@ -49,13 +49,13 @@ func (h Histogram) Run() error {
 		_ = metabaseDB.Close()
 	}()
 
-	nodes, err := satelliteDB.OverlayCache().SelectAllStorageNodesDownload(ctx, 4*time.Hour, overlay.AsOfSystemTimeConfig{
-		Enabled:         true,
-		DefaultInterval: 30 * time.Second,
+	n1, n2, err := satelliteDB.OverlayCache().SelectAllStorageNodesUpload(ctx, overlay.NodeSelectionConfig{
+		OnlineWindow: 4 * time.Hour,
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	nodes := append(n1, n2...)
 
 	fmt.Println("node cache is loaded", len(nodes))
 
@@ -72,7 +72,6 @@ func (h Histogram) Run() error {
 	}
 
 	selectedNodes := make([]*nodeselection.SelectedNode, 0)
-
 	for _, piece := range segment.Pieces {
 		node := findNode(nodes, piece.StorageNode)
 		if node != nil {
@@ -81,7 +80,6 @@ func (h Histogram) Run() error {
 			fmt.Println("Missing node", piece.StorageNode, "pieceId=", piece.Number)
 		}
 	}
-
 	util.PrintHistogram(selectedNodes, selector)
 	PrintBusFactor(selectedNodes, selector, 54-29)
 	return nil

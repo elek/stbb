@@ -9,4 +9,5 @@ type Segment struct {
 	Download     Download     `cmd:"" help:"Download all the available pieces ASAP"`
 	Ecdecode     ECDecode     `cmd:"" help:"decode original segment from downloaded pieces"`
 	Show         Show         `cmd:"" help:"show information about the segment"`
+	Nodes        Nodes        `cmd:"" help:"print details of nodes"`
 }
