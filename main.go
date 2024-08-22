@@ -26,7 +26,6 @@ import (
 	"github.com/elek/stbb/pkg/segment"
 	"github.com/elek/stbb/pkg/store"
 	"github.com/elek/stbb/pkg/uplink"
-	"github.com/elek/stbb/pkg/walker"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
 	"log"
@@ -170,7 +169,6 @@ func main() {
 		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
 		Metabase   metabase.Metabase      `cmd:"" usage:"Raw metabase db related helpers"`
 		Dir        dir.Dir                `cmd:""`
-		Walker     walker.Walker          `cmd:"" help"file walker related performance tests"`
 	}
 
 	ctx := kong.Parse(&cli,
