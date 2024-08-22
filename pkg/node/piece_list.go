@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
@@ -14,6 +15,7 @@ import (
 
 type PieceList struct {
 	Aliases []int32 `arg:""`
+	Limit   int64
 	writers map[int32]io.WriteCloser
 }
 
@@ -49,8 +51,7 @@ func (p *PieceList) Run() error {
 		}
 	}()
 
-	var ix int
-	prev := time.Now()
+	progress := util.Progres{}
 	err = metabaseDB.IterateLoopSegments(ctx, metabase.IterateLoopSegments{
 		BatchSize:          100000,
 		AsOfSystemInterval: 1 * time.Minute,
@@ -60,19 +61,16 @@ func (p *PieceList) Run() error {
 			if entry.Inline() {
 				continue
 			}
-			if ix%100000 == 0 {
-				fmt.Println(ix, time.Since(prev).Seconds(), "seconds")
-				prev = time.Now()
+
+			if p.Limit > 0 && progress.Counter() > p.Limit {
+				return nil
 			}
-			//if ix > 10000 {
-			//	return nil
-			//}
 			err := p.check(entry)
 			if err != nil {
 				return err
 			}
+			progress.Increment()
 
-			ix++
 		}
 		return nil
 	})
@@ -86,7 +84,11 @@ func (p *PieceList) check(entry metabase.LoopSegmentEntry) error {
 	for _, alias := range p.Aliases {
 		for _, pieceAlias := range entry.AliasPieces {
 			if int32(pieceAlias.Alias) == alias {
-				_, err := p.writers[alias].Write([]byte(fmt.Sprintf("%s,%d,%s,%d,%d,%d,%d\n", entry.StreamID, entry.Position.Encode(), entry.RootPieceID, pieceAlias.Number, entry.PlainSize, entry.EncryptedSize, entry.Placement)))
+				exp := int64(0)
+				if entry.ExpiresAt != nil {
+					exp = entry.ExpiresAt.Unix()
+				}
+				_, err := p.writers[alias].Write([]byte(fmt.Sprintf("%s,%d,%s,%d,%d,%d,%d,%d,%d\n", entry.StreamID, entry.Position.Encode(), entry.RootPieceID, pieceAlias.Number, entry.PlainSize, entry.EncryptedSize, entry.Placement, exp, entry.Redundancy.RequiredShares)))
 				if err != nil {
 					return err
 				}

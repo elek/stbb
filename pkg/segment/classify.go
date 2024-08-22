@@ -69,24 +69,24 @@ func (s *Classify) Run() error {
 		}
 
 		var selected []nodeselection.SelectedNode
-		//if s.UseParticipatingNodes {
-		//	participatingNodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 5*time.Minute)
-		//	for _, n := range participatingNodes {
-		//		for _, id := range nodeIDs {
-		//			if id == n.ID {
-		//				selected = append(selected, n)
-		//			}
-		//		}
-		//	}
-		//	if err != nil {
-		//		return err
-		//	}
-		//} else {
-		selected, err = satelliteDB.OverlayCache().GetNodes(ctx, nodeIDs, 4*time.Hour, -5*time.Minute)
-		if err != nil {
-			return err
+		if s.UseParticipatingNodes {
+			participatingNodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 5*time.Minute)
+			for _, n := range participatingNodes {
+				for _, id := range nodeIDs {
+					if id == n.ID {
+						selected = append(selected, n)
+					}
+				}
+			}
+			if err != nil {
+				return err
+			}
+		} else {
+			selected, err = satelliteDB.OverlayCache().GetNodes(ctx, nodeIDs, 4*time.Hour, -5*time.Minute)
+			if err != nil {
+				return err
+			}
 		}
-		//}
 
 		for _, sn := range selected {
 			nodeInfo[sn.ID] = sn
@@ -99,12 +99,21 @@ func (s *Classify) Run() error {
 		}
 	}
 
-	c := nodeselection.ConfigurablePlacementRule{
-		s.PlacementFile,
+	var placement nodeselection.Placement
+	doPlacementCheck := false
+	if s.PlacementFile != "" {
+		doPlacementCheck = true
+		c := nodeselection.ConfigurablePlacementRule{
+			s.PlacementFile,
+		}
+		def, err := c.Parse(func() (nodeselection.Placement, error) {
+			panic("default placement shouldn't be used")
+		}, nodeselection.NewPlacementConfigEnvironment(nil))
+		if err != nil {
+			return errs.Wrap(err)
+		}
+		placement = def[segment.Placement]
 	}
-	def, err := c.Parse(func() (nodeselection.Placement, error) {
-		panic("default placement shouldn't be used")
-	}, nodeselection.NewPlacementConfigEnvironment(nil))
 
 	fmt.Println("segment", segment.StreamID)
 	fmt.Println("placement", segment.Placement)
@@ -113,9 +122,9 @@ func (s *Classify) Run() error {
 		segment.Pieces,
 		selectedNodes,
 		map[location.CountryCode]struct{}{},
-		true,
-		true,
-		def[segment.Placement])
+		doPlacementCheck,
+		doPlacementCheck,
+		placement)
 	pattern := "%-20s %d\n"
 	fmt.Printf(pattern, "healthy", result.Healthy.Count())
 	fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Count())
