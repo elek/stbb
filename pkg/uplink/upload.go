@@ -9,6 +9,7 @@ import (
 	"storj.io/storj/cmd/uplink/ulloc"
 	"storj.io/uplink"
 	"storj.io/uplink/private/testuplink"
+	"time"
 	//	"storj.io/uplink/private/testuplink"
 )
 
@@ -17,6 +18,7 @@ type Upload struct {
 	Refactored bool   `help:"Use code from upload code refactor"`
 	Source     string `arg:"" name:"source"`
 	Target     string `arg:"" name:"target"`
+	TTL        time.Duration
 }
 
 func (u *Upload) Run() error {
