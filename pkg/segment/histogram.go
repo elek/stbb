@@ -25,6 +25,9 @@ type Histogram struct {
 func (h Histogram) Run() error {
 	ctx := context.Background()
 	log, err := zap.NewDevelopment()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	selector, err := nodeselection.CreateNodeAttribute(h.Selector)
 	if err != nil {
