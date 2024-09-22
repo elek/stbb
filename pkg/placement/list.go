@@ -55,7 +55,7 @@ func (s List) Run() error {
 	slices.SortFunc(nodes, func(a, b *nodeselection.SelectedNode) int {
 		return strings.Compare(a.LastIPPort, b.LastIPPort)
 	})
-	filter := d.CreateFilters(storj.PlacementConstraint(s.Placement))
+	filter, _ := d.CreateFilters(storj.PlacementConstraint(s.Placement))
 	for _, node := range nodes {
 		fmt.Println(node.ID, node.Email, node.LastIPPort, node.Suspended, node.Vetted, node.Online, filter.Match(node))
 		for _, tag := range node.Tags {

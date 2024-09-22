@@ -43,7 +43,7 @@ func (s *PieceList) Run() error {
 	if err != nil {
 		return err
 	}
-	source, err = pgutil.CheckApplicationName(source, "stbb")
+	source, err = pgutil.EnsureApplicationName(source, "stbb")
 	if err != nil {
 		return err
 	}

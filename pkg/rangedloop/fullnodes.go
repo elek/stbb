@@ -6,8 +6,8 @@ import (
 	"github.com/zeebo/errs"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
-	"storj.io/common/storj/location"
 	"storj.io/storj/satellite/nodeselection"
+	"storj.io/storj/shared/location"
 	"storj.io/storj/shared/tagsql"
 	"time"
 )

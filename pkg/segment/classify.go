@@ -9,11 +9,11 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"storj.io/common/storj"
-	"storj.io/common/storj/location"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/repair"
 	"storj.io/storj/satellite/satellitedb"
+	"storj.io/storj/shared/location"
 	"time"
 )
 

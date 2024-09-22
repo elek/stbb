@@ -140,7 +140,7 @@ func (b *BlobStore) Delete(ctx context.Context, ref blobstore.BlobRef) error {
 	})
 }
 
-func (b *BlobStore) DeleteWithStorageFormat(ctx context.Context, ref blobstore.BlobRef, formatVer blobstore.FormatVersion) error {
+func (b *BlobStore) DeleteWithStorageFormat(ctx context.Context, ref blobstore.BlobRef, formatVer blobstore.FormatVersion, size int64) error {
 	if formatVer != filestore.FormatV1 {
 		return errs.New("Unsupported format")
 	}
