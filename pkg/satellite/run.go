@@ -28,7 +28,8 @@ func (s *NodeEndpoint) GetTime(context.Context, *pb.GetTimeRequest) (*pb.GetTime
 	}, nil
 }
 
-func (s *NodeEndpoint) CheckIn(context.Context, *pb.CheckInRequest) (*pb.CheckInResponse, error) {
+func (s *NodeEndpoint) CheckIn(ctx context.Context, req *pb.CheckInRequest) (*pb.CheckInResponse, error) {
+	fmt.Println("Node checked in", req.Address, req.Capacity.FreeDisk)
 	return &pb.CheckInResponse{
 		PingNodeSuccess: true,
 	}, nil
