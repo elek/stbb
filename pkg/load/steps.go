@@ -3,18 +3,21 @@ package load
 import (
 	"bytes"
 	"context"
+	"github.com/spacemonkeygo/monkit/v3"
 	"io"
 	"storj.io/uplink"
+	"time"
 )
 
-func Upload(ctx context.Context, cfg uplink.Config, access *uplink.Access, source []byte, bucket string, key string) error {
-	project, err := cfg.OpenProject(ctx, access)
-	if err != nil {
-		return err
-	}
-	defer project.Close()
+var mon = monkit.Package()
 
-	dest, err := project.UploadObject(ctx, bucket, key, &uplink.UploadOptions{})
+func Upload(ctx context.Context, project *uplink.Project, source []byte, bucket string, key string, duration time.Duration) (err error) {
+	mon.Task()(&ctx)(&err)
+	opts := uplink.UploadOptions{}
+	if duration > 0 {
+		opts.Expires = time.Now().Add(duration)
+	}
+	dest, err := project.UploadObject(ctx, bucket, key, &opts)
 	if err != nil {
 		return err
 	}
@@ -31,13 +34,8 @@ func Upload(ctx context.Context, cfg uplink.Config, access *uplink.Access, sourc
 	return nil
 }
 
-func Download(ctx context.Context, cfg uplink.Config, access *uplink.Access, bucket string, key string) (res []byte, err error) {
-	project, err := cfg.OpenProject(ctx, access)
-	if err != nil {
-		return
-	}
-	defer project.Close()
-
+func Download(ctx context.Context, project *uplink.Project, bucket string, key string) (res []byte, err error) {
+	mon.Task()(&ctx)(&err)
 	source, err := project.DownloadObject(ctx, bucket, key, nil)
 	if err != nil {
 		return
@@ -54,13 +52,8 @@ func Download(ctx context.Context, cfg uplink.Config, access *uplink.Access, buc
 	return dest.Bytes(), nil
 }
 
-func Delete(ctx context.Context, cfg uplink.Config, access *uplink.Access, bucket string, key string) error {
-	project, err := cfg.OpenProject(ctx, access)
-	if err != nil {
-		return err
-	}
-	defer project.Close()
-
+func Delete(ctx context.Context, project *uplink.Project, bucket string, key string) (err error) {
+	mon.Task()(&ctx)(&err)
 	_, err = project.DeleteObject(ctx, bucket, key)
 	return err
 
