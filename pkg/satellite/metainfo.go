@@ -21,6 +21,17 @@ type Metainfo struct {
 	identity *identity.FullIdentity
 }
 
+func (m *Metainfo) GetObjectLegalHold(ctx context.Context, request *pb.GetObjectLegalHoldRequest) (*pb.GetObjectLegalHoldResponse, error) {
+	return &pb.GetObjectLegalHoldResponse{
+		Enabled: false,
+	}, nil
+}
+
+func (m *Metainfo) SetObjectLegalHold(ctx context.Context, request *pb.SetObjectLegalHoldRequest) (*pb.SetObjectLegalHoldResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewMetainfo(identity *identity.FullIdentity) *Metainfo {
 	return &Metainfo{
 		identity: identity,
