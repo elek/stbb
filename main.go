@@ -125,9 +125,10 @@ func main() {
 		}()
 	}
 
-	if os.Getenv("STBB_DEBUG") != "" {
-		fmt.Println("stating debug server")
-		listener, err := net.Listen("tcp", os.Getenv("STBB_DEBUG"))
+	debugListAddress := os.Getenv("STBB_DEBUG")
+	if debugListAddress != "" {
+		fmt.Println("starting debug server ", debugListAddress)
+		listener, err := net.Listen("tcp", debugListAddress)
 		if err != nil {
 			panic(err)
 		}
