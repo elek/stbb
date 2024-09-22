@@ -20,7 +20,7 @@ type Select struct {
 	PlacementConfig string
 	Placement       int
 	NodeNo          int    `default:"110"`
-	Selector        string `default:"id"`
+	Selector        string `default:"wallet"`
 	Number          int    `default:"1"`
 }
 
