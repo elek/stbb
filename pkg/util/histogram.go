@@ -11,9 +11,9 @@ func PrintHistogram(nodes []*nodeselection.SelectedNode, selector nodeselection.
 		c := selector(*n)
 		histogram[c] = histogram[c] + 1
 	}
-	fmt.Print("Selected nodes: ")
+	fmt.Print("Selected nodes: \n")
 	for k, v := range histogram {
-		fmt.Printf("%s:%d ", k, v)
+		fmt.Printf("   %s:%d\n", k, v)
 	}
 	fmt.Println()
 }
