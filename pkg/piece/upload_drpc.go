@@ -81,7 +81,7 @@ func (d *UploadDrpc) Upload(ctx context.Context, client pb.DRPCReplaySafePiecest
 		return 0, pieceID, errs.Wrap(err)
 	}
 
-	orderLimit, pk, serialNo, err := creator.CreateOrderLimit(ctx, pieceID, stat.Size(), creator.GetSatelliteID(), d.NodeURL.ID)
+	orderLimit, pk, serialNo, err := creator.CreateOrderLimit(ctx, pieceID, stat.Size(), d.NodeURL.ID)
 	if err != nil {
 		return 0, pieceID, errs.Wrap(err)
 	}

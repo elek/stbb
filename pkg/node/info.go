@@ -34,7 +34,17 @@ func (i Info) Run() error {
 		return errors.WithStack(err)
 	}
 	fmt.Println(node.Capacity)
-	fmt.Println(node.Address)
+	fmt.Println(node.Address.Address)
 	fmt.Println(node.CountryCode)
+	fmt.Println(node.LastNet)
+	fmt.Println(node.LastIPPort)
+	fmt.Println(node.PieceCount)
+	tags, err := satelliteDB.OverlayCache().GetNodeTags(ctx, node.Id)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	for _, t := range tags {
+		fmt.Println("   ", t.Name, string(t.Value))
+	}
 	return nil
 }

@@ -27,12 +27,12 @@ func (s Size) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	fw := pieces.NewFileWalker(log, store, nil, nil)
+	fw := pieces.NewFileWalker(log, store, nil, nil, nil)
 
 	p := util.Progres{}
 	var satPiecesTotal, satPiecesContentSize int64
 	start := time.Now()
-	err = fw.WalkSatellitePieces(context.Background(), s.Satellite, "", func(access pieces.StoredPieceAccess) error {
+	err = fw.WalkSatellitePieces(context.Background(), s.Satellite, nil, func(access pieces.StoredPieceAccess) error {
 		pieceTotal, pieceContentSize, err := access.Size(context.Background())
 		if err != nil {
 			if os.IsNotExist(err) {

@@ -46,9 +46,9 @@ func NewDownloader(ctx context.Context, storagenodeURL string, dh *util.DialerHe
 
 	d.dialer = dh
 
-	d.OrderLimitCreator, err = util.NewKeySigner()
-	if err != nil {
-		return
-	}
+	//d.OrderLimitCreator, err = util.NewKeySigner()
+	//if err != nil {
+	//	return
+	//}
 	return
 }

@@ -19,6 +19,10 @@ type writer struct {
 	db     *badger.DB
 }
 
+func (w *writer) ReserveHeader(i int64) error {
+	return nil
+}
+
 func NewWriter(db *badger.DB, ref blobstore.BlobRef) *writer {
 	return &writer{
 		db:     db,

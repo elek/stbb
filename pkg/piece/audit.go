@@ -132,7 +132,7 @@ func (a Audit) check(ctx context.Context, client pb.DRPCReplaySafePiecestoreClie
 	if err != nil {
 		return err
 	}
-	orderLimit, priv, sn, err := creator.CreateOrderLimit(ctx, id, int64(size), creator.GetSatelliteID(), a.NodeURL.ID)
+	orderLimit, priv, sn, err := creator.CreateOrderLimit(ctx, id, int64(size), a.NodeURL.ID)
 	if err != nil {
 		return nil
 	}

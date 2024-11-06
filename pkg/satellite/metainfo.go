@@ -21,6 +21,11 @@ type Metainfo struct {
 	identity *identity.FullIdentity
 }
 
+func (m *Metainfo) SetBucketObjectLockConfiguration(ctx context.Context, request *pb.SetBucketObjectLockConfigurationRequest) (*pb.SetBucketObjectLockConfigurationResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *Metainfo) GetObjectLegalHold(ctx context.Context, request *pb.GetObjectLegalHoldRequest) (*pb.GetObjectLegalHoldResponse, error) {
 	return &pb.GetObjectLegalHoldResponse{
 		Enabled: false,

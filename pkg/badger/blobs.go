@@ -308,7 +308,7 @@ func (b *BlobStore) ListNamespaces(ctx context.Context) ([][]byte, error) {
 	return b.namespaces, nil
 }
 
-func (b *BlobStore) WalkNamespace(ctx context.Context, namespace []byte, startFromPrefix string, walkFunc func(blobstore.BlobInfo) error) error {
+func (b *BlobStore) WalkNamespace(ctx context.Context, namespace []byte, skip blobstore.SkipPrefixFn, walkFunc func(blobstore.BlobInfo) error) error {
 	err := b.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.IteratorOptions{PrefetchValues: false})
 		defer it.Close()

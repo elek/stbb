@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"storj.io/common/identity"
@@ -20,6 +21,7 @@ type OrderLimitCreator interface {
 type KeySigner struct {
 	signer signing.Signer
 	Action pb.PieceAction
+	TTL    time.Duration
 	nodeID storj.NodeID
 }
 
@@ -35,6 +37,7 @@ func NewKeySignerFromFullIdentity(id *identity.FullIdentity, action pb.PieceActi
 		Action: action,
 	}
 }
+
 func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
 	d := KeySigner{}
 	d.Action = pb.PieceAction_GET
@@ -66,8 +69,8 @@ func NewKeySignerFromDir(keysDir string) (*KeySigner, error) {
 func (d *KeySigner) GetSatelliteID() storj.NodeID {
 	return d.nodeID
 }
-func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID, size int64, satellite storj.NodeID, sn storj.NodeID) (limit *pb.OrderLimit, pk storj.PiecePrivateKey, serial storj.SerialNumber, err error) {
 
+func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID, size int64, sn storj.NodeID) (limit *pb.OrderLimit, pk storj.PiecePrivateKey, serial storj.SerialNumber, err error) {
 	pub, pk, err := storj.NewPieceKey()
 	if err != nil {
 		return
@@ -80,13 +83,16 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 	limit = &pb.OrderLimit{
 		PieceId:         pieceID,
 		SerialNumber:    serial,
-		SatelliteId:     satellite,
+		SatelliteId:     d.signer.ID(),
 		StorageNodeId:   sn,
 		Action:          d.Action,
 		Limit:           size,
 		OrderCreation:   time.Now(),
 		OrderExpiration: time.Now().Add(24 * time.Hour),
 		UplinkPublicKey: pub,
+	}
+	if d.TTL > 0 {
+		limit.PieceExpiration = time.Now().Add(d.TTL)
 	}
 	limit, err = signing.SignOrderLimit(ctx, d.signer, limit)
 	if err != nil {
@@ -95,4 +101,27 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 	return
 }
 
-//
+type WithKeySigner struct {
+	SignerIdentity string        `usage:"the identity directory for signing order limits"`
+	TTL            time.Duration `usage:"piece expiration period of orders"`
+	signer         *KeySigner
+}
+
+func (w *WithKeySigner) Init(action pb.PieceAction) (err error) {
+	if w.SignerIdentity != "" {
+		w.signer, err = NewKeySignerFromDir(w.SignerIdentity)
+	} else {
+		w.signer, err = NewKeySigner()
+	}
+
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	w.signer.Action = action
+	w.signer.TTL = w.TTL
+	return
+}
+
+func (w *WithKeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID, size int64, sn storj.NodeID) (limit *pb.OrderLimit, pk storj.PiecePrivateKey, serial storj.SerialNumber, err error) {
+	return w.signer.CreateOrderLimit(ctx, pieceID, size, sn)
+}

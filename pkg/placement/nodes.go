@@ -8,15 +8,20 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"storj.io/common/memory"
+	"storj.io/common/storj"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
 	"storj.io/storj/satellite/satellitedb"
+	"strconv"
+	"strings"
 	"time"
 )
 
 type Nodes struct {
-	Selector string
-	Filter   string
+	Selector         string
+	Filter           string
+	OnlineWindow     time.Duration `default:"4h"`
+	MinimumDiskSpace memory.Size   `default:"500GB"`
 }
 
 func (s Nodes) Run() error {
@@ -30,9 +35,22 @@ func (s Nodes) Run() error {
 	var filter nodeselection.NodeFilter
 	filter = nodeselection.AnyFilter{}
 	if s.Filter != "" {
-		filter, err = nodeselection.FilterFromString(s.Filter)
-		if err != nil {
-			return err
+		if strings.Contains(s.Filter, "#") {
+			placementFile, placementID, _ := strings.Cut(s.Filter, "#")
+			p, err := strconv.Atoi(placementID)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			config, err := nodeselection.LoadConfig(placementFile, &nodeselection.PlacementConfigEnvironment{})
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			filter = config[storj.PlacementConstraint(p)].NodeFilter
+		} else {
+			filter, err = nodeselection.FilterFromString(s.Filter)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -45,8 +63,8 @@ func (s Nodes) Run() error {
 	defer satelliteDB.Close()
 
 	oldNodes, newNodes, err := satelliteDB.OverlayCache().SelectAllStorageNodesUpload(ctx, overlay.NodeSelectionConfig{
-		OnlineWindow:     4 * time.Hour,
-		MinimumDiskSpace: memory.GB * 5,
+		OnlineWindow:     s.OnlineWindow,
+		MinimumDiskSpace: s.MinimumDiskSpace,
 	})
 
 	if err != nil {

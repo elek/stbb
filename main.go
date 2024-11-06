@@ -6,12 +6,14 @@ import (
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
+	"github.com/elek/stbb/pkg/admin"
 	"github.com/elek/stbb/pkg/authservice"
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/dir"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/encoding"
+	"github.com/elek/stbb/pkg/hashstore"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/elek/stbb/pkg/metabase"
 	"github.com/elek/stbb/pkg/metainfo"
@@ -170,6 +172,8 @@ func main() {
 		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
 		Metabase   metabase.Metabase      `cmd:"" usage:"Raw metabase db related helpers"`
 		Dir        dir.Dir                `cmd:""`
+		Admin      admin.Admin            `cmd:"" usage:"helper commands, similar to the admin interface"`
+		Hashstore  hashstore.Hashstore    `cmd:"" usage:"commands related to the new hashtable based store"`
 	}
 
 	ctx := kong.Parse(&cli,

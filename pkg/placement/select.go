@@ -32,6 +32,10 @@ func (s Select) Run() error {
 		return errors.WithStack(err)
 	}
 
+	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil))
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
 		ApplicationName: "stbb",
 	})
@@ -41,11 +45,6 @@ func (s Select) Run() error {
 	defer func() {
 		satelliteDB.Close()
 	}()
-
-	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil))
-	if err != nil {
-		return errors.WithStack(err)
-	}
 
 	cache, err := overlay.NewUploadSelectionCache(log, satelliteDB.OverlayCache(), 60*time.Minute, overlay.NodeSelectionConfig{
 		NewNodeFraction:  0.01,

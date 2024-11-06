@@ -25,7 +25,7 @@ func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient
 	}
 	defer stream.Close()
 
-	orderLimit, priv, sn, err := creator.CreateOrderLimit(ctx, req.PieceID, req.Size, req.SatelliteID, req.Storagenode.ID)
+	orderLimit, priv, sn, err := creator.CreateOrderLimit(ctx, req.PieceID, req.Size, req.Storagenode.ID)
 	if err != nil {
 		return
 	}

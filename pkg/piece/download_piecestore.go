@@ -61,7 +61,7 @@ func (d *DownloadPieceStore) Download(ctx context.Context, signer *util.KeySigne
 		return
 	}
 
-	orderLimit, priv, _, err := signer.CreateOrderLimit(ctx, pieceID, d.Size, signer.GetSatelliteID(), d.NodeURL.ID)
+	orderLimit, priv, _, err := signer.CreateOrderLimit(ctx, pieceID, d.Size, d.NodeURL.ID)
 	if err != nil {
 		return
 	}

@@ -30,7 +30,7 @@ func (c Checksum) Run() error {
 	for _, n := range ns {
 		fmt.Println("checking namespace ", hex.EncodeToString(n))
 		ix := 0
-		err = blobs.WalkNamespace(ctx, n, "", func(info blobstore.BlobInfo) error {
+		err = blobs.WalkNamespace(ctx, n, nil, func(info blobstore.BlobInfo) error {
 			err := c.checkBlob(ctx, blobs, info)
 			ix++
 			if err != nil {
