@@ -1,0 +1,13 @@
+project_name: stbb
+archives:
+ - id: default
+   format: binary
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: linux
+        goarch: 386    
+      - goos: windows
+      - goos: darwin
+
