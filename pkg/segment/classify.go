@@ -14,6 +14,7 @@ import (
 	"storj.io/storj/satellite/repair"
 	"storj.io/storj/satellite/satellitedb"
 	"storj.io/storj/shared/location"
+	"strings"
 	"time"
 )
 
@@ -61,8 +62,9 @@ func (s *Classify) Run() error {
 
 	selectedNodes := make([]nodeselection.SelectedNode, len(segment.Pieces))
 
+	nodeInfo := map[storj.NodeID]nodeselection.SelectedNode{}
+
 	{
-		nodeInfo := map[storj.NodeID]nodeselection.SelectedNode{}
 		nodeIDs := storj.NodeIDList{}
 		for _, piece := range segment.Pieces {
 			nodeIDs = append(nodeIDs, piece.StorageNode)
@@ -108,7 +110,7 @@ func (s *Classify) Run() error {
 		}
 		def, err := c.Parse(func() (nodeselection.Placement, error) {
 			panic("default placement shouldn't be used")
-		}, nodeselection.NewPlacementConfigEnvironment(nil))
+		}, nodeselection.NewPlacementConfigEnvironment(nil, nil))
 		if err != nil {
 			return errs.Wrap(err)
 		}
@@ -133,14 +135,56 @@ func (s *Classify) Run() error {
 	fmt.Printf(pattern, "suspended", result.Suspended.Count())
 	fmt.Printf(pattern, "exiting", result.Exiting.Count())
 	fmt.Printf(pattern, "missing", result.Missing.Count())
-	for _, piece := range segment.Pieces {
-		if result.Missing.Contains(int(piece.Number)) {
-			fmt.Println("   ", piece.StorageNode)
-		}
-	}
 	fmt.Printf(pattern, "unhealhty-retrvb.", result.UnhealthyRetrievable.Count())
 	fmt.Printf(pattern, "clumped", result.Clumped.Count())
 	fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Count())
 
+	for _, piece := range segment.Pieces {
+
+		fmt.Printf("[%s] %d %s %s\n", getStatus(result, int(piece.Number)), piece.Number, piece.StorageNode, getNodeInfo(nodeInfo, piece.StorageNode))
+	}
+
 	return nil
+}
+
+func getStatus(result repair.PiecesCheckResult, number int) string {
+	st := []string{}
+	switch {
+	case result.Healthy.Contains(number):
+		st = append(st, "healthy")
+	case result.Missing.Contains(number):
+		st = append(st, "missing")
+	case result.Clumped.Contains(number):
+		st = append(st, "clumped")
+	case result.Exiting.Contains(number):
+		st = append(st, "exiting")
+	case result.Suspended.Contains(number):
+		st = append(st, "suspended")
+	case result.Clumped.Contains(number):
+		st = append(st, "clumped")
+	case result.OutOfPlacement.Contains(number):
+		st = append(st, "oop")
+
+	}
+
+	return strings.Join(st, ",")
+}
+
+func getNodeInfo(info map[storj.NodeID]nodeselection.SelectedNode, nodeID storj.NodeID) string {
+
+	node, found := info[nodeID]
+	if !found {
+		return "???"
+	}
+	identification := ""
+	for _, tag := range []string{"host", "instance"} {
+		hostTag, err := node.Tags.FindBySignerAndName(nodeID, tag)
+		if err == nil {
+			if len(identification) > 0 {
+				identification += "/"
+			}
+			identification += string(hostTag.Value)
+		}
+	}
+	return fmt.Sprintf("%s %s %s", node.LastIPPort, node.Email, identification)
 }
