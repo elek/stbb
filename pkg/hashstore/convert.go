@@ -94,6 +94,7 @@ func (i *Convert) Copy(ctx context.Context, store blobstore.Blobs, op *piecestor
 
 	_, err = out.Write(source[512:])
 	if err != nil {
+		_ = out.Cancel(ctx)
 		return errors.WithStack(err)
 	}
 
