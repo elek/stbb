@@ -7,6 +7,7 @@ import (
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
 	"github.com/elek/stbb/pkg/admin"
+	"github.com/elek/stbb/pkg/audit"
 	"github.com/elek/stbb/pkg/authservice"
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/crypto"
@@ -174,6 +175,7 @@ func main() {
 		Dir        dir.Dir                `cmd:""`
 		Admin      admin.Admin            `cmd:"" usage:"helper commands, similar to the admin interface"`
 		Hashstore  hashstore.Hashstore    `cmd:"" usage:"commands related to the new hashtable based store"`
+		Audit      audit.Audit            `cmd:"" usage:"commands related to the audit subsystem"`
 	}
 
 	ctx := kong.Parse(&cli,
