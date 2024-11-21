@@ -39,12 +39,13 @@ func (s Simulate) Run() error {
 		satelliteDB.Close()
 	}()
 
-	selectorInit, err := nodeselection.SelectorFromString(s.Selector, nodeselection.NewPlacementConfigEnvironment(nil))
+	env := nodeselection.NewPlacementConfigEnvironment(nil, nil)
+	selectorInit, err := nodeselection.SelectorFromString(s.Selector, env)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	f, err := nodeselection.FilterFromString(s.Filter)
+	f, err := nodeselection.FilterFromString(s.Filter, env)
 	if err != nil {
 		return errors.WithStack(err)
 	}

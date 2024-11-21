@@ -28,7 +28,7 @@ func (s List) Run() error {
 		return errors.WithStack(err)
 	}
 
-	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil))
+	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}

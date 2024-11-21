@@ -47,7 +47,7 @@ func (s Nodes) Run() error {
 			}
 			filter = config[storj.PlacementConstraint(p)].NodeFilter
 		} else {
-			filter, err = nodeselection.FilterFromString(s.Filter)
+			filter, err = nodeselection.FilterFromString(s.Filter, nil)
 			if err != nil {
 				return err
 			}
