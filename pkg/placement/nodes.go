@@ -12,14 +12,14 @@ import (
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
 	"storj.io/storj/satellite/satellitedb"
-	"strconv"
-	"strings"
 	"time"
 )
 
 type Nodes struct {
 	Selector         string
 	Filter           string
+	PlacementConfig  string
+	Placement        int
 	OnlineWindow     time.Duration `default:"4h"`
 	MinimumDiskSpace memory.Size   `default:"500GB"`
 }
@@ -34,24 +34,24 @@ func (s Nodes) Run() error {
 
 	var filter nodeselection.NodeFilter
 	filter = nodeselection.AnyFilter{}
-	if s.Filter != "" {
-		if strings.Contains(s.Filter, "#") {
-			placementFile, placementID, _ := strings.Cut(s.Filter, "#")
-			p, err := strconv.Atoi(placementID)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			config, err := nodeselection.LoadConfig(placementFile, &nodeselection.PlacementConfigEnvironment{})
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			filter = config[storj.PlacementConstraint(p)].NodeFilter
-		} else {
-			filter, err = nodeselection.FilterFromString(s.Filter, nil)
-			if err != nil {
-				return err
-			}
+
+	if s.PlacementConfig != "" {
+		d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
+		if err != nil {
+			return errors.WithStack(err)
 		}
+		filter = d[storj.PlacementConstraint(s.Placement)].NodeFilter
+	}
+	if s.Filter != "" {
+		f, err := nodeselection.FilterFromString(s.Filter, nil)
+		if err != nil {
+			return err
+		}
+		filter = nodeselection.NodeFilters{
+			f,
+			filter,
+		}
+
 	}
 
 	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{

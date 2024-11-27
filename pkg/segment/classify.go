@@ -149,22 +149,29 @@ func (s *Classify) Run() error {
 
 func getStatus(result repair.PiecesCheckResult, number int) string {
 	st := []string{}
-	switch {
-	case result.Healthy.Contains(number):
+	if result.Healthy.Contains(number) {
 		st = append(st, "healthy")
-	case result.Missing.Contains(number):
+	}
+	if result.Missing.Contains(number) {
 		st = append(st, "missing")
-	case result.Clumped.Contains(number):
+	}
+	if result.Clumped.Contains(number) {
 		st = append(st, "clumped")
-	case result.Exiting.Contains(number):
+	}
+	if result.Exiting.Contains(number) {
 		st = append(st, "exiting")
-	case result.Suspended.Contains(number):
+	}
+	if result.Suspended.Contains(number) {
 		st = append(st, "suspended")
-	case result.Clumped.Contains(number):
+	}
+	if result.Clumped.Contains(number) {
 		st = append(st, "clumped")
-	case result.OutOfPlacement.Contains(number):
+	}
+	if result.Retrievable.Contains(number) {
+		st = append(st, "retrievable")
+	}
+	if result.OutOfPlacement.Contains(number) {
 		st = append(st, "oop")
-
 	}
 
 	return strings.Join(st, ",")
