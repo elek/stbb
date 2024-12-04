@@ -1,10 +1,7 @@
 package hashstore
 
 import (
-	"context"
 	"github.com/elek/stbb/pkg/load"
-	"github.com/pkg/errors"
-	"storj.io/storj/storagenode/hashstore"
 	"time"
 )
 
@@ -54,16 +51,16 @@ func (b Generate) Run() error {
 	return nil
 }
 
-func (b Generate) writeOne(ctx context.Context, store *hashstore.Store, data []byte, expiresTime time.Time) (err error) {
-	defer mon.Task()(&ctx)(&err)
-	create, err := store.Create(ctx, hashstore.Key(b.NextPieceID()), expiresTime)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer create.Close()
-	_, err = create.Write(data)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	return err
-}
+//func (b Generate) writeOne(ctx context.Context, store *hashstore.Store, data []byte, expiresTime time.Time) (err error) {
+//	defer mon.Task()(&ctx)(&err)
+//	create, err := store.Create(ctx, hashstore.Key(b.NextPieceID()), expiresTime)
+//	if err != nil {
+//		return errors.WithStack(err)
+//	}
+//	defer create.Close()
+//	_, err = create.Write(data)
+//	if err != nil {
+//		return errors.WithStack(err)
+//	}
+//	return err
+//}
