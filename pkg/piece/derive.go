@@ -6,13 +6,13 @@ import (
 )
 
 type Derive struct {
-	NodeURL     storj.NodeURL `arg:""`
+	NodeID      storj.NodeID  `arg:""`
 	RootPieceID storj.PieceID `arg:""`
 	Index       int32         `arg:""`
 }
 
 func (d Derive) Run() error {
-	pieceId := d.RootPieceID.Derive(d.NodeURL.ID, d.Index)
-	fmt.Println(pieceId.String())
+
+	fmt.Println(d.RootPieceID.Derive(d.NodeID, d.Index))
 	return nil
 }
