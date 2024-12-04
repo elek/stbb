@@ -42,5 +42,6 @@ func (c CreateFilter) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	return nil
 }
