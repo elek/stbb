@@ -45,10 +45,19 @@ func (s *Show) Run() error {
 	if err != nil {
 		return err
 	}
+	pieces := segment.Pieces
+	segment.Pieces = nil
 	raw, err := json.MarshalIndent(segment, "", "   ")
 	if err != nil {
 		return err
 	}
 	fmt.Println(string(raw))
+
+	fmt.Println(segment.RootPieceID.String())
+
+	for _, piece := range pieces {
+		fmt.Println(piece.Number, piece.StorageNode, segment.RootPieceID.Derive(piece.StorageNode, int32(piece.Number)))
+	}
+
 	return nil
 }
