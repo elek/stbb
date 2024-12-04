@@ -2,11 +2,8 @@ package hashstore
 
 import (
 	"context"
-	crand "crypto/rand"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"io"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
 )
@@ -23,37 +20,37 @@ type Generate struct {
 }
 
 func (b Generate) Run() error {
-	log, err := zap.NewDevelopment()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	opts := []any{hashstore.MinTableSize(b.MinTableSize)}
-	if b.MetaPath != "" {
-		opts = append(opts, hashstore.MetaDirPath(b.MetaPath))
-	}
-	store, err := hashstore.NewStore(b.Dir, log, opts...)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer store.Close()
-	ctx := context.Background()
-
-	data, err := io.ReadAll(io.LimitReader(crand.Reader, b.Size))
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	for i := 0; i < b.Samples; i++ {
-		var expiresTime time.Time
-		if i%b.TTLModulo == 0 && b.TTL != 0 {
-			expiresTime = time.Now().Add(b.TTL)
-		}
-		err = b.writeOne(ctx, store, data, expiresTime)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-	}
+	//log, err := zap.NewDevelopment()
+	//if err != nil {
+	//	return errors.WithStack(err)
+	//}
+	//opts := []any{hashstore.MinTableSize(b.MinTableSize)}
+	//if b.MetaPath != "" {
+	//	opts = append(opts, hashstore.MetaDirPath(b.MetaPath))
+	//}
+	//store, err := hashstore.NewStore(b.Dir, log, opts...)
+	//if err != nil {
+	//	return errors.WithStack(err)
+	//}
+	//defer store.Close()
+	//ctx := context.Background()
+	//
+	//data, err := io.ReadAll(io.LimitReader(crand.Reader, b.Size))
+	//if err != nil {
+	//	return errors.WithStack(err)
+	//}
+	//
+	//for i := 0; i < b.Samples; i++ {
+	//	var expiresTime time.Time
+	//	if i%b.TTLModulo == 0 && b.TTL != 0 {
+	//		expiresTime = time.Now().Add(b.TTL)
+	//	}
+	//	err = b.writeOne(ctx, store, data, expiresTime)
+	//	if err != nil {
+	//		return errors.WithStack(err)
+	//	}
+	//
+	//}
 	return nil
 }
 
