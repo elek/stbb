@@ -1,7 +1,6 @@
 package hashstore
 
 import (
-	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
@@ -24,7 +23,7 @@ func (i *List) Run() error {
 		return errors.WithStack(err)
 	}
 	defer hashtbl.Close()
-	hashtbl.Range(context.Background(), func(record hashstore.Record, err error) bool {
+	hashtbl.Range(func(record hashstore.Record, err error) bool {
 		fmt.Println(record.String())
 		return true
 	})

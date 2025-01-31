@@ -45,7 +45,10 @@ func (i *Convert) Run() error {
 	dest := filepath.Join(destDir, "hashstore")
 	_ = os.MkdirAll(dest, 0755)
 
-	op := piecestore.NewHashStoreBackend(dest, nil, nil, log)
+	op, err := piecestore.NewHashStoreBackend(dest, nil, nil, log)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	defer op.Close()
 
 	buf := make([]byte, 3_000_000)
