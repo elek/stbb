@@ -9,12 +9,12 @@ import (
 	"storj.io/common/storj"
 )
 
-type NodeStat struct {
+type PricingModel struct {
 	util.DialerHelper
 	URL string `arg:""`
 }
 
-func (g NodeStat) Run() error {
+func (g PricingModel) Run() error {
 	ctx := context.Background()
 
 	dialer, err := g.CreateRPCDialer()
