@@ -16,7 +16,7 @@ require (
 	github.com/oschwald/maxminddb-golang v1.12.0
 	github.com/outcaste-io/badger/v3 v3.2202.1-0.20220426173331-b25bc764af0d
 	github.com/pkg/errors v0.9.1
-	github.com/spacemonkeygo/monkit/v3 v3.0.23
+	github.com/spacemonkeygo/monkit/v3 v3.0.24
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
@@ -32,13 +32,13 @@ require (
 	google.golang.org/protobuf v1.35.2
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20241122160459-7ebb6c97b77d
+	storj.io/common v0.0.0-20241217150018-eb3fb91616f6
 	storj.io/drpc v0.0.35-0.20240709171858-0075ac871661
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd
-	storj.io/storj v1.91.0-alpha.0.20241204084255-8b7ff294701e
-	storj.io/uplink v1.13.2-0.20241106140533-61d511a04894
+	storj.io/storj v1.91.0-alpha.0.20250106104727-4ba50ceafd85
+	storj.io/uplink v1.13.2-0.20241209213014-e5f3beed1a59
 )
 
 require (
@@ -151,6 +151,7 @@ require (
 	github.com/zeebo/structs v1.0.3-0.20230601144555-f2db46069602 // indirect
 	github.com/zeebo/sudo v1.0.2 // indirect
 	github.com/zyedidia/generic v1.2.1 // indirect
+	go.etcd.io/bbolt v1.3.5 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.29.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
