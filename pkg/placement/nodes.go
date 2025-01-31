@@ -16,7 +16,7 @@ import (
 )
 
 type Nodes struct {
-	Selector         string
+	Selector         []string
 	Filter           string
 	PlacementConfig  string
 	Placement        int
@@ -72,9 +72,14 @@ func (s Nodes) Run() error {
 	}
 
 	fmt.Println("cache is loaded", "new", len(newNodes), "old", len(oldNodes))
-	selector, err := nodeselection.CreateNodeAttribute(s.Selector)
-	if err != nil {
-		return errors.WithStack(err)
+
+	var attr []nodeselection.NodeAttribute
+	for _, s := range s.Selector {
+		selector, err := nodeselection.CreateNodeAttribute(s)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		attr = append(attr, selector)
 	}
 	var filtered []*nodeselection.SelectedNode
 	for _, node := range append(oldNodes, newNodes...) {
@@ -82,7 +87,7 @@ func (s Nodes) Run() error {
 			filtered = append(filtered, node)
 		}
 	}
-	util.PrintHistogram(filtered, selector)
+	util.PrintHistogram(filtered, attr...)
 	fmt.Println()
 	return nil
 }

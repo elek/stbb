@@ -24,6 +24,7 @@ type Select struct {
 	Selector        string `default:"wallet"`
 	Number          int    `default:"1"`
 	Durability      string `usage:"node attribute to calculate the durability risk for"`
+	Invariant       bool   `usage:"Check invariant for all selections"`
 }
 
 func (s Select) Run() error {
@@ -81,6 +82,7 @@ func (s Select) Run() error {
 		}
 	}
 
+	oopSelection := 0
 	for i := 0; i < s.Number; i++ {
 		nodes, err := cache.GetNodes(ctx, overlay.FindStorageNodesRequest{
 			RequestedCount: s.NodeNo,
@@ -99,9 +101,18 @@ func (s Select) Run() error {
 			}
 			pieces, invNodes := convert(nodes)
 			oop := d[storj.PlacementConstraint(s.Placement)].Invariant(pieces, invNodes)
-			util.PrintHistogram(nodes, selector)
-			fmt.Println("Out of placement nodes", oop.Count())
+			if s.Invariant {
+				if oop.Count() > 0 {
+					oopSelection++
+				}
+			} else {
+				util.PrintHistogram(nodes, selector)
+				fmt.Println("Out of placement nodes", oop.Count())
+			}
 		}
+	}
+	if s.Invariant {
+		fmt.Println("OOP selections", oopSelection)
 	}
 	if s.Durability != "" {
 		for ix, h := range report.healthStat {
