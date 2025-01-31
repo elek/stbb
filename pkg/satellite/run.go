@@ -15,6 +15,7 @@ import (
 	"storj.io/drpc/drpcmigrate"
 	"storj.io/drpc/drpcmux"
 	"storj.io/drpc/drpcserver"
+	"strings"
 	"time"
 )
 
@@ -29,7 +30,19 @@ func (s *NodeEndpoint) GetTime(context.Context, *pb.GetTimeRequest) (*pb.GetTime
 }
 
 func (s *NodeEndpoint) CheckIn(ctx context.Context, req *pb.CheckInRequest) (*pb.CheckInResponse, error) {
-	fmt.Println("Node checked in", req.Address, req.Capacity.FreeDisk)
+	var printTags []string
+	for _, tag := range req.SignedTags.Tags {
+		var tags pb.NodeTagSet
+		err := pb.Unmarshal(tag.GetSerializedTag(), &tags)
+		if err != nil {
+			fmt.Println("Invalid tags:", err.Error())
+		}
+		for _, t := range tags.Tags {
+			printTags = append(printTags, fmt.Sprintf("%s=%s", t.Name, string(t.Value)))
+		}
+
+	}
+	fmt.Println("Node checked in", req.Address, req.Capacity.FreeDisk, strings.Join(printTags, ","))
 	return &pb.CheckInResponse{
 		PingNodeSuccess: true,
 	}, nil
