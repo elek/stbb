@@ -8,4 +8,5 @@ type Bloom struct {
 	Send       Send         `cmd:"" help:"send bloom filter to a storagenode, with raw RPC call"`
 	SendClient SendClient   `cmd:"" help:"send bloom filter to a storagenode, with piecestore client"`
 	Find       Find         `cmd:"" help:"Find BF for specific nodes in the generated ZIP files"`
+	Unwrap     Unwrap       `cmd:"" help:"unwrap a bloom filter (form pb representation to raw filter)"`
 }

@@ -14,6 +14,7 @@ import (
 type Check struct {
 	Filter string `default:"bloom.filter"`
 	Pieces string `default:"" required:"true"`
+	Proto  bool   `help:"force protobuf based deserialization" default:"false"`
 }
 
 func (c Check) Run() error {
@@ -22,7 +23,7 @@ func (c Check) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if strings.HasSuffix(c.Filter, ".pb") {
+	if strings.HasSuffix(c.Filter, ".pb") || c.Proto {
 		retainInfo := &internalpb.RetainInfo{}
 		err = pb.Unmarshal(rawFilter, retainInfo)
 		if err != nil {

@@ -14,7 +14,7 @@ import (
 )
 
 type Find struct {
-	NodeID storj.NodeID `arg:""`
+	NodeID []storj.NodeID `arg:""`
 	Bucket string
 	Prefix string
 }
@@ -58,10 +58,16 @@ func (f Find) Run() error {
 			return errors.WithStack(err)
 		}
 
+		found := 0
 		for _, file := range reader.File {
-			if file.Name == f.NodeID.String() {
-				fmt.Println("FOUND", file.Name, object.Key)
-				return nil
+			for _, nodeID := range f.NodeID {
+				if file.Name == nodeID.String() {
+					fmt.Println("FOUND", file.Name, object.Key, nodeID)
+					found++
+					if found == len(nodeID) {
+						return nil
+					}
+				}
 			}
 		}
 	}
