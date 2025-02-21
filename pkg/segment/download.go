@@ -120,7 +120,6 @@ func (s *Download) Run() error {
 			Size:        int64(segment.EncryptedSize / 29),
 			SatelliteID: ident.ID,
 		}, func(bytes []byte, hash *pb.PieceHash, ol *pb.OrderLimit) {
-			fmt.Println(hash.HashAlgorithm.String())
 			err := os.WriteFile(outFile, bytes, 0644)
 			if err != nil {
 				fmt.Println(err)
@@ -134,7 +133,7 @@ func (s *Download) Run() error {
 		})
 		_ = conn.Close()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("ERROR", pieceID, "couldn't be downloaded", snURL, err)
 			continue
 		}
 		fmt.Println(pieceID, "is downloaded from", snURL)

@@ -67,7 +67,7 @@ func (r RangedLoop) Run() error {
 	case "test", "placement", "single":
 		provider = NewFullScan(metabaseDB, r.ScanType)
 	case "full":
-		provider = rangedloop.NewMetabaseRangeSplitter(log, metabaseDB, -10*time.Second, 10*time.Second, 8)
+		provider = rangedloop.NewMetabaseRangeSplitter(log, metabaseDB, cfg)
 		cfg.Parallelism = 8
 	}
 	service := rangedloop.NewService(log.Named("rangedloop"), cfg, provider, observers)
