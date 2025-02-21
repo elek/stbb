@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
+	"sort"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
@@ -82,6 +83,8 @@ func (s Select) Run() error {
 		}
 	}
 
+	stat := map[string]int{}
+	var sum int
 	oopSelection := 0
 	for i := 0; i < s.Number; i++ {
 		nodes, err := cache.GetNodes(ctx, overlay.FindStorageNodesRequest{
@@ -109,6 +112,10 @@ func (s Select) Run() error {
 				util.PrintHistogram(nodes, selector)
 				fmt.Println("Out of placement nodes", oop.Count())
 			}
+			for _, node := range nodes {
+				stat[selector(*node)]++
+				sum++
+			}
 		}
 	}
 	if s.Invariant {
@@ -124,6 +131,17 @@ func (s Select) Run() error {
 				fmt.Println(ix, b.SegmentCount, b.ClassExemplars)
 			}
 		}
+	}
+
+	var groups []string
+	for group := range stat {
+		groups = append(groups, group)
+	}
+	sort.Strings(groups)
+
+	for _, group := range groups {
+		count := stat[group]
+		fmt.Printf("_%s_: %d %% (%d)\n", group, count*100/sum, count)
 	}
 
 	return nil
