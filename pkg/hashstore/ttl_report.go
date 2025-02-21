@@ -1,6 +1,7 @@
 package hashstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
@@ -18,7 +19,8 @@ func (l *TTLReport) Run() error {
 	}
 
 	defer o.Close()
-	hashtbl, err := hashstore.OpenHashtbl(o)
+	ctx := context.Background()
+	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -27,14 +29,18 @@ func (l *TTLReport) Run() error {
 	// logid --> TTL --> count
 	expired := make(map[uint64]map[hashstore.Expiration]int)
 
-	hashtbl.Range(func(rec hashstore.Record, err error) bool {
+	err = hashtbl.Range(ctx, func(ctx context.Context, rec hashstore.Record) (bool, error) {
 		if _, found := expired[rec.Log]; !found {
 			expired[rec.Log] = make(map[hashstore.Expiration]int)
 		}
 
 		expired[rec.Log][rec.Expires]++
-		return true
+		return true, nil
 	})
+
+	if err != nil {
+		return err
+	}
 
 	for logid, ttls := range expired {
 		fmt.Println("LOG", logid)

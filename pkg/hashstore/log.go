@@ -26,7 +26,7 @@ func (l *Logs) Run() error {
 	}
 
 	defer o.Close()
-	hashtbl, err := hashstore.OpenHashtbl(o)
+	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -46,7 +46,7 @@ func (l *Logs) Run() error {
 
 	currentSize, err := findFiles(l.LogDir)
 
-	hashtbl.Range(func(rec hashstore.Record, err error) bool {
+	err = hashtbl.Range(ctx, func(_ context.Context, rec hashstore.Record) (bool, error) {
 		rerr = func() error {
 			if err != nil {
 				return errors.WithStack(err)
@@ -79,7 +79,7 @@ func (l *Logs) Run() error {
 
 			return nil
 		}()
-		return rerr == nil
+		return rerr == nil, rerr
 	})
 	fmt.Println("modification", modifications)
 	for k, v := range used {

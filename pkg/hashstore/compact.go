@@ -18,12 +18,13 @@ func (i *Compact) Run() error {
 		return errors.WithStack(err)
 	}
 
-	store, err := hashstore.NewStore(i.Dir, log)
+	ctx := context.Background()
+
+	store, err := hashstore.NewStore(ctx, i.Dir, "", log)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	defer store.Close()
-	ctx := context.Background()
 
 	err = store.Compact(ctx, func(ctx context.Context, key hashstore.Key, created time.Time) bool {
 		return false

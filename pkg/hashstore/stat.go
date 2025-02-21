@@ -1,6 +1,7 @@
 package hashstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
@@ -20,7 +21,10 @@ func (i *Stat) Run() error {
 	}
 
 	defer o.Close()
-	hashtbl, err := hashstore.OpenHashtbl(o)
+
+	ctx := context.Background()
+
+	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
 	if err != nil {
 		return errors.WithStack(err)
 	}

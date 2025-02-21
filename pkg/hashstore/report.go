@@ -1,6 +1,7 @@
 package hashstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
@@ -19,7 +20,10 @@ func (i *Report) Run() error {
 	}
 
 	defer o.Close()
-	hashtbl, err := hashstore.OpenHashtbl(o)
+
+	ctx := context.Background()
+
+	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -31,7 +35,7 @@ func (i *Report) Run() error {
 	trash := 0
 	today := timeToDateDown(time.Now())
 	var ttlPrev, ttlNext []int
-	hashtbl.Range(func(record hashstore.Record, err error) bool {
+	err = hashtbl.Range(ctx, func(ctx2 context.Context, record hashstore.Record) (bool, error) {
 		if record.Expires.Set() {
 			expRel := int(record.Expires.Time() - today)
 			if expRel > 100 || expRel < -100 {
@@ -56,8 +60,11 @@ func (i *Report) Run() error {
 			nonTTL++
 		}
 
-		return true
+		return true, nil
 	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	fmt.Println("no-ttl", nonTTL)
 	fmt.Println("ttl", ttl)
 	fmt.Println("ttlFar", ttlFar)
