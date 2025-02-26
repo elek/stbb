@@ -54,8 +54,9 @@ func (n *Score) Run() (err error) {
 	}
 
 	env := map[any]any{
-		"node_attribute": nodeselection.CreateNodeAttribute,
-		"node_value":     nodeselection.CreateNodeValue,
+		"node_attribute":       nodeselection.CreateNodeAttribute,
+		"node_value":           nodeselection.CreateNodeValue,
+		"uploadSuccessTracker": &oneTracker{},
 	}
 	nodeselection.AddArithmetic(env)
 	score, err := mito.Eval(n.Score, env)
