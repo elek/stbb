@@ -13,4 +13,5 @@ type Hashstore struct {
 	Report    Report    `cmd:"" usage:"show additional reports on a hashtable store"`
 	Logs      Logs      `cmd:"" usage:"show current log file load"`
 	TTLReport TTLReport `cmd:"" usage:"print out ttl expiration per file"`
+	Recover   Recover   `cmd:"" usage:"recover hashtable (metadata) from a hashstore log files"`
 }
