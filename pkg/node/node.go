@@ -7,6 +7,8 @@ type Node struct {
 	Checkin      Checkin      `cmd:"" help:"node checking rpc call (sn->satellite RPC)"`
 	Usage        Usage        `cmd:"" help:"calls the info endpoint of the satellite in the name of the storagenode (sn->satellite RPC)"`
 
+	Enrich Enrich `cmd:"" help:"enrich node information with metadata from the satellite"`
+
 	Export         Export         `cmd:""`
 	UnsentOrder    UnsentOrder    `cmd:"" usage:"parse unsent order archive"`
 	Paystub        Paystub        `cmd:""`
