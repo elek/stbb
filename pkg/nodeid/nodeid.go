@@ -28,6 +28,8 @@ type NodeID struct {
 	Remote   Remote   `cmd:"" help:"read nodeid from remote DRPC port"`
 	Generate Generate `cmd:""`
 	Noise    Noise    `cmd:""`
+	Sign     Sign     `cmd:"" help:"Cross sign identity"`
+	Cert     Cert     `cmd:"" help:"List details of certificate files"`
 }
 
 type Decode struct {
