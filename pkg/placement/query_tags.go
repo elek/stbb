@@ -12,8 +12,15 @@ func (q QueryTags) Run() error {
 	query := "WITH\n"
 
 	tags := map[string]bool{
-		"soc2": true, "operator": true, "owner": true, "vivint-exclude-upload": true, "surge": true, "us-select-exclude-upload": true,
-		"host": false, "service": false, "server_group": false,
+		"soc2":                     true,
+		"operator":                 true,
+		"owner":                    true,
+		"vivint-exclude-upload":    true,
+		"surge":                    true,
+		"us-select-exclude-upload": true,
+		"host":                     false,
+		"service":                  false,
+		"server_group":             false,
 	}
 
 	for tag, authoritive := range tags {
@@ -26,13 +33,13 @@ func (q QueryTags) Run() error {
 	}
 
 	query += "\nnode_with_tags as (\n    select nodes.*,\n"
-	for tag, _ := range tags {
+	for tag := range tags {
 		tag = strings.ReplaceAll(tag, "-", "_")
 		query += fmt.Sprintf("    %s.strvalue as %s,\n", tag, tag)
 	}
 	query = query[:len(query)-2]
 	query += "\nfrom nodes\n"
-	for tag, _ := range tags {
+	for tag := range tags {
 		tag = strings.ReplaceAll(tag, "-", "_")
 		query += fmt.Sprintf("    left join %s on %s.node_id = nodes.id\n", tag, tag)
 	}
