@@ -9,9 +9,10 @@ type Hashstore struct {
 	List    List    `cmd:"" usage:"list content of a hashtable"`
 	Stat    Stat    `cmd:"" usage:"list content of a hashtable stat"`
 	//Generate Generate `cmd:"" usage:"generate data to a hashtable store"`
-	Compact   Compact   `cmd:"" usage:"compact a hashtable store"`
-	Report    Report    `cmd:"" usage:"show additional reports on a hashtable store"`
-	Logs      Logs      `cmd:"" usage:"show current log file load"`
-	TTLReport TTLReport `cmd:"" usage:"print out ttl expiration per file"`
-	Recover   Recover   `cmd:"" usage:"recover hashtable (metadata) from a hashstore log files"`
+	Compact     Compact     `cmd:"" usage:"compact a hashtable store"`
+	Report      Report      `cmd:"" usage:"show additional reports on a hashtable store"`
+	Logs        Logs        `cmd:"" usage:"show current log file load"`
+	TTLReport   TTLReport   `cmd:"" usage:"print out ttl expiration per file"`
+	Recover     Recover     `cmd:"" usage:"recover hashtable (metadata) from a hashstore log files"`
+	RestoreTime RestoreTime `cmd:"" usage:"get/set restore time for a satellite"`
 }
