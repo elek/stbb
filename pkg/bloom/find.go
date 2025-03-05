@@ -64,7 +64,7 @@ func (f Find) Run() error {
 				if file.Name == nodeID.String() {
 					fmt.Println("FOUND", file.Name, object.Key, nodeID)
 					found++
-					if found == len(nodeID) {
+					if found == len(f.NodeID) {
 						return nil
 					}
 				}

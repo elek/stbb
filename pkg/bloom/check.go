@@ -12,9 +12,10 @@ import (
 )
 
 type Check struct {
-	Filter string `default:"bloom.filter"`
-	Pieces string `default:"" required:"true"`
-	Proto  bool   `help:"force protobuf based deserialization" default:"false"`
+	Filter      string `default:"bloom.filter"`
+	Pieces      string `default:"" required:"true"`
+	Proto       bool   `help:"force protobuf based deserialization" default:"false"`
+	ShowMissing int    `help:"Show this number if missing piece IDs (file based processing)" default:"0"`
 }
 
 func (c Check) Run() error {
@@ -50,12 +51,16 @@ func (c Check) Run() error {
 			}
 			pieceID, err := storj.PieceIDFromString(line)
 			if err != nil {
-				return errors.WithStack(err)
+				return errors.Wrap(err, "Invalid line: "+line)
 			}
 			if filter.Contains(pieceID) {
 				matched++
 			} else {
 				missing++
+				if c.ShowMissing > 0 {
+					fmt.Println("missing", pieceID)
+					c.ShowMissing--
+				}
 			}
 		}
 		fmt.Println("missing", missing)
