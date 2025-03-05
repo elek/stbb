@@ -15,4 +15,5 @@ type Hashstore struct {
 	TTLReport   TTLReport   `cmd:"" usage:"print out ttl expiration per file"`
 	Recover     Recover     `cmd:"" usage:"recover hashtable (metadata) from a hashstore log files"`
 	RestoreTime RestoreTime `cmd:"" usage:"get/set restore time for a satellite"`
+	Get         Get         `cmd:"" usage:"get a record from a hashtable"`
 }
