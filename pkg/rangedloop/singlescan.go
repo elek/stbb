@@ -23,7 +23,7 @@ func NewFullScan(db *metabase.DB, scanType string) *FullScan {
 		},
 	}
 }
-func (f *FullScan) CreateRanges(nRanges int, batchSize int) ([]rangedloop.SegmentProvider, error) {
+func (f *FullScan) CreateRanges(_ context.Context, nRanges int, batchSize int) ([]rangedloop.SegmentProvider, error) {
 	if nRanges != 1 {
 		return nil, errors.New("Only one segment is allowed")
 	}

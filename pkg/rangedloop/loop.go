@@ -6,6 +6,7 @@ import (
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
+	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
@@ -14,8 +15,17 @@ import (
 )
 
 type RangedLoop struct {
-	ScanType  string
+	ScanType  string `default:"full"`
 	ScanParam int
+
+	Parallelism int `default:"1"`
+	NodeID      storj.NodeID
+	Output      string
+
+	BackupBucket   string
+	BackupDatabase string
+	BackupDay      string
+	Instance       string
 }
 
 func (r RangedLoop) Run() error {
@@ -51,7 +61,7 @@ func (r RangedLoop) Run() error {
 	}()
 
 	cfg := rangedloop.Config{
-		Parallelism:        1,
+		Parallelism:        r.Parallelism,
 		BatchSize:          2500,
 		AsOfSystemInterval: -10 * time.Second,
 	}
@@ -59,8 +69,10 @@ func (r RangedLoop) Run() error {
 	var observers []rangedloop.Observer
 
 	observers = append(observers, NewCount())
-	//observers = append(observers, metrics.NewObserver(zap.NewNop()))
 	observers = append(observers, metrics.NewObserver())
+	if !r.NodeID.IsZero() {
+		observers = append(observers, NewPieceList(r.NodeID, r.Output))
+	}
 	var provider rangedloop.RangeSplitter
 
 	switch r.ScanType {
@@ -68,7 +80,12 @@ func (r RangedLoop) Run() error {
 		provider = NewFullScan(metabaseDB, r.ScanType)
 	case "full":
 		provider = rangedloop.NewMetabaseRangeSplitter(log, metabaseDB, cfg)
-		cfg.Parallelism = 8
+	case "avro":
+		segmentPattern := fmt.Sprintf("%s*/%s/%s-*/segments.avro-*", r.BackupDay, r.BackupDatabase, r.Instance)
+		segmentsAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, segmentPattern)
+		metainfoPattern := fmt.Sprintf("%s*/%s/%s-*/node_aliases.avro-*", r.BackupDay, "metainfo", r.Instance)
+		nodeAliasesAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, metainfoPattern)
+		provider = rangedloop.NewAvroSegmentsSplitter(segmentsAvroIterator, nodeAliasesAvroIterator)
 	}
 	service := rangedloop.NewService(log.Named("rangedloop"), cfg, provider, observers)
 	_, err = service.RunOnce(ctx)
