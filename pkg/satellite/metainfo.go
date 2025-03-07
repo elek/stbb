@@ -21,6 +21,12 @@ type Metainfo struct {
 	identity *identity.FullIdentity
 }
 
+func (m *Metainfo) DeleteObjects(ctx context.Context, request *pb.DeleteObjectsRequest) (*pb.DeleteObjectsResponse, error) {
+	panic("implement me")
+}
+
+var _ pb.DRPCMetainfoServer = (*Metainfo)(nil)
+
 func (m *Metainfo) SetBucketObjectLockConfiguration(ctx context.Context, request *pb.SetBucketObjectLockConfigurationRequest) (*pb.SetBucketObjectLockConfigurationResponse, error) {
 	//TODO implement me
 	panic("implement me")

@@ -52,7 +52,7 @@ func (n *SelectPool) Run() (err error) {
 	//if !b {
 	//	panic("unknown tracker")
 	//}
-	//successTrackers := metainfo.NewSuccessTrackers([]storj.NodeID{}, tracker)
+	//successTrackers := metainfo.NewSuccessTrackers([]storj.nodeID{}, tracker)
 	successTrackers := oneTracker{}
 
 	placements, err := nodeselection.LoadConfig(n.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(successTrackers, nil))
