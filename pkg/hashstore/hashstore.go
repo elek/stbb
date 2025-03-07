@@ -16,4 +16,5 @@ type Hashstore struct {
 	Recover     Recover     `cmd:"" usage:"recover hashtable (metadata) from a hashstore log files"`
 	RestoreTime RestoreTime `cmd:"" usage:"get/set restore time for a satellite"`
 	Get         Get         `cmd:"" usage:"get a record from a hashtable"`
+	Diff        Diff        `cmd:"" usage:"diff two hashstore"`
 }
