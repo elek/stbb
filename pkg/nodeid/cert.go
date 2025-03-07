@@ -32,12 +32,12 @@ func (c *Cert) Run() error {
 			return errors.WithStack(err)
 		}
 		block, _ := pem.Decode(keyBytes)
-		fmt.Println(block.Type)
 		privateKey, err := x509.ParseECPrivateKey(block.Bytes)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		allKeys[filepath.Base(f)] = &privateKey.PublicKey
+		fmt.Println(filepath.Base(f), privateKey.PublicKey.X.Text(16), privateKey.PublicKey.Y.Text(16))
 		externalKeys[filepath.Base(f)] = &privateKey.PublicKey
 	}
 
