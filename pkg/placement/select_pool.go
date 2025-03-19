@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"math/rand"
+	"storj.io/common/testrand"
 	"storj.io/storj/satellite/metainfo"
 
 	"go.uber.org/zap"
@@ -81,7 +82,7 @@ func (n *SelectPool) Run() (err error) {
 		zero, _ := storj.NodeIDFromString("1111111111111111111111111111111VyS547o")
 		var nodes []*nodeselection.SelectedNode
 		for i := 0; i < n.FakeNodes; i++ {
-			id := storj.NodeID{byte(i)}
+			id := testrand.NodeID()
 			nodes = append(nodes, &nodeselection.SelectedNode{
 				ID: id,
 				Tags: nodeselection.NodeTags{
@@ -225,14 +226,7 @@ func (n *SelectPool) Run() (err error) {
 		fmt.Println()
 	}
 
-	//nodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 10*time.Millisecond)
-	//if err != nil {
-	//	return errors.WithStack(err)
-	//}
-	//for _, node := range nodes {
-	//	fmt.Println(node.ID, nodeAttribute(node), successTracker.InitScoreNode(storj.NodeID{}).Get(&node))
-	//}
-
+	//tw.Debug()
 	//min, max := -1, -1
 	//hist := map[int]int{}
 	//for _, v := range stat {
@@ -268,9 +262,13 @@ type TrackerWrap interface {
 	Increment(nodes []*nodeselection.SelectedNode, success int)
 	Bump()
 	InitScoreNode() nodeselection.ScoreNode
+	Debug()
 }
 
 type Noop struct {
+}
+
+func (n *Noop) Debug() {
 }
 
 func (n *Noop) Increment(nodes []*nodeselection.SelectedNode, success int) {
@@ -289,6 +287,12 @@ var _ TrackerWrap = &Noop{}
 
 type Fair struct {
 	tracker *FairTracker
+}
+
+func (f *Fair) Debug() {
+	for id, score := range f.tracker.counters {
+		fmt.Println(id, score)
+	}
 }
 
 func (f *Fair) Increment(nodes []*nodeselection.SelectedNode, success int) {
@@ -310,6 +314,10 @@ var _ TrackerWrap = &Fair{}
 
 type BitShift struct {
 	tracker *metainfo.SuccessTrackers
+}
+
+func (b *BitShift) Debug() {
+
 }
 
 func (b *BitShift) InitScoreNode() nodeselection.ScoreNode {
