@@ -28,6 +28,7 @@ type SelectPool struct {
 	Tracker         string `default:"noop"`
 	Rps             int    `default:"400"`
 	K               int    `default:"1000000"`
+	FakeNodes       int    `default:"0" usage:"Number of fake nodes to use instead of db"`
 }
 
 func (n *SelectPool) Run() (err error) {
@@ -64,6 +65,7 @@ func (n *SelectPool) Run() (err error) {
 	default:
 		return errors.New("unknown tracker: " + n.Tracker)
 	}
+
 	placements, err := nodeselection.LoadConfig(n.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), nil))
 	if err != nil {
 		return errors.WithStack(err)
@@ -74,17 +76,64 @@ func (n *SelectPool) Run() (err error) {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer func() {
-		satelliteDB.Close()
-	}()
+	var nodeSource overlay.UploadSelectionDB
+	if n.FakeNodes > 0 {
+		zero, _ := storj.NodeIDFromString("1111111111111111111111111111111VyS547o")
+		var nodes []*nodeselection.SelectedNode
+		for i := 0; i < n.FakeNodes; i++ {
+			id := storj.NodeID{byte(i)}
+			nodes = append(nodes, &nodeselection.SelectedNode{
+				ID: id,
+				Tags: nodeselection.NodeTags{
+					{
+						NodeID: id,
+						Signer: zero,
+						Name:   "soc2",
+						Value:  []byte("true"),
+					},
+					{
+						NodeID: id,
+						Signer: zero,
+						Name:   "operator",
+						Value:  []byte("storj.io"),
+					},
+					{
+						NodeID: id,
+						Signer: zero,
+						Name:   "server_group",
+						Value:  []byte(fmt.Sprintf("group%d", i%5)),
+					},
+					{
+						NodeID: id,
+						Signer: zero,
+						Name:   "host",
+						Value:  []byte(fmt.Sprintf("group%d", i/5/36)),
+					},
+					{
+						NodeID: id,
+						Signer: zero,
+						Name:   "service",
+						Value:  []byte(fmt.Sprintf("instance%d", i)),
+					},
+				},
+			})
+		}
+		nodeSource = &NodeList{Nodes: nodes}
 
-	cache, err := overlay.NewUploadSelectionCache(log, satelliteDB.OverlayCache(), 60*time.Minute, overlay.NodeSelectionConfig{
+	} else {
+		satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
+			ApplicationName: "stbb",
+		})
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		defer func() {
+			satelliteDB.Close()
+		}()
+		nodeSource = satelliteDB.OverlayCache()
+	}
+
+	cache, err := overlay.NewUploadSelectionCache(log, nodeSource, 60*time.Minute, overlay.NodeSelectionConfig{
 		NewNodeFraction:  0.01,
 		OnlineWindow:     4 * time.Hour,
 		MinimumDiskSpace: 5 * memory.GB,
@@ -288,3 +337,11 @@ func (b *BitShift) Bump() {
 }
 
 var _ TrackerWrap = &BitShift{}
+
+type NodeList struct {
+	Nodes []*nodeselection.SelectedNode
+}
+
+func (n NodeList) SelectAllStorageNodesUpload(ctx context.Context, selectionCfg overlay.NodeSelectionConfig) (reputable, new []*nodeselection.SelectedNode, err error) {
+	return n.Nodes, nil, nil
+}

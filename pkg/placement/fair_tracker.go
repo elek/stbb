@@ -26,9 +26,9 @@ func (f *FairTracker) Update(node *nodeselection.SelectedNode) {
 }
 
 func (f *FairTracker) BumpGeneration() {
-	for k, v := range f.counters {
-		f.counters[k] = v * 0.5
-	}
+	//for k, v := range f.counters {
+	//	f.counters[k] = v * 0.9
+	//}
 }
 
 var _ nodeselection.ScoreNode = &FairTracker{}
