@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"math/rand"
+	"storj.io/storj/satellite/metainfo"
 
 	"go.uber.org/zap"
-	"math/rand"
 	"os"
 	"sort"
 	"storj.io/common/memory"
@@ -23,6 +24,10 @@ type SelectPool struct {
 	PlacementConfig string
 	Placement       storj.PlacementConstraint
 	Selector        string
+	CSV             bool
+	Tracker         string `default:"noop"`
+	Rps             int    `default:"400"`
+	K               int    `default:"1000000"`
 }
 
 func (n *SelectPool) Run() (err error) {
@@ -48,14 +53,18 @@ func (n *SelectPool) Run() (err error) {
 		return strings.Join(result, ",")
 	}
 
-	//tracker, b := metainfo.GetNewSuccessTracker("bitshift")
-	//if !b {
-	//	panic("unknown tracker")
-	//}
-	//successTrackers := metainfo.NewSuccessTrackers([]storj.nodeID{}, tracker)
-	successTrackers := oneTracker{}
-
-	placements, err := nodeselection.LoadConfig(n.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(successTrackers, nil))
+	var tw TrackerWrap
+	switch n.Tracker {
+	case "noop":
+		tw = &Noop{}
+	case "fair":
+		tw = &Fair{}
+	case "bitshift":
+		tw = &BitShift{}
+	default:
+		return errors.New("unknown tracker: " + n.Tracker)
+	}
+	placements, err := nodeselection.LoadConfig(n.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -102,11 +111,11 @@ func (n *SelectPool) Run() (err error) {
 	if success == 0 {
 		success = 65
 	}
-	k := 100_000
+
 	sum := 0
 	stat := map[string]int{}
 	oop := map[int]int{}
-	for i := 0; i < k; i++ {
+	for i := 0; i < n.K; i++ {
 		nodes, err := cache.GetNodes(ctx, overlay.FindStorageNodesRequest{
 			RequestedCount: selection,
 			Placement:      n.Placement,
@@ -120,18 +129,29 @@ func (n *SelectPool) Run() (err error) {
 			stat[nodeAttribute(*node)]++
 			sum++
 		}
+
 		pieces, invNodes := convert(nodes)
-		inv := placements[storj.PlacementConstraint(n.Placement)].Invariant(pieces, invNodes)
+		inv := placements[n.Placement].Invariant(pieces, invNodes)
 		oop[inv.Count()]++
-		rand.Shuffle(len(nodes), func(i, j int) {
-			nodes[i], nodes[j] = nodes[j], nodes[i]
-		})
-		//for ix, node := range nodes {
-		//	successTrackers.GetTracker(node.ID).Increment(node.ID, ix < success)
-		//}
+
+		tw.Increment(nodes, success)
+
+		if i%n.Rps == 0 {
+			tw.Bump()
+		}
 	}
 
-	output := fmt.Sprintf("I selected %d nodes %d times, and the following groups were used to store pieces:\n", selection, k)
+	var output string
+	if !n.CSV {
+		output = fmt.Sprintf("I selected %d nodes %d times, and the following groups were used to store pieces:\n", selection, n.K)
+	} else {
+
+		for _, s := range strings.Split(selectorDef, ",") {
+			parts := strings.Split(s, ":")
+			output += fmt.Sprintf("%s,", parts[len(parts)-1])
+		}
+		output += "percentage,selection\n"
+	}
 
 	var groups []string
 	for group := range stat {
@@ -141,20 +161,27 @@ func (n *SelectPool) Run() (err error) {
 
 	for _, group := range groups {
 		count := stat[group]
-		output += fmt.Sprintf("_%s_: %d %% (%d)\n", group, count*100/sum, count)
+
+		if n.CSV {
+			output += fmt.Sprintf("_%s_,%d,%d\n", group, count*100/sum, count)
+		} else {
+			output += fmt.Sprintf("_%s_: %d %% (%d)\n", group, count*100/sum, count)
+		}
 	}
 	fmt.Println(output)
-	for k, c := range oop {
-		fmt.Println(k, c)
+	if !n.CSV {
+		for k, c := range oop {
+			fmt.Println(k, c)
+		}
+		fmt.Println()
 	}
-	fmt.Println()
 
 	//nodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 10*time.Millisecond)
 	//if err != nil {
 	//	return errors.WithStack(err)
 	//}
 	//for _, node := range nodes {
-	//	fmt.Println(node.ID, nodeAttribute(node), successTrackers.GetTracker(node.ID).Get(&node))
+	//	fmt.Println(node.ID, nodeAttribute(node), successTracker.InitScoreNode(storj.NodeID{}).Get(&node))
 	//}
 
 	//min, max := -1, -1
@@ -187,3 +214,77 @@ func (o oneTracker) Get(uplink storj.NodeID) func(node *nodeselection.SelectedNo
 }
 
 var _ nodeselection.UploadSuccessTracker = oneTracker{}
+
+type TrackerWrap interface {
+	Increment(nodes []*nodeselection.SelectedNode, success int)
+	Bump()
+	InitScoreNode() nodeselection.ScoreNode
+}
+
+type Noop struct {
+}
+
+func (n *Noop) Increment(nodes []*nodeselection.SelectedNode, success int) {
+	return
+}
+
+func (n *Noop) Bump() {
+
+}
+
+func (n *Noop) InitScoreNode() nodeselection.ScoreNode {
+	return &oneTracker{}
+}
+
+var _ TrackerWrap = &Noop{}
+
+type Fair struct {
+	tracker *FairTracker
+}
+
+func (f *Fair) Increment(nodes []*nodeselection.SelectedNode, success int) {
+	for _, node := range nodes {
+		f.tracker.Update(node)
+	}
+}
+
+func (f *Fair) Bump() {
+	f.tracker.BumpGeneration()
+}
+
+func (f *Fair) InitScoreNode() nodeselection.ScoreNode {
+	f.tracker = NewFairTracker()
+	return f.tracker
+}
+
+var _ TrackerWrap = &Fair{}
+
+type BitShift struct {
+	tracker *metainfo.SuccessTrackers
+}
+
+func (b *BitShift) InitScoreNode() nodeselection.ScoreNode {
+	tracker, ok := metainfo.GetNewSuccessTracker("bitshift")
+	if !ok {
+		panic("unknown tracker")
+	}
+	successTracker := metainfo.NewSuccessTrackers([]storj.NodeID{}, tracker)
+	b.tracker = successTracker
+	return successTracker
+}
+
+func (b *BitShift) Increment(nodes []*nodeselection.SelectedNode, success int) {
+	rand.Shuffle(len(nodes), func(i, j int) {
+		nodes[i], nodes[j] = nodes[j], nodes[i]
+	})
+
+	for ix, node := range nodes {
+		b.tracker.GetTracker(storj.NodeID{}).Increment(node.ID, ix < success)
+	}
+}
+
+func (b *BitShift) Bump() {
+	b.tracker.BumpGeneration()
+}
+
+var _ TrackerWrap = &BitShift{}
