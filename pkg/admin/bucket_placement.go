@@ -27,6 +27,9 @@ func (s *SetBucketPlacement) Run() error {
 	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
 		ApplicationName: "stbb",
 	})
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	gr := os.Getenv("UPLINK_ACCESS")
 	access, err := grant.ParseAccess(gr)
