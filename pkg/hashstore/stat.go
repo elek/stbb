@@ -92,7 +92,7 @@ func (i *Stat) Run() error {
 	tbl.AppendRow(table.Row{
 		"AvgSet",
 		stat.AvgSet,
-		" average size of length of records",
+		"average size of length of records",
 	})
 
 	tbl.AppendRow(table.Row{
@@ -112,14 +112,20 @@ func (i *Stat) Run() error {
 	})
 
 	tbl.AppendRow(table.Row{
-		"NumTrash",
-		stat.NumTrash,
-		"total number of records available",
+		"NumSet",
+		stat.NumSet,
+		"number of set records",
 	})
 	tbl.AppendRow(table.Row{
-		"NumSlots",
-		stat.NumSlots,
-		"sum of lengths in set trash records",
+		"LenSet",
+		stat.LenSet,
+		"sum of lengths in set records",
+	})
+
+	tbl.AppendRow(table.Row{
+		"AvgSet",
+		stat.AvgSet,
+		"average size of length of records",
 	})
 	tbl.AppendRow(table.Row{
 		"TableSize",

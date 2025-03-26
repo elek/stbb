@@ -34,6 +34,8 @@ func (i *Report) Run() error {
 	today := timeToDateDown(time.Now())
 	ttlHistogram := NewTimeHistogram()
 	trashHistorgram := NewTimeHistogram()
+	all := 0
+	size := 0
 	err = hashtbl.Range(ctx, func(ctx2 context.Context, record hashstore.Record) (bool, error) {
 		if record.Expires.Set() {
 			expRel := int(record.Expires.Time() - today)
@@ -45,12 +47,16 @@ func (i *Report) Run() error {
 		} else {
 			nonTTL++
 		}
-
+		all++
+		size += int(record.Length)
 		return true, nil
 	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	fmt.Println("pieces", all)
+	fmt.Println("average size", size/all)
+	fmt.Println()
 	fmt.Println("no-ttl", nonTTL)
 	fmt.Println("ttl", ttlHistogram.Count())
 	fmt.Println("trash", trashHistorgram.Count())
