@@ -16,12 +16,13 @@ import (
 )
 
 type Nodes struct {
-	Selector         []string
-	Filter           string
-	PlacementConfig  string
-	Placement        int
-	OnlineWindow     time.Duration `default:"4h"`
-	MinimumDiskSpace memory.Size   `default:"500GB"`
+	Selector           []string
+	Filter             string
+	PlacementConfig    string
+	Placement          int
+	OnlineWindow       time.Duration `default:"4h"`
+	MinimumDiskSpace   memory.Size   `default:"500GB"`
+	IgnoreUploadFilter bool
 }
 
 func (s Nodes) Run() error {
@@ -32,14 +33,17 @@ func (s Nodes) Run() error {
 		return errors.WithStack(err)
 	}
 
-	var filter nodeselection.NodeFilter
+	var filter, uploadFilter nodeselection.NodeFilter
 	filter = nodeselection.AnyFilter{}
+	uploadFilter = nodeselection.AnyFilter{}
 
 	if s.PlacementConfig != "" {
 		d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
 		if err != nil {
 			return errors.WithStack(err)
 		}
+		filter = d[storj.PlacementConstraint(s.Placement)].NodeFilter
+		uploadFilter = d[storj.PlacementConstraint(s.Placement)].UploadFilter
 		filter = d[storj.PlacementConstraint(s.Placement)].NodeFilter
 	}
 	if s.Filter != "" {
@@ -83,9 +87,14 @@ func (s Nodes) Run() error {
 	}
 	var filtered []*nodeselection.SelectedNode
 	for _, node := range append(oldNodes, newNodes...) {
-		if filter.Match(node) {
-			filtered = append(filtered, node)
+		if !filter.Match(node) {
+			continue
 		}
+		if !uploadFilter.Match(node) && !s.IgnoreUploadFilter {
+			continue
+		}
+		filtered = append(filtered, node)
+
 	}
 	util.PrintHistogram(filtered, attr...)
 	fmt.Println()
