@@ -1,5 +1,12 @@
 package placement
 
+import (
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
+	"os"
+	"storj.io/storj/satellite/nodeselection"
+)
+
 type Placement struct {
 	Select     Select     `cmd:"" help:"select given number of nodes from DB, matching the placement rule"`
 	SelectPool SelectPool `cmd:"" help:"select given number of nodes from DB, printing simplified pool stat"`
@@ -9,4 +16,27 @@ type Placement struct {
 	QueryTags  QueryTags  `cmd:"" help:"generate query for tags"`
 	Simulate   Simulate   `cmd:"" help:"selection simulation with histogram"`
 	Score      Score      `cmd:"" help:"print out node scores"`
+}
+
+type WithPlacement struct {
+	PlacementConfig string `usage:"location of the placement file"`
+}
+
+func (w WithPlacement) GetPlacement(environment *nodeselection.PlacementConfigEnvironment) (nodeselection.PlacementDefinitions, error) {
+	content, err := os.ReadFile(w.PlacementConfig)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	m := map[string]interface{}{}
+	err = yaml.Unmarshal(content, &m)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	placementDef, wrapped := m["placement"]
+	if !wrapped {
+		placementDef = string(content)
+	}
+
+	return nodeselection.LoadConfigFromString(placementDef.(string), environment)
 }

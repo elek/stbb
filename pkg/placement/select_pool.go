@@ -22,14 +22,14 @@ import (
 )
 
 type SelectPool struct {
-	PlacementConfig string
-	Placement       storj.PlacementConstraint
-	Selector        string
-	CSV             bool
-	Tracker         string `default:"noop"`
-	Rps             int    `default:"400"`
-	K               int    `default:"1000000"`
-	FakeNodes       int    `default:"0" usage:"Number of fake nodes to use instead of db"`
+	WithPlacement
+	Placement storj.PlacementConstraint
+	Selector  string
+	CSV       bool
+	Tracker   string `default:"noop"`
+	Rps       int    `default:"400"`
+	K         int    `default:"1000000"`
+	FakeNodes int    `default:"0" usage:"Number of fake nodes to use instead of db"`
 }
 
 func (n *SelectPool) Run() (err error) {
@@ -67,7 +67,7 @@ func (n *SelectPool) Run() (err error) {
 		return errors.New("unknown tracker: " + n.Tracker)
 	}
 
-	placements, err := nodeselection.LoadConfig(n.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), nil))
+	placements, err := n.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}
