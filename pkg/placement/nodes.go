@@ -16,9 +16,10 @@ import (
 )
 
 type Nodes struct {
-	Selector           []string
-	Filter             string
-	PlacementConfig    string
+	WithPlacement
+	Selector []string
+	Filter   string
+
 	Placement          int
 	OnlineWindow       time.Duration `default:"4h"`
 	MinimumDiskSpace   memory.Size   `default:"500GB"`
@@ -38,11 +39,10 @@ func (s Nodes) Run() error {
 	uploadFilter = nodeselection.AnyFilter{}
 
 	if s.PlacementConfig != "" {
-		d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
+		d, err := s.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(nil, nil))
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		filter = d[storj.PlacementConstraint(s.Placement)].NodeFilter
 		uploadFilter = d[storj.PlacementConstraint(s.Placement)].UploadFilter
 		filter = d[storj.PlacementConstraint(s.Placement)].NodeFilter
 	}
@@ -57,7 +57,6 @@ func (s Nodes) Run() error {
 		}
 
 	}
-
 	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
 		ApplicationName: "stbb",
 	})
@@ -87,10 +86,10 @@ func (s Nodes) Run() error {
 	}
 	var filtered []*nodeselection.SelectedNode
 	for _, node := range append(oldNodes, newNodes...) {
-		if !filter.Match(node) {
+		if filter != nil && !filter.Match(node) {
 			continue
 		}
-		if !uploadFilter.Match(node) && !s.IgnoreUploadFilter {
+		if uploadFilter != nil && !uploadFilter.Match(node) && !s.IgnoreUploadFilter {
 			continue
 		}
 		filtered = append(filtered, node)

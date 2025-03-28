@@ -19,13 +19,13 @@ import (
 )
 
 type Select struct {
-	PlacementConfig string
-	Placement       int
-	NodeNo          int    `default:"110"`
-	Selector        string `default:"wallet"`
-	Number          int    `default:"1"`
-	Durability      string `usage:"node attribute to calculate the durability risk for"`
-	Invariant       bool   `usage:"Check invariant for all selections"`
+	WithPlacement
+	Placement  int
+	NodeNo     int    `default:"110"`
+	Selector   string `default:"wallet"`
+	Number     int    `default:"1"`
+	Durability string `usage:"node attribute to calculate the durability risk for"`
+	Invariant  bool   `usage:"Check invariant for all selections"`
 }
 
 func (s Select) Run() error {
@@ -35,8 +35,7 @@ func (s Select) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
+	d, err := s.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(nil, nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -15,9 +15,10 @@ import (
 )
 
 type Tags struct {
-	ValueTags   []string `usage:"node tags to check the value" default:"tag:vivint-exclude-upload,tag:surge,tag:us-select-exclude-upload,tag:soc2,tag:owner,tag:weight"`
+	ValueTags   []string `usage:"node tags to check the value" default:""`
 	CategoryTag string   `usage:"node tags to categorize nodes" default:"tag:server_group"`
-	Filter      string   `usage:"additional display only node filter" default:"tag(\"1111111111111111111111111111111VyS547o\",\"operator\",\"storj.io\") && country(\"US\")"`
+	Filter      string   `usage:"additional display only node filter" default:""`
+	All         bool
 }
 
 func (s Tags) Run() error {
@@ -76,13 +77,23 @@ func (s Tags) Run() error {
 		}
 		values[category]["all"]["count"]++
 
-		for name, v := range valueAttributes {
-			value := v(node)
-			if _, ok := values[category][name]; !ok {
-				values[category][name] = map[string]int{}
-			}
+		if s.All {
+			for _, tag := range node.Tags {
+				if _, ok := values[category][tag.Name]; !ok {
+					values[category][tag.Name] = map[string]int{}
+				}
 
-			values[category][name][value]++
+				values[category][tag.Name][string(tag.Value)]++
+			}
+		} else {
+			for name, v := range valueAttributes {
+				value := v(node)
+				if _, ok := values[category][name]; !ok {
+					values[category][name] = map[string]int{}
+				}
+
+				values[category][name][value]++
+			}
 		}
 
 	}

@@ -11,17 +11,7 @@ type QueryTags struct {
 func (q QueryTags) Run() error {
 	query := "WITH\n"
 
-	tags := map[string]bool{
-		"soc2":                     true,
-		"operator":                 true,
-		"owner":                    true,
-		"vivint-exclude-upload":    true,
-		"surge":                    true,
-		"us-select-exclude-upload": true,
-		"host":                     false,
-		"service":                  false,
-		"server_group":             false,
-	}
+	tags := map[string]bool{	}
 
 	for tag, authoritive := range tags {
 

@@ -18,7 +18,7 @@ import (
 type List struct {
 	PlacementConfig string   `usage:"location of the placement file"`
 	Placement       int      `usage:"placement to use"`
-	Attributes      []string `usage:"node attributes to print out" default:"email,tag:owner,tag:provider,tag:host,tag:instance,tag:surge,tag:vivint-exclude-upload"`
+	Attributes      []string `usage:"node attributes to print out"`
 	Filter          string   `usage:"additional display only node filter"`
 }
 
