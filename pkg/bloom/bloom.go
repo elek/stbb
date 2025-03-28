@@ -11,4 +11,6 @@ type Bloom struct {
 	SendClient SendClient `cmd:"" help:"send bloom filter to a storagenode, with piecestore client"`
 	Find       Find       `cmd:"" help:"Find BF for specific nodes in the generated ZIP files"`
 	Unwrap     Unwrap     `cmd:"" help:"unwrap a bloom filter (form pb representation to raw filter)"`
+
+	Parameters Parameters `cmd:"" help:"Show optimal size parameters"`
 }
