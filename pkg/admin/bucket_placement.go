@@ -3,15 +3,16 @@ package admin
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
 	"storj.io/common/grant"
 	"storj.io/common/storj"
-	"storj.io/storj/satellite/satellitedb"
 )
 
 type SetBucketPlacement struct {
+	db.WithDatabase
 	Bucket    string `arg:"" required:"" help:"name of the bucket"`
 	Placement int    `arg:"" required:"" help:"placement for the bucket"`
 }
@@ -24,9 +25,7 @@ func (s *SetBucketPlacement) Run() error {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

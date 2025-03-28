@@ -19,7 +19,7 @@ type Placement struct {
 }
 
 type WithPlacement struct {
-	PlacementConfig string `usage:"location of the placement file"`
+	PlacementConfig string `usage:"location of the placement file" yaml:"placement-config"`
 }
 
 func (w WithPlacement) GetPlacement(environment *nodeselection.PlacementConfigEnvironment) (nodeselection.PlacementDefinitions, error) {

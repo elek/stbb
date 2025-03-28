@@ -3,26 +3,26 @@ package placement
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"math/rand"
 	"storj.io/common/testrand"
 	"storj.io/storj/satellite/metainfo"
 
 	"go.uber.org/zap"
-	"os"
 	"sort"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type SelectPool struct {
 	WithPlacement
+	db.WithDatabase
 	Placement storj.PlacementConstraint
 	Selector  string
 	CSV       bool
@@ -122,9 +122,7 @@ func (n *SelectPool) Run() (err error) {
 		nodeSource = &NodeList{Nodes: nodes}
 
 	} else {
-		satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-			ApplicationName: "stbb",
-		})
+		satelliteDB, err := n.WithDatabase.GetSatelliteDB(ctx, log)
 		if err != nil {
 			return errors.WithStack(err)
 		}

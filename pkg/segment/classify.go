@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
@@ -12,13 +13,13 @@ import (
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/repair"
-	"storj.io/storj/satellite/satellitedb"
 	"storj.io/storj/shared/location"
 	"strings"
 	"time"
 )
 
 type Classify struct {
+	db.WithDatabase
 	StreamID              string `arg:""`
 	PlacementFile         string
 	UseParticipatingNodes bool
@@ -41,9 +42,7 @@ func (s *Classify) Run() error {
 		_ = metabaseDB.Close()
 	}()
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("satellitedb"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return err
 	}

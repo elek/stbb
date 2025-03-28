@@ -3,17 +3,18 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
 	"storj.io/storj/satellite/nodeselection"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type Enrich struct {
+	db.WithDatabase
 	File string `arg:""`
 }
 
@@ -24,9 +25,7 @@ func (i Enrich) Run() error {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := i.WithDatabase.GetSatelliteDB(ctx, log)
 
 	if err != nil {
 		return err

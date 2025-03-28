@@ -3,14 +3,14 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
-	"storj.io/storj/satellite/satellitedb"
 )
 
 type Info struct {
+	db.WithDatabase
 	NodeID storj.NodeID `arg:""`
 }
 
@@ -21,9 +21,7 @@ func (i Info) Run() error {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := i.WithDatabase.GetSatelliteDB(ctx, log)
 
 	if err != nil {
 		return err

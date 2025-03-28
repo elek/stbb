@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
@@ -13,11 +14,11 @@ import (
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"time"
 )
 
 type Histogram struct {
+	db.WithDatabase
 	Selector string
 	StreamID string `arg:""`
 }
@@ -34,9 +35,7 @@ func (h Histogram) Run() error {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := h.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return err
 	}

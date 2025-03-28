@@ -3,6 +3,7 @@ package rangedloop
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
@@ -10,11 +11,11 @@ import (
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
-	"storj.io/storj/satellite/satellitedb"
 	"time"
 )
 
 type RangedLoop struct {
+	db.WithDatabase
 	ScanType  string `default:"full"`
 	ScanParam int
 
@@ -52,9 +53,7 @@ func (r RangedLoop) Run() error {
 	}
 	fmt.Println("node aliases", list.Size())
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := r.WithDatabase.GetSatelliteDB(ctx, log)
 
 	defer func() {
 		_ = satelliteDB.Close()

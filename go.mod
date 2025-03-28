@@ -4,6 +4,7 @@ go 1.23.5
 
 require (
 	github.com/alecthomas/kong v0.7.1
+	github.com/alecthomas/kong-yaml v0.2.0
 	github.com/dgraph-io/badger/v4 v4.5.0
 	github.com/elek/storj-badger-storage v0.0.0-20240627194528-7392d8eb933f
 	github.com/gogo/protobuf v1.3.2

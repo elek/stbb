@@ -3,23 +3,23 @@ package placement
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"sort"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type Select struct {
 	WithPlacement
+	db.WithDatabase
 	Placement  int
 	NodeNo     int    `default:"110"`
 	Selector   string `default:"wallet"`
@@ -39,9 +39,7 @@ func (s Select) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

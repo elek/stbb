@@ -3,20 +3,20 @@ package placement
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"time"
 )
 
 type Nodes struct {
 	WithPlacement
+	db.WithDatabase
 	Selector []string
 	Filter   string
 
@@ -57,9 +57,7 @@ func (s Nodes) Run() error {
 		}
 
 	}
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return err
 	}

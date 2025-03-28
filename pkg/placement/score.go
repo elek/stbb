@@ -3,6 +3,7 @@ package placement
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/jtolio/mito"
 	"github.com/pkg/errors"
 	"reflect"
@@ -11,17 +12,15 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
 
-	"storj.io/storj/satellite/satellitedb"
 	"time"
 )
 
 type Score struct {
-	Placement storj.PlacementConstraint
-	Filter    string `default:"tag(\"1111111111111111111111111111111VyS547o\",\"soc2\",\"true\")"`
-	Score     string `default:"node_value(\"free_disk\")"`
+	db.WithDatabase
+	Filter string `default:""`
+	Score  string `default:"node_value(\"free_disk\")"`
 }
 
 func (n *Score) Run() (err error) {
@@ -34,9 +33,7 @@ func (n *Score) Run() (err error) {
 
 	of := &oneTracker{}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := n.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
 	nodeselection2 "storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type Nodes struct {
+	db.WithDatabase
 	NodeIDs string `arg:""`
 	Verbose bool   `default:"true"`
 }
@@ -24,9 +24,7 @@ func (h Nodes) Run() error {
 	ctx := context.Background()
 	log, err := zap.NewDevelopment()
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := h.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return err
 	}

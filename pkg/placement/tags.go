@@ -3,18 +3,18 @@ package placement
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
-	"os"
 	"slices"
 	"storj.io/storj/satellite/nodeselection"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type Tags struct {
+	db.WithDatabase
 	ValueTags   []string `usage:"node tags to check the value" default:""`
 	CategoryTag string   `usage:"node tags to categorize nodes" default:"tag:server_group"`
 	Filter      string   `usage:"additional display only node filter" default:""`
@@ -34,9 +34,7 @@ func (s Tags) Run() error {
 		return err
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

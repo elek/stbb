@@ -2,6 +2,7 @@ package placement
 
 import (
 	"context"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -10,12 +11,12 @@ import (
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"storj.io/storj/satellite/satellitedb"
 	"strings"
 	"time"
 )
 
 type List struct {
+	db.WithDatabase
 	PlacementConfig string   `usage:"location of the placement file"`
 	Placement       int      `usage:"placement to use"`
 	Attributes      []string `usage:"node attributes to print out"`
@@ -35,9 +36,7 @@ func (s List) Run() error {
 		return errors.WithStack(err)
 	}
 
-	satelliteDB, err := satellitedb.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_SATELLITE"), satellitedb.Options{
-		ApplicationName: "stbb",
-	})
+	satelliteDB, err := s.WithDatabase.GetSatelliteDB(ctx, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

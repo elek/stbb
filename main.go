@@ -10,6 +10,7 @@ import (
 	"github.com/elek/stbb/pkg/audit"
 	"github.com/elek/stbb/pkg/authservice"
 	"github.com/elek/stbb/pkg/bloom"
+	"github.com/elek/stbb/pkg/config"
 	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/dir"
 	"github.com/elek/stbb/pkg/downloadng"
@@ -188,6 +189,7 @@ func main() {
 			target.Set(reflect.ValueOf(url))
 			return nil
 		})),
+		kong.Configuration(config.Loader, "~/.config/stbb/config.yaml"),
 	)
 
 	kong.Bind(ctx)
