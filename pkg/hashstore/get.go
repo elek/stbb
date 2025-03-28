@@ -5,30 +5,23 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/storj/storagenode/hashstore"
 )
 
 type Get struct {
-	Path string `arg:"" usage:"the path to the hashstore"`
-	ID   string `arg:"" usage:"the id of the record to get"`
+	WithHashtable
+	ID string `arg:"" usage:"the id of the record to get"`
 }
 
 func (i *Get) Run() error {
-	o, err := os.Open(i.Path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	defer o.Close()
-
 	ctx := context.Background()
-	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
+
+	hashtbl, close, err := i.WithHashtable.Open(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer hashtbl.Close()
+	defer close()
 
 	var pieceID storj.PieceID
 	idh, err := hex.DecodeString(i.ID)

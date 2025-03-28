@@ -4,27 +4,20 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
 	"storj.io/storj/storagenode/hashstore"
 )
 
 type TTLReport struct {
-	Hashstore string `arg:""`
+	WithHashtable
 }
 
 func (l *TTLReport) Run() error {
-	o, err := os.Open(l.Hashstore)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	defer o.Close()
 	ctx := context.Background()
-	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
+	hashtbl, close, err := l.WithHashtable.Open(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer hashtbl.Close()
+	defer close()
 
 	// logid --> TTL --> count
 	expired := make(map[uint64]map[hashstore.Expiration]int)

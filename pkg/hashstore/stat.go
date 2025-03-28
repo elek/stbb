@@ -6,51 +6,18 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
 	"os"
-	"path/filepath"
-	"storj.io/storj/storagenode/hashstore"
-	"strings"
 	"time"
 )
 
 type Stat struct {
-	Path string `arg:""`
-}
-
-func Open(ctx context.Context, path string) (hashstore.Tbl, func() error, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return nil, func() error { return nil }, errors.WithStack(err)
-	}
-	if stat.IsDir() {
-		entries, err := os.ReadDir(path)
-		if err != nil {
-			return nil, func() error { return nil }, errors.WithStack(err)
-		}
-		for _, entry := range entries {
-			if strings.HasPrefix(entry.Name(), "hashtbl-") {
-				fmt.Println("using hashtbl", entry.Name())
-				return Open(ctx, filepath.Join(path, entry.Name()))
-			}
-		}
-		return nil, nil, errors.New("no hashtbl found in directory")
-	} else {
-		o, err := os.Open(path)
-		if err != nil {
-			return nil, func() error { return nil }, errors.WithStack(err)
-		}
-		tbl, err := hashstore.OpenTable(ctx, o)
-		return tbl, func() error {
-			_ = tbl.Close
-			return o.Close()
-		}, err
-	}
+	WithHashtable
 }
 
 func (i *Stat) Run() error {
 
 	ctx := context.Background()
 
-	hashtbl, close, err := Open(ctx, i.Path)
+	hashtbl, close, err := i.WithHashtable.Open(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -111,22 +78,6 @@ func (i *Stat) Run() error {
 		"average size of length of trash records",
 	})
 
-	tbl.AppendRow(table.Row{
-		"NumSet",
-		stat.NumSet,
-		"number of set records",
-	})
-	tbl.AppendRow(table.Row{
-		"LenSet",
-		stat.LenSet,
-		"sum of lengths in set records",
-	})
-
-	tbl.AppendRow(table.Row{
-		"AvgSet",
-		stat.AvgSet,
-		"average size of length of records",
-	})
 	tbl.AppendRow(table.Row{
 		"TableSize",
 		stat.TableSize,

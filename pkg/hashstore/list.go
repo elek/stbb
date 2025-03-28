@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
 )
 
 type List struct {
-	Path    string `arg:""`
+	WithHashtable
 	Expired bool   `help:"list expired records" default:"true"`
 	Trash   bool   `help:"list trashed records" default:"true"`
 	ValidAt string `help:"list records only if valid at this time (created before, expired after)"`
@@ -19,19 +18,13 @@ type List struct {
 }
 
 func (i *List) Run() error {
-	o, err := os.Open(i.Path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	defer o.Close()
 
 	ctx := context.Background()
-	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
+	hashtbl, close, err := i.WithHashtable.Open(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer hashtbl.Close()
+	defer close()
 
 	var valid uint32
 	if i.ValidAt != "" {

@@ -5,30 +5,23 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"math"
-	"os"
+	"storj.io/common/memory"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
 )
 
 type Report struct {
-	Path string `arg:""`
+	WithHashtable
 }
 
 func (i *Report) Run() error {
-	o, err := os.Open(i.Path)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	defer o.Close()
-
 	ctx := context.Background()
 
-	hashtbl, err := hashstore.OpenHashtbl(ctx, o)
+	hashtbl, close, err := i.WithHashtable.Open(ctx)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer hashtbl.Close()
+	defer close()
 
 	nonTTL := 0
 	today := timeToDateDown(time.Now())
@@ -38,11 +31,11 @@ func (i *Report) Run() error {
 	size := 0
 	err = hashtbl.Range(ctx, func(ctx2 context.Context, record hashstore.Record) (bool, error) {
 		if record.Expires.Set() {
-			expRel := int(record.Expires.Time() - today)
+			expRel := int(record.Expires.Time()) - int(today)
 			if record.Expires.Trash() {
-				trashHistorgram.Increment(expRel)
+				trashHistorgram.Increment(expRel, int(record.Length))
 			} else {
-				ttlHistogram.Increment(expRel)
+				ttlHistogram.Increment(expRel, int(record.Length))
 			}
 		} else {
 			nonTTL++
@@ -70,39 +63,44 @@ func (i *Report) Run() error {
 }
 
 type TimeHistogram struct {
-	values map[int]int
+	count map[int]int
+	size  map[int]int
 }
 
 func NewTimeHistogram() *TimeHistogram {
-	return &TimeHistogram{values: map[int]int{}}
+	return &TimeHistogram{
+		count: map[int]int{},
+		size:  map[int]int{},
+	}
 }
 
-func (t *TimeHistogram) Increment(idx int) {
-	t.values[idx]++
+func (t *TimeHistogram) Increment(idx int, size int) {
+	t.count[idx]++
+	t.size[idx] += size
 }
 
 func (t *TimeHistogram) Count() (res int) {
-	for _, v := range t.values {
+	for _, v := range t.count {
 		res += v
 	}
 	return res
 }
 
 func (t *TimeHistogram) Print(minLimit int, maxLimit int) {
-	if len(t.values) == 0 {
+	if len(t.count) == 0 {
 		return
 	}
 	min := math.MaxInt
 	max := 0
 	underLimitCounter := 0
 	overLimitCounter := 0
-	for k := range t.values {
+	for k := range t.count {
 		if k < minLimit {
-			underLimitCounter += t.values[k]
+			underLimitCounter += t.count[k]
 			continue
 		}
 		if k > maxLimit {
-			overLimitCounter += t.values[k]
+			overLimitCounter += t.count[k]
 			continue
 		}
 		if k < min {
@@ -112,12 +110,14 @@ func (t *TimeHistogram) Print(minLimit int, maxLimit int) {
 			max = k
 		}
 	}
-
 	if underLimitCounter > 0 {
 		fmt.Println("  EARLIER", underLimitCounter)
 	}
-	for i := min; i <= max; i++ {
-		fmt.Printf("  TODAY+%d: %d records\n", i, t.values[i])
+	for i := -50; i <= max; i++ {
+		if _, found := t.count[i]; !found {
+			continue
+		}
+		fmt.Printf("  TODAY+%d: %d records (%s bytes)\n", i, t.count[i], memory.Size(t.size[i]).String())
 	}
 	if overLimitCounter > 0 {
 		fmt.Println("  LATER", overLimitCounter)
