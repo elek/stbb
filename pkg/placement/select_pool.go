@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 	"math/rand"
 	"storj.io/common/testrand"
 	"storj.io/storj/satellite/metainfo"
@@ -198,7 +199,7 @@ func (n *SelectPool) Run() (err error) {
 			parts := strings.Split(s, ":")
 			output += fmt.Sprintf("%s,", parts[len(parts)-1])
 		}
-		output += "percentage,selection\n"
+		output += "value\n"
 	}
 
 	var groups []string
@@ -211,15 +212,17 @@ func (n *SelectPool) Run() (err error) {
 		count := stat[group]
 
 		if n.CSV {
-			output += fmt.Sprintf("_%s_,%d,%d\n", group, count*100/sum, count)
+			output += fmt.Sprintf("%s,%d\n", group, count)
 		} else {
 			output += fmt.Sprintf("_%s_: %d %% (%d)\n", group, count*100/sum, count)
 		}
 	}
 	fmt.Println(output)
 	if !n.CSV {
-		for k, c := range oop {
-			fmt.Println(k, c)
+		keys := maps.Keys(oop)
+		sort.Ints(keys)
+		for k := range keys {
+			fmt.Println(k, oop[k])
 		}
 		fmt.Println()
 	}

@@ -37,6 +37,7 @@ func (i Info) Run() error {
 	fmt.Println("last_net", node.LastNet)
 	fmt.Println("last_ip_port", node.LastIPPort)
 	fmt.Println("piece_count", node.PieceCount)
+	fmt.Println("version", node.Version)
 	tags, err := satelliteDB.OverlayCache().GetNodeTags(ctx, node.Id)
 	if err != nil {
 		return errors.WithStack(err)
