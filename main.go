@@ -171,7 +171,6 @@ func main() {
 		Placement  placement.Placement    `cmd:""`
 		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
 		Metabase   metabase.Metabase      `cmd:"" help:"Raw metabase db related helpers"`
-		Dir        dir.Dir                `cmd:""`
 		Admin      admin.Admin            `cmd:"" help:"helper commands, similar to the admin interface"`
 		Hashstore  hashstore.Hashstore    `cmd:"" help:"commands related to the new hashtable based store"`
 		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
