@@ -38,7 +38,7 @@ require (
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd
-	storj.io/storj v1.91.0-alpha.0.20250328085834-7d7b0615b6e7
+	storj.io/storj v1.91.0-alpha.0.20250409071135-28065d0ee221
 	storj.io/uplink v1.13.2-0.20250218103408-3179c8d1ccdb
 )
 
@@ -188,5 +188,3 @@ require (
 	storj.io/eventkit v0.0.0-20250407101305-1fc91e6bea89 // indirect
 	storj.io/picobuf v0.0.3 // indirect
 )
-
-replace storj.io/storj => ../../jr/storj

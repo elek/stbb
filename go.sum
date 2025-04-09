@@ -2310,5 +2310,7 @@ storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd h1:XkLxAvogynNQu/1gM/F
 storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd/go.mod h1:nwyyJiAFAPRu81qBfAE5cBGkVXROYSNJu9pGXLtStHE=
 storj.io/picobuf v0.0.3 h1:xAUPB5ZUGfxkqd3bnw3zp01kkWb9wlhg4vtZWUs2S9A=
 storj.io/picobuf v0.0.3/go.mod h1:4V4xelV1RSCck5GgmkL/Txw9l6IfX3XcBzegmL5Kudo=
+storj.io/storj v1.91.0-alpha.0.20250409071135-28065d0ee221 h1:jXVzR7cUizByJ6EjiV6Cxks+Q5Wmh9Yxpa8T3F1FnDk=
+storj.io/storj v1.91.0-alpha.0.20250409071135-28065d0ee221/go.mod h1:XM4n3rbOMozy7R5qPehSFbByWqrfXORv4j1D2xM9it4=
 storj.io/uplink v1.13.2-0.20250218103408-3179c8d1ccdb h1:m/Jh3BvlZsnMhmtperDLSU+FGyB53yqHad0eJt4smXE=
 storj.io/uplink v1.13.2-0.20250218103408-3179c8d1ccdb/go.mod h1:CjDtU53uxXprL2zzV/czR/lshywwrBBuUo8K8quv+xo=

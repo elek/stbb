@@ -97,7 +97,7 @@ func (l *Logs) Run() error {
 	}
 	tbl := table.NewWriter()
 	tbl.SetOutputMirror(os.Stdout)
-	tbl.AppendHeader(table.Row{"ID", "Path", "TTL", "Real size", "Used", "Cleanable", "Unknown"})
+	tbl.AppendHeader(table.Row{"ID", "Path", "TTL", "Real size", "Used", "Expired", "Trash", "Unknown"})
 	for _, v := range lp {
 		sum.RealSize += v.RealSize
 		sum.Used += v.Used
