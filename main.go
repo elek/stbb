@@ -12,7 +12,6 @@ import (
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/config"
 	"github.com/elek/stbb/pkg/crypto"
-	"github.com/elek/stbb/pkg/dir"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/hashstore"
 	"github.com/elek/stbb/pkg/load"
@@ -165,10 +164,10 @@ func main() {
 		Sandbox    sandbox.Sandbox        `cmd:""`
 		Segment    segment.Segment        `cmd:""`
 		Metainfo   metainfo.Metainfo      `cmd:""`
-		Bloom      bloom.Bloom            `cmd:""`
+		Bloom      bloom.Bloom            `cmd:"helpers to process bloom filters"`
 		Store      store.Store            `cmd:""`
 		IOTest     IOTest                 `cmd:""`
-		Placement  placement.Placement    `cmd:""`
+		Placement  placement.Placement    `cmd:"placement (and node selection) based helpers"`
 		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
 		Metabase   metabase.Metabase      `cmd:"" help:"Raw metabase db related helpers"`
 		Admin      admin.Admin            `cmd:"" help:"helper commands, similar to the admin interface"`
