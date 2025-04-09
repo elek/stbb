@@ -9,7 +9,8 @@ import (
 )
 
 type Compact struct {
-	Dir string `usage:"directory of the store (not the db!)" default:"/tmp/store"`
+	LogDir  string `usage:"directory of the store" `
+	MetaDir string `usage:"directory of the hashtable files" `
 }
 
 func (i *Compact) Run() error {
@@ -20,7 +21,7 @@ func (i *Compact) Run() error {
 
 	ctx := context.Background()
 
-	store, err := hashstore.NewStore(ctx, i.Dir, "", log)
+	store, err := hashstore.NewStore(ctx, i.LogDir, i.MetaDir, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}
