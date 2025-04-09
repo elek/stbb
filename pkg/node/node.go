@@ -10,7 +10,7 @@ type Node struct {
 	Enrich Enrich `cmd:"" help:"enrich node information with metadata from the satellite"`
 
 	Export         Export         `cmd:""`
-	UnsentOrder    UnsentOrder    `cmd:"" usage:"parse unsent order archive"`
+	UnsentOrder    UnsentOrder    `cmd:"" help:"parse unsent order archive"`
 	Paystub        Paystub        `cmd:""`
 	PieceList      PieceList      `cmd:"" help:"generate list of pieces for one node"`
 	PieceListCheck PieceListCheck `cmd:"" help:"check the generated list based on a real blobstore"`

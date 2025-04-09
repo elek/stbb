@@ -30,7 +30,7 @@ type SelectPool struct {
 	Tracker   string `default:"noop"`
 	Rps       int    `default:"400"`
 	K         int    `default:"1000000"`
-	FakeNodes int    `default:"0" usage:"Number of fake nodes to use instead of db"`
+	FakeNodes int    `default:"0" help:"Number of fake nodes to use instead of db"`
 }
 
 func (n *SelectPool) Run() (err error) {

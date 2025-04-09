@@ -11,7 +11,7 @@ import (
 
 type Get struct {
 	WithHashtable
-	ID string `arg:"" usage:"the id of the record to get"`
+	ID string `arg:"" help:"the id of the record to get"`
 }
 
 func (i *Get) Run() error {

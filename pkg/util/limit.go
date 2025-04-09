@@ -102,8 +102,8 @@ func (d *KeySigner) CreateOrderLimit(ctx context.Context, pieceID storj.PieceID,
 }
 
 type WithKeySigner struct {
-	SignerIdentity string        `usage:"the identity directory for signing order limits"`
-	TTL            time.Duration `usage:"piece expiration period of orders"`
+	SignerIdentity string        `help:"the identity directory for signing order limits"`
+	TTL            time.Duration `help:"piece expiration period of orders"`
 	signer         *KeySigner
 }
 

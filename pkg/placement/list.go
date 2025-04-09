@@ -17,10 +17,10 @@ import (
 
 type List struct {
 	db.WithDatabase
-	PlacementConfig string   `usage:"location of the placement file"`
-	Placement       int      `usage:"placement to use"`
-	Attributes      []string `usage:"node attributes to print out"`
-	Filter          string   `usage:"additional display only node filter"`
+	PlacementConfig string   `help:"location of the placement file"`
+	Placement       int      `help:"placement to use"`
+	Attributes      []string `help:"node attributes to print out"`
+	Filter          string   `help:"additional display only node filter"`
 }
 
 func (s List) Run() error {

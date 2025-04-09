@@ -15,9 +15,9 @@ import (
 )
 
 type Store struct {
-	Header   Header   `cmd:"" usage:"read header of sj1 file"`
-	Generate Generate `cmd:"" usage:"generate blobs"`
-	Size     Size     `cmd:"" usage:"walk a blob directory for one satellite and calculate size"`
+	Header   Header   `cmd:"" help:"read header of sj1 file"`
+	Generate Generate `cmd:"" help:"generate blobs"`
+	Size     Size     `cmd:"" help:"walk a blob directory for one satellite and calculate size"`
 }
 
 type WithStore struct {

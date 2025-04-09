@@ -7,13 +7,13 @@ import (
 
 type Generate struct {
 	load.PieceIDStream
-	Dir          string        `usage:"directory of the store (not the db!)" default:"/tmp/store"`
-	Samples      int           `usage:"number of pieces to be written" default:"1"`
-	Size         int64         `usage:"size of the pieces to be written" default:"100000"`
-	TTL          time.Duration `usage:"TTL to be used"`
-	TTLModulo    int           `usage:"modulo for TTL. Only the selected pieces with this modulo will be TTLed" default:"1"`
-	MinTableSize uint64        `usage:"minimum table size for the store" default:"20"`
-	MetaPath     string        `usage:"path to the meta file" default:""`
+	Dir          string        `help:"directory of the store (not the db!)" default:"/tmp/store"`
+	Samples      int           `help:"number of pieces to be written" default:"1"`
+	Size         int64         `help:"size of the pieces to be written" default:"100000"`
+	TTL          time.Duration `help:"TTL to be used"`
+	TTLModulo    int           `help:"modulo for TTL. Only the selected pieces with this modulo will be TTLed" default:"1"`
+	MinTableSize uint64        `help:"minimum table size for the store" default:"20"`
+	MetaPath     string        `help:"path to the meta file" default:""`
 }
 
 func (b Generate) Run() error {

@@ -172,11 +172,11 @@ func main() {
 		IOTest     IOTest                 `cmd:""`
 		Placement  placement.Placement    `cmd:""`
 		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
-		Metabase   metabase.Metabase      `cmd:"" usage:"Raw metabase db related helpers"`
+		Metabase   metabase.Metabase      `cmd:"" help:"Raw metabase db related helpers"`
 		Dir        dir.Dir                `cmd:""`
-		Admin      admin.Admin            `cmd:"" usage:"helper commands, similar to the admin interface"`
-		Hashstore  hashstore.Hashstore    `cmd:"" usage:"commands related to the new hashtable based store"`
-		Audit      audit.Audit            `cmd:"" usage:"commands related to the audit subsystem"`
+		Admin      admin.Admin            `cmd:"" help:"helper commands, similar to the admin interface"`
+		Hashstore  hashstore.Hashstore    `cmd:"" help:"commands related to the new hashtable based store"`
+		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
 	}
 
 	ctx := kong.Parse(&cli,

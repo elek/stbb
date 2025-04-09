@@ -9,8 +9,8 @@ import (
 )
 
 type Compact struct {
-	LogDir  string `usage:"directory of the store" `
-	MetaDir string `usage:"directory of the hashtable files" `
+	LogDir  string `help:"directory of the store" `
+	MetaDir string `help:"directory of the hashtable files" `
 }
 
 func (i *Compact) Run() error {

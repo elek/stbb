@@ -24,8 +24,8 @@ type Select struct {
 	NodeNo     int    `default:"110"`
 	Selector   string `default:"wallet"`
 	Number     int    `default:"1"`
-	Durability string `usage:"node attribute to calculate the durability risk for"`
-	Invariant  bool   `usage:"Check invariant for all selections"`
+	Durability string `help:"node attribute to calculate the durability risk for"`
+	Invariant  bool   `help:"Check invariant for all selections"`
 }
 
 func (s Select) Run() error {

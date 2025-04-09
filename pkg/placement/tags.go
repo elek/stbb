@@ -15,9 +15,9 @@ import (
 
 type Tags struct {
 	db.WithDatabase
-	ValueTags   []string `usage:"node tags to check the value" default:""`
-	CategoryTag string   `usage:"node tags to categorize nodes" default:"tag:server_group"`
-	Filter      string   `usage:"additional display only node filter" default:""`
+	ValueTags   []string `help:"node tags to check the value" default:""`
+	CategoryTag string   `help:"node tags to categorize nodes" default:"tag:server_group"`
+	Filter      string   `help:"additional display only node filter" default:""`
 	All         bool
 }
 

@@ -11,7 +11,7 @@ import (
 )
 
 type WithHashtable struct {
-	Path string `arg:"" usage:"the path to the hashtable file (or directory with one hashtbl file)"`
+	Path string `arg:"" help:"the path to the hashtable file (or directory with one hashtbl file)"`
 }
 
 func (w WithHashtable) Open(ctx context.Context) (hashstore.Tbl, func() error, error) {

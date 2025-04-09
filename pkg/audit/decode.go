@@ -9,7 +9,7 @@ import (
 )
 
 type Decode struct {
-	Value string `arg:"" usage:"hex representation of the audit history"`
+	Value string `arg:"" help:"hex representation of the audit history"`
 }
 
 func (d Decode) Run() error {
