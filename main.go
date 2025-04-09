@@ -14,7 +14,6 @@ import (
 	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/dir"
 	"github.com/elek/stbb/pkg/downloadng"
-	"github.com/elek/stbb/pkg/encoding"
 	"github.com/elek/stbb/pkg/hashstore"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/elek/stbb/pkg/metabase"
@@ -156,7 +155,6 @@ func main() {
 		Node       node.Node              `cmd:""`
 		Satellite  satellite.Satellite    `cmd:""`
 		Downloadng downloadng.DownloadCmd `cmd:""`
-		Encoding   encoding.Encoding      `cmd:""`
 		Telemetry  stbb.TelemetryReceiver `cmd:""`
 		Version    Version                `cmd:""`
 		Access     access.AccessCmd       `cmd:""`
