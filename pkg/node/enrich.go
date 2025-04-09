@@ -31,7 +31,7 @@ func (i Enrich) Run() error {
 		return err
 	}
 	defer satelliteDB.Close()
-	nodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, -1*time.Second)
+	nodes, err := satelliteDB.OverlayCache().GetAllParticipatingNodes(ctx, 4*time.Hour, -1*time.Second)
 	if err != nil {
 		return errors.WithStack(err)
 	}

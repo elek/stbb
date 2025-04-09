@@ -42,7 +42,7 @@ func (s Tags) Run() error {
 		satelliteDB.Close()
 	}()
 
-	nodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 10*time.Millisecond)
+	nodes, err := satelliteDB.OverlayCache().GetAllParticipatingNodes(ctx, 4*time.Hour, 10*time.Millisecond)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -4,7 +4,6 @@ go 1.23.5
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/alecthomas/kong-yaml v0.2.0
 	github.com/dgraph-io/badger/v4 v4.5.0
 	github.com/elek/storj-badger-storage v0.0.0-20240627194528-7392d8eb933f
 	github.com/gogo/protobuf v1.3.2
@@ -186,6 +185,8 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	storj.io/eventkit v0.0.0-20240415002644-1d9596fee086 // indirect
+	storj.io/eventkit v0.0.0-20250407101305-1fc91e6bea89 // indirect
 	storj.io/picobuf v0.0.3 // indirect
 )
+
+replace storj.io/storj => ../../jr/storj

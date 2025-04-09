@@ -159,7 +159,7 @@ func TestStoreLoad(t *testing.T) {
 //		ctx := testcontext.New(t)
 //		defer ctx.Cleanup()
 //
-//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.Dir("store"), filestore.DefaultConfig)
+//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.LogDir("store"), filestore.DefaultConfig)
 //		require.NoError(t, err)
 //		defer ctx.Check(store.Close)
 //
@@ -217,7 +217,7 @@ func TestStoreLoad(t *testing.T) {
 //		_ = gStore.GarbageCollect(ctx)
 //
 //		// flaky test, for checking whether files have been actually deleted from disk
-//		err = filepath.Walk(ctx.Dir("store"), func(path string, info os.FileInfo, _ error) error {
+//		err = filepath.Walk(ctx.LogDir("store"), func(path string, info os.FileInfo, _ error) error {
 //			if info.IsDir() {
 //				return nil
 //			}
@@ -294,7 +294,7 @@ func TestStoreLoad(t *testing.T) {
 //		ctx := testcontext.New(t)
 //		defer ctx.Cleanup()
 //
-//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.Dir("store"), filestore.DefaultConfig)
+//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.LogDir("store"), filestore.DefaultConfig)
 //		require.NoError(t, err)
 //		defer ctx.Check(store.Close)
 //
@@ -355,7 +355,7 @@ func TestStoreLoad(t *testing.T) {
 //		ctx := testcontext.New(t)
 //		defer ctx.Cleanup()
 //
-//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.Dir("store"), filestore.DefaultConfig)
+//		store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.LogDir("store"), filestore.DefaultConfig)
 //		require.NoError(t, err)
 //		defer ctx.Check(store.Close)
 //
@@ -528,7 +528,7 @@ func TestStoreTraversals(t *testing.T) {
 //	ctx := testcontext.New(t)
 //	defer ctx.Cleanup()
 //
-//	store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.Dir("store"), filestore.DefaultConfig)
+//	store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.LogDir("store"), filestore.DefaultConfig)
 //	require.NoError(t, err)
 //	defer ctx.Check(store.Close)
 //
@@ -653,7 +653,7 @@ func TestStoreTraversals(t *testing.T) {
 //	ctx := testcontext.New(t)
 //	defer ctx.Cleanup()
 //
-//	store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.Dir("store"), filestore.DefaultConfig)
+//	store, err := filestore.NewAt(zaptest.NewLogger(t), ctx.LogDir("store"), filestore.DefaultConfig)
 //	require.NoError(t, err)
 //	defer ctx.Check(store.Close)
 //

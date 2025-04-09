@@ -45,7 +45,7 @@ func (n *Score) Run() (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	nodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, -1*time.Second)
+	nodes, err := satelliteDB.OverlayCache().GetAllParticipatingNodes(ctx, 4*time.Hour, -1*time.Second)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -20,9 +20,8 @@ import (
 
 type Classify struct {
 	db.WithDatabase
-	StreamID              string `arg:""`
-	PlacementFile         string
-	UseParticipatingNodes bool
+	StreamID      string `arg:""`
+	PlacementFile string
 }
 
 func (s *Classify) Run() error {
@@ -71,23 +70,17 @@ func (s *Classify) Run() error {
 			}
 
 			var selected []nodeselection.SelectedNode
-			if s.UseParticipatingNodes {
-				participatingNodes, err := satelliteDB.OverlayCache().GetParticipatingNodes(ctx, 4*time.Hour, 5*time.Minute)
-				for _, n := range participatingNodes {
-					for _, id := range nodeIDs {
-						if id == n.ID {
-							selected = append(selected, n)
-						}
+
+			participatingNodes, err := satelliteDB.OverlayCache().GetAllParticipatingNodes(ctx, 4*time.Hour, 5*time.Minute)
+			for _, n := range participatingNodes {
+				for _, id := range nodeIDs {
+					if id == n.ID {
+						selected = append(selected, n)
 					}
 				}
-				if err != nil {
-					return err
-				}
-			} else {
-				selected, err = satelliteDB.OverlayCache().GetActiveNodes(ctx, nodeIDs, 4*time.Hour, -5*time.Minute)
-				if err != nil {
-					return err
-				}
+			}
+			if err != nil {
+				return err
 			}
 
 			for _, sn := range selected {

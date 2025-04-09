@@ -25,7 +25,7 @@ func (b Generate) Run() error {
 	//if b.MetaPath != "" {
 	//	opts = append(opts, hashstore.MetaDirPath(b.MetaPath))
 	//}
-	//store, err := hashstore.NewStore(b.Dir, log, opts...)
+	//store, err := hashstore.NewStore(b.LogDir, log, opts...)
 	//if err != nil {
 	//	return errors.WithStack(err)
 	//}
