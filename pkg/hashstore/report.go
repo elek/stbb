@@ -48,6 +48,7 @@ func (i *Report) Run() error {
 		return errors.WithStack(err)
 	}
 	fmt.Println("pieces", all)
+	fmt.Println("size", size)
 	fmt.Println("average size", size/all)
 	fmt.Println()
 	fmt.Println("no-ttl", nonTTL)

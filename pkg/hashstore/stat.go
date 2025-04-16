@@ -53,7 +53,7 @@ func (i *Stat) Run() error {
 	})
 	tbl.AppendRow(table.Row{
 		"LenSet",
-		stat.LenSet,
+		stat.LenSet.Base10String(),
 		"sum of lengths in set records",
 	})
 	tbl.AppendRow(table.Row{
@@ -69,7 +69,7 @@ func (i *Stat) Run() error {
 	})
 	tbl.AppendRow(table.Row{
 		"LenTrash",
-		stat.LenTrash,
+		stat.LenTrash.Base10String(),
 		"sum of lengths in set trash records",
 	})
 	tbl.AppendRow(table.Row{
@@ -80,7 +80,7 @@ func (i *Stat) Run() error {
 
 	tbl.AppendRow(table.Row{
 		"TableSize",
-		stat.TableSize,
+		stat.TableSize.Base10String(),
 		"total number of bytes in the hash table",
 	})
 	tbl.AppendRow(table.Row{

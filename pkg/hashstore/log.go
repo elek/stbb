@@ -111,10 +111,10 @@ func (l *Logs) Run() error {
 			v.ID,
 			v.Path,
 			ttl,
-			v.RealSize,
-			v.Used,
-			v.Expired,
-			v.Trash,
+			v.RealSize.Base10String(),
+			v.Used.Base10String(),
+			v.Expired.Base10String(),
+			v.Trash.Base10String(),
 			v.Unknown(),
 		})
 	}
@@ -122,11 +122,11 @@ func (l *Logs) Run() error {
 		"",
 		sum.Path,
 		"",
-		sum.RealSize,
-		sum.Used,
-		sum.Expired,
-		sum.Trash,
-		sum.Unknown(),
+		sum.RealSize.Base10String(),
+		sum.Used.Base10String(),
+		sum.Expired.Base10String(),
+		sum.Trash.Base10String(),
+		sum.Unknown().Base10String(),
 	})
 	tbl.Render()
 
