@@ -12,7 +12,8 @@ import (
 
 type Checkin struct {
 	util.DialerHelper
-	URL string `arg:""`
+	URL             string `arg:""`
+	ExternalAddress string
 }
 
 func (c *Checkin) Run() error {
@@ -37,7 +38,7 @@ func (c *Checkin) Run() error {
 
 	client := pb.NewDRPCNodeClient(conn)
 	resp, err := client.CheckIn(ctx, &pb.CheckInRequest{
-		Address: "1.2.3.4:1234",
+		Address: c.ExternalAddress,
 		Capacity: &pb.NodeCapacity{
 			FreeDisk: 100000000,
 		},
