@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"math"
+	"os"
+	"path/filepath"
 	"storj.io/common/memory"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
@@ -17,11 +19,11 @@ type Report struct {
 func (i *Report) Run() error {
 	ctx := context.Background()
 
-	hashtbl, close, err := i.WithHashtable.Open(ctx)
-	if err != nil {
-		return errors.WithStack(err)
+	paths := []string{i.WithHashtable.Path}
+	if _, err := os.Stat(filepath.Join(i.Path, "s0")); err == nil {
+		paths = []string{filepath.Join(i.Path, "s0", "meta"), filepath.Join(i.Path, "s1", "meta")}
+		fmt.Println("Checking both hashtable:", paths)
 	}
-	defer close()
 
 	nonTTL := 0
 	today := timeToDateDown(time.Now())
@@ -29,23 +31,33 @@ func (i *Report) Run() error {
 	trashHistorgram := NewTimeHistogram()
 	all := 0
 	size := 0
-	err = hashtbl.Range(ctx, func(ctx2 context.Context, record hashstore.Record) (bool, error) {
-		if record.Expires.Set() {
-			expRel := int(record.Expires.Time()) - int(today)
-			if record.Expires.Trash() {
-				trashHistorgram.Increment(expRel, int(record.Length))
-			} else {
-				ttlHistogram.Increment(expRel, int(record.Length))
-			}
-		} else {
-			nonTTL++
+
+	for _, p := range paths {
+		i.WithHashtable.Path = p
+		hashtbl, close, err := i.WithHashtable.Open(ctx)
+		if err != nil {
+			return errors.WithStack(err)
 		}
-		all++
-		size += int(record.Length)
-		return true, nil
-	})
-	if err != nil {
-		return errors.WithStack(err)
+		defer close()
+
+		err = hashtbl.Range(ctx, func(ctx2 context.Context, record hashstore.Record) (bool, error) {
+			if record.Expires.Set() {
+				expRel := int(record.Expires.Time()) - int(today)
+				if record.Expires.Trash() {
+					trashHistorgram.Increment(expRel, int(record.Length))
+				} else {
+					ttlHistogram.Increment(expRel, int(record.Length))
+				}
+			} else {
+				nonTTL++
+			}
+			all++
+			size += int(record.Length)
+			return true, nil
+		})
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	fmt.Println("pieces", all)
 	fmt.Println("size", size)
