@@ -68,7 +68,7 @@ func (n *SelectPool) Run() (err error) {
 		return errors.New("unknown tracker: " + n.Tracker)
 	}
 
-	placements, err := n.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), nil))
+	placements, err := n.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), &NoopFailureTracker{}))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -354,3 +354,12 @@ type NodeList struct {
 func (n NodeList) SelectAllStorageNodesUpload(ctx context.Context, selectionCfg overlay.NodeSelectionConfig) (reputable, new []*nodeselection.SelectedNode, err error) {
 	return n.Nodes, nil, nil
 }
+
+type NoopFailureTracker struct {
+}
+
+func (n *NoopFailureTracker) Get(node *nodeselection.SelectedNode) float64 {
+	return 1
+}
+
+var _ nodeselection.UploadFailureTracker = &NoopFailureTracker{}
