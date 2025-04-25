@@ -75,6 +75,29 @@ func (i *Report) Run() error {
 	return nil
 }
 
+type HashstoreReport struct {
+	Table string
+	Stat  PieceStat
+	Sum   struct {
+		NonTTL Stat
+		TTL    Stat
+		Trash  Stat
+	}
+	Trash []HistogramItem
+	TTL   []HistogramItem
+}
+
+type PieceStat struct {
+	Count int
+	Size  int
+}
+
+type HistogramItem struct {
+	Day   int
+	Count int
+	Size  int
+}
+
 type TimeHistogram struct {
 	count map[int]int
 	size  map[int]int
