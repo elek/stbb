@@ -25,12 +25,10 @@ func (i *Report) Run() error {
 		fmt.Println("Checking both hashtable:", paths)
 	}
 
-	nonTTL := 0
+	report := HashstoreReport{}
 	today := timeToDateDown(time.Now())
 	ttlHistogram := NewTimeHistogram()
-	trashHistorgram := NewTimeHistogram()
-	all := 0
-	size := 0
+	trashHistogram := NewTimeHistogram()
 
 	for _, p := range paths {
 		i.WithHashtable.Path = p
@@ -44,33 +42,59 @@ func (i *Report) Run() error {
 			if record.Expires.Set() {
 				expRel := int(record.Expires.Time()) - int(today)
 				if record.Expires.Trash() {
-					trashHistorgram.Increment(expRel, int(record.Length))
+					trashHistogram.Increment(expRel, int(record.Length))
 				} else {
 					ttlHistogram.Increment(expRel, int(record.Length))
 				}
 			} else {
-				nonTTL++
+				report.Sum.NonTTL.Count++
+				report.Sum.NonTTL.Size += int(record.Length)
 			}
-			all++
-			size += int(record.Length)
+			report.Stat.Count++
+			report.Stat.Size += int(record.Length)
 			return true, nil
 		})
 		if err != nil {
 			return errors.WithStack(err)
 		}
 	}
-	fmt.Println("pieces", all)
-	fmt.Println("size", size)
-	fmt.Println("average size", size/all)
+
+	// Convert histograms to report format
+	for day, count := range ttlHistogram.count {
+		report.TTL = append(report.TTL, HistogramItem{
+			Day:   day,
+			Count: count,
+			Size:  ttlHistogram.size[day],
+		})
+		report.Sum.TTL.Count += count
+		report.Sum.TTL.Size += ttlHistogram.size[day]
+	}
+
+	for day, count := range trashHistogram.count {
+		report.Trash = append(report.Trash, HistogramItem{
+			Day:   day,
+			Count: count,
+			Size:  trashHistogram.size[day],
+		})
+		report.Sum.Trash.Count += count
+		report.Sum.Trash.Size += trashHistogram.size[day]
+	}
+
+	// Print report
+	fmt.Println("pieces", report.Stat.Count)
+	fmt.Println("size", report.Stat.Size)
+	if report.Stat.Count > 0 {
+		fmt.Println("average size", report.Stat.Size/report.Stat.Count)
+	}
 	fmt.Println()
-	fmt.Println("no-ttl", nonTTL)
-	fmt.Println("ttl", ttlHistogram.Count())
-	fmt.Println("trash", trashHistorgram.Count())
+	fmt.Println("no-ttl", report.Sum.NonTTL.Count)
+	fmt.Println("ttl", report.Sum.TTL.Count)
+	fmt.Println("trash", report.Sum.Trash.Count)
 	fmt.Println()
 	fmt.Println("TTL PER DAY")
 	ttlHistogram.Print(-50, 50)
 	fmt.Println("TRASH PER DAY")
-	trashHistorgram.Print(-50, 10)
+	trashHistogram.Print(-50, 10)
 
 	return nil
 }
@@ -79,9 +103,9 @@ type HashstoreReport struct {
 	Table string
 	Stat  PieceStat
 	Sum   struct {
-		NonTTL Stat
-		TTL    Stat
-		Trash  Stat
+		NonTTL PieceStat
+		TTL    PieceStat
+		Trash  PieceStat
 	}
 	Trash []HistogramItem
 	TTL   []HistogramItem
@@ -91,6 +115,8 @@ type PieceStat struct {
 	Count int
 	Size  int
 }
+
+type Stat = PieceStat
 
 type HistogramItem struct {
 	Day   int
