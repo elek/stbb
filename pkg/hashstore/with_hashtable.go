@@ -2,7 +2,6 @@ package hashstore
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
@@ -30,7 +29,6 @@ func (w WithHashtable) openPath(ctx context.Context, path string) (hashstore.Tbl
 		}
 		for _, entry := range entries {
 			if strings.HasPrefix(entry.Name(), "hashtbl-") {
-				fmt.Println("using hashtbl", entry.Name())
 				return w.openPath(ctx, filepath.Join(path, entry.Name()))
 			}
 		}

@@ -2,11 +2,13 @@ package hashstore
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"storj.io/common/memory"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
@@ -14,18 +16,26 @@ import (
 
 type Report struct {
 	WithHashtable
+	JSON bool `help:"Output in JSON format"`
 }
 
 func (i *Report) Run() error {
 	ctx := context.Background()
 
+	report := HashstoreReport{}
+
 	paths := []string{i.WithHashtable.Path}
 	if _, err := os.Stat(filepath.Join(i.Path, "s0")); err == nil {
 		paths = []string{filepath.Join(i.Path, "s0", "meta"), filepath.Join(i.Path, "s1", "meta")}
-		fmt.Println("Checking both hashtable:", paths)
+		if !i.JSON {
+			fmt.Println("Checking both hashtable:", paths)
+		} else {
+			report.Table = "both"
+		}
+	} else {
+		report.Table = i.Path
 	}
 
-	report := HashstoreReport{}
 	today := timeToDateDown(time.Now())
 	ttlHistogram := NewTimeHistogram()
 	trashHistogram := NewTimeHistogram()
@@ -80,21 +90,39 @@ func (i *Report) Run() error {
 		report.Sum.Trash.Size += trashHistogram.size[day]
 	}
 
+	sort.Slice(report.TTL, func(i, j int) bool {
+		return report.TTL[i].Day < report.TTL[j].Day
+	})
+
+	sort.Slice(report.Trash, func(i, j int) bool {
+		return report.Trash[i].Day < report.Trash[j].Day
+	})
+
 	// Print report
-	fmt.Println("pieces", report.Stat.Count)
-	fmt.Println("size", report.Stat.Size)
-	if report.Stat.Count > 0 {
-		fmt.Println("average size", report.Stat.Size/report.Stat.Count)
+	if i.JSON {
+		// Print JSON format
+		jsonData, err := json.MarshalIndent(report, "", "  ")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		fmt.Println(string(jsonData))
+	} else {
+		// Print human-readable format
+		fmt.Println("pieces", report.Stat.Count)
+		fmt.Println("size", report.Stat.Size)
+		if report.Stat.Count > 0 {
+			fmt.Println("average size", report.Stat.Size/report.Stat.Count)
+		}
+		fmt.Println()
+		fmt.Println("no-ttl", report.Sum.NonTTL.Count)
+		fmt.Println("ttl", report.Sum.TTL.Count)
+		fmt.Println("trash", report.Sum.Trash.Count)
+		fmt.Println()
+		fmt.Println("TTL PER DAY")
+		ttlHistogram.Print(-50, 50)
+		fmt.Println("TRASH PER DAY")
+		trashHistogram.Print(-50, 10)
 	}
-	fmt.Println()
-	fmt.Println("no-ttl", report.Sum.NonTTL.Count)
-	fmt.Println("ttl", report.Sum.TTL.Count)
-	fmt.Println("trash", report.Sum.Trash.Count)
-	fmt.Println()
-	fmt.Println("TTL PER DAY")
-	ttlHistogram.Print(-50, 50)
-	fmt.Println("TRASH PER DAY")
-	trashHistogram.Print(-50, 10)
 
 	return nil
 }
@@ -115,8 +143,6 @@ type PieceStat struct {
 	Count int
 	Size  int
 }
-
-type Stat = PieceStat
 
 type HistogramItem struct {
 	Day   int
