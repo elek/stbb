@@ -36,7 +36,7 @@ func (p *PieceListCheck) Run() error {
 
 	ctx := context.Background()
 
-	sqlDB, err := tagsql.Open(ctx, "sqlite", "file:"+p.PieceExpirationDB+"?_busy_timeout=10000")
+	sqlDB, err := tagsql.Open(ctx, "sqlite", "file:"+p.PieceExpirationDB+"?_busy_timeout=10000", nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}

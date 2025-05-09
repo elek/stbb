@@ -50,7 +50,7 @@ func (s *Download) Run() error {
 		return err
 	}
 
-	satelliteDBX, err := dbx.Open(driver, source)
+	satelliteDBX, err := dbx.Open(driver, source, nil)
 	if err != nil {
 		return err
 	}

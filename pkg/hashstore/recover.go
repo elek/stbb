@@ -31,7 +31,7 @@ func (n *Recover) Run() (err error) {
 	}
 	defer tblFile.Close()
 
-	tbl, err := hashstore.CreateHashtbl(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()))
+	tbl, err := hashstore.CreateHashTbl(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -51,7 +51,7 @@ func (n *Recover) Run() (err error) {
 		start := time.Now()
 		err = n.RecoverOne(path, func(record hashstore.Record) error {
 			counter++
-			ok, err := tbl.Insert(ctx, record)
+			ok, err := tbl.Append(ctx, record)
 			if err != nil {
 				fmt.Println("Couldn't insert record", record.Key.String(), err)
 			}

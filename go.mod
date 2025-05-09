@@ -33,13 +33,13 @@ require (
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20250318112615-b9952c61d22f
+	storj.io/common v0.0.0-20250417130254-ed442fd0e04f
 	storj.io/drpc v0.0.35-0.20240709171858-0075ac871661
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd
-	storj.io/storj v1.91.0-alpha.0.20250409071135-28065d0ee221
-	storj.io/uplink v1.13.2-0.20250218103408-3179c8d1ccdb
+	storj.io/storj v1.91.0-alpha.0.20250509112900-74a26e6006d1
+	storj.io/uplink v1.13.2-0.20250411115637-46e46ee70e74
 )
 
 require (
@@ -185,6 +185,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	storj.io/eventkit v0.0.0-20250407101305-1fc91e6bea89 // indirect
+	storj.io/eventkit v0.0.0-20250410172343-61f26d3de156 // indirect
+	storj.io/minmaxheap v0.0.0-20250403032542-1e24a6fe9c16 // indirect
 	storj.io/picobuf v0.0.3 // indirect
 )

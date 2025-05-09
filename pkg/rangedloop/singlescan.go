@@ -2,9 +2,7 @@ package rangedloop
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
-	"storj.io/common/storj"
 	"storj.io/common/uuid"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
@@ -49,60 +47,61 @@ func (s *SQLProvider) Range() rangedloop.UUIDRange {
 }
 
 func (s *SQLProvider) Iterate(ctx context.Context, fn func([]rangedloop.Segment) error) error {
-	aliasMap, err := s.conn.LatestNodesAliasMap(ctx)
-	if err != nil {
-		return err
-	}
-
-	query := `select
-    stream_id, position,
-			created_at, expires_at, repaired_at,
-			root_piece_id,
-			encrypted_size,
-			plain_offset, plain_size,
-			redundancy,
-			remote_alias_pieces,
-			placement FROM segments WHERE segments.position is not null AND segments.remote_alias_pieces is not null`
-
-	var args []interface{}
-	switch s.scanType {
-	case "test":
-		query += " LIMIT 100"
-	case "placement":
-		query += " AND segments.placement = $1"
-		args = append(args, storj.PlacementConstraint(12))
-	default:
-	}
-	fmt.Println("executing", query)
-	rows, err := s.conn.UnderlyingTagSQL().QueryContext(context.Background(), query, args...)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	defer rows.Close()
-	segments := make([]rangedloop.Segment, 0, 1000)
-	for rows.Next() {
-		p := metabase.LoopSegmentEntry{}
-		err := scanItem(ctx, aliasMap, rows, &p)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		segments = append(segments, rangedloop.Segment(p))
-		if len(segments) > 1000 {
-			err := fn(segments)
-			if err != nil {
-				return err
-			}
-			segments = segments[:0]
-		}
-		if err != nil {
-			return err
-		}
-	}
-
-	err = fn(segments)
-	if err != nil {
-		return err
-	}
+	panic("TODO: reimplement this with using Adapter")
+	//aliasMap, err := s.conn.LatestNodesAliasMap(ctx)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//query := `select
+	//stream_id, position,
+	//		created_at, expires_at, repaired_at,
+	//		root_piece_id,
+	//		encrypted_size,
+	//		plain_offset, plain_size,
+	//		redundancy,
+	//		remote_alias_pieces,
+	//		placement FROM segments WHERE segments.position is not null AND segments.remote_alias_pieces is not null`
+	//
+	//var args []interface{}
+	//switch s.scanType {
+	//case "test":
+	//	query += " LIMIT 100"
+	//case "placement":
+	//	query += " AND segments.placement = $1"
+	//	args = append(args, storj.PlacementConstraint(12))
+	//default:
+	//}
+	//fmt.Println("executing", query)
+	//rows, err := s.conn.UnderlyingTagSQL().QueryContext(context.Background(), query, args...)
+	//if err != nil {
+	//	return errors.WithStack(err)
+	//}
+	//defer rows.Close()
+	//segments := make([]rangedloop.Segment, 0, 1000)
+	//for rows.Next() {
+	//	p := metabase.LoopSegmentEntry{}
+	//	err := scanItem(ctx, aliasMap, rows, &p)
+	//	if err != nil {
+	//		return errors.WithStack(err)
+	//	}
+	//	segments = append(segments, rangedloop.Segment(p))
+	//	if len(segments) > 1000 {
+	//		err := fn(segments)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		segments = segments[:0]
+	//	}
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//err = fn(segments)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
