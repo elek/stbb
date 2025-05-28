@@ -14,6 +14,7 @@ import (
 	"github.com/elek/stbb/pkg/crypto"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/hashstore"
+	"github.com/elek/stbb/pkg/jobq"
 	"github.com/elek/stbb/pkg/load"
 	"github.com/elek/stbb/pkg/metabase"
 	"github.com/elek/stbb/pkg/metainfo"
@@ -173,6 +174,7 @@ func main() {
 		Admin      admin.Admin            `cmd:"" help:"helper commands, similar to the admin interface"`
 		Hashstore  hashstore.Hashstore    `cmd:"" help:"commands related to the new hashtable based store"`
 		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
+		Jobq       jobq.Jobq              `cmd:"" help:"jobq related helper commands"`
 	}
 
 	ctx := kong.Parse(&cli,
