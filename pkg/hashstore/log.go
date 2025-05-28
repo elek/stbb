@@ -2,6 +2,7 @@ package hashstore
 
 import (
 	"context"
+	"fmt"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
 	"io/fs"
@@ -58,6 +59,9 @@ func (l *Logs) Run() error {
 	var shouldTrash func(ctx context.Context, key hashstore.Key, created time.Time) bool
 
 	logFiles, err := findFiles(l.Logs)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	err = hashtbl.Range(ctx, func(_ context.Context, rec hashstore.Record) (bool, error) {
 		rerr = func() error {
@@ -65,7 +69,10 @@ func (l *Logs) Run() error {
 				return errors.WithStack(err)
 			}
 			nexist++ // bump the number of records that exist for progress reporting.
-
+			if _, found := logFiles[rec.Log]; !found {
+				fmt.Printf("WARNING: log file %d is not found\n", rec.Log, len(logFiles))
+				return nil
+			}
 			if expired(rec.Expires) {
 				logFiles[rec.Log].Expired += memory.Size(rec.Length)
 			} else if rec.Expires.Trash() {
@@ -152,6 +159,9 @@ func findFiles(dir string) (map[uint64]*LogReport, error) {
 	if dir == "" {
 		return sizes, nil
 	}
+	if _, err := os.Stat(dir); err != nil {
+		return sizes, errors.WithMessage(err, "The directory couldn't be read: "+dir)
+	}
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
 			return nil
@@ -164,6 +174,7 @@ func findFiles(dir string) (map[uint64]*LogReport, error) {
 		//     log-<16 bytes of id>-<8 bytes of ttl>
 		// so they always begin with "log-" and are either 20 or 29 bytes long.
 		if (len(name) != 20 && len(name) != 29) || name[0:4] != "log-" {
+			fmt.Println("Not a log file:", name)
 			return nil
 		}
 
