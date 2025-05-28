@@ -23,7 +23,7 @@ type WithPlacement struct {
 	PlacementConfig string `help:"location of the placement file" yaml:"placement-config"`
 }
 
-func (w WithPlacement) GetPlacement(environment *nodeselection.PlacementConfigEnvironment) (nodeselection.PlacementDefinitions, error) {
+func (w WithPlacement) GetPlacement(environment nodeselection.PlacementConfigEnvironment) (nodeselection.PlacementDefinitions, error) {
 	content, err := os.ReadFile(w.PlacementConfig)
 	if err != nil {
 		return nil, errors.WithStack(err)

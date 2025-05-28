@@ -38,7 +38,7 @@ require (
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20240221095020-52b0792fa6cd
-	storj.io/storj v1.91.0-alpha.0.20250509112900-74a26e6006d1
+	storj.io/storj v1.91.0-alpha.0.20250514094539-bd540782ecdf
 	storj.io/uplink v1.13.2-0.20250411115637-46e46ee70e74
 )
 

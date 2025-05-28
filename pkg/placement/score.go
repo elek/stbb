@@ -41,7 +41,7 @@ func (n *Score) Run() (err error) {
 		satelliteDB.Close()
 	}()
 
-	filter, err := nodeselection.FilterFromString(n.Filter, &nodeselection.PlacementConfigEnvironment{})
+	filter, err := nodeselection.FilterFromString(n.Filter, nodeselection.PlacementConfigEnvironment{})
 	if err != nil {
 		return errors.WithStack(err)
 	}
