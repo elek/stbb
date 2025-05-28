@@ -7,11 +7,14 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"storj.io/common/storj"
+	"storj.io/storj/satellite/nodeselection"
+	"strings"
 )
 
 type Info struct {
 	db.WithDatabase
-	NodeID storj.NodeID `arg:""`
+	NodeID   storj.NodeID `arg:""`
+	Selector string
 }
 
 func (i Info) Run() error {
@@ -31,6 +34,45 @@ func (i Info) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	tags, err := satelliteDB.OverlayCache().GetNodeTags(ctx, node.Id)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if i.Selector != "" {
+		var attributes []nodeselection.NodeAttribute
+		for _, attr := range strings.Split(i.Selector, ",") {
+			attr, err := nodeselection.CreateNodeAttribute(attr)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			attributes = append(attributes, attr)
+		}
+		nodeAttribute := func(n nodeselection.SelectedNode) string {
+			var result []string
+			for _, attr := range attributes {
+				result = append(result, attr(n))
+			}
+			return strings.Join(result, ",")
+		}
+		sn := nodeselection.SelectedNode{
+			ID:          node.Id,
+			Address:     node.Address,
+			LastNet:     node.LastNet,
+			LastIPPort:  node.LastIPPort,
+			CountryCode: node.CountryCode,
+		}
+		for _, tag := range tags {
+			sn.Tags = append(sn.Tags, nodeselection.NodeTag{
+				NodeID:   node.Id,
+				Name:     tag.Name,
+				Value:    tag.Value,
+				SignedAt: node.CreatedAt,
+				Signer:   node.Id,
+			})
+		}
+		fmt.Println(nodeAttribute(sn))
+		return nil
+	}
 	fmt.Println("free disk", node.Capacity.FreeDisk)
 	fmt.Println("address", node.Address.Address)
 	fmt.Println("country_code", node.CountryCode)
@@ -38,10 +80,7 @@ func (i Info) Run() error {
 	fmt.Println("last_ip_port", node.LastIPPort)
 	fmt.Println("piece_count", node.PieceCount)
 	fmt.Println("version", node.Version)
-	tags, err := satelliteDB.OverlayCache().GetNodeTags(ctx, node.Id)
-	if err != nil {
-		return errors.WithStack(err)
-	}
+
 	for _, t := range tags {
 		fmt.Printf("   %s=%s\n", t.Name, string(t.Value))
 	}
