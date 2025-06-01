@@ -4,17 +4,21 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
+	"io"
 	"os"
 	"storj.io/storj/satellite/metabase"
+	"strings"
 	"time"
 )
 
 type Report struct {
 	File string `arg:""`
+	db.WithDatabase
 }
 
 func (s *Report) Run() error {
@@ -24,9 +28,7 @@ func (s *Report) Run() error {
 	}
 
 	ctx := context.TODO()
-	metabaseDB, err := metabase.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_METAINFO"), metabase.Config{
-		ApplicationName: "stbb",
-	})
+	metabaseDB, err := s.GetMetabaseDB(ctx, log.Named("metabase"))
 	if err != nil {
 		return errs.New("Error creating metabase connection: %+v", err)
 	}
@@ -43,7 +45,14 @@ func (s *Report) Run() error {
 	for {
 		line, err := cr.Read()
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
 			return errors.WithStack(err)
+		}
+		seg := line[0]
+		if !strings.Contains(seg, "/") {
+			seg += "/" + line[1]
 		}
 		su, sp, err := util.ParseSegmentPosition(line[0])
 		if err != nil {
@@ -54,6 +63,10 @@ func (s *Report) Run() error {
 			StreamID: su,
 			Position: sp,
 		})
+		if err != nil {
+			fmt.Println(segment.StreamID, segment.Position.Encode(), err.Error())
+			continue
+		}
 		repaired := ""
 		if segment.RepairedAt != nil {
 			repaired = segment.RepairedAt.Format(time.RFC3339)
