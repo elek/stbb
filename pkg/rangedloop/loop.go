@@ -6,9 +6,7 @@ import (
 	"github.com/elek/stbb/pkg/db"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
-	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
 	"time"
@@ -37,28 +35,6 @@ func (r RangedLoop) Run() error {
 
 	ctx := context.Background()
 
-	metabaseDB, err := metabase.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_METAINFO"), metabase.Config{
-		ApplicationName: "stbb",
-	})
-	if err != nil {
-		return errs.New("Error creating metabase connection: %+v", err)
-	}
-	defer func() {
-		_ = metabaseDB.Close()
-	}()
-
-	list, err := metabaseDB.LatestNodesAliasMap(ctx)
-	if err != nil {
-		return err
-	}
-	fmt.Println("node aliases", list.Size())
-
-	satelliteDB, err := r.WithDatabase.GetSatelliteDB(ctx, log)
-
-	defer func() {
-		_ = satelliteDB.Close()
-	}()
-
 	cfg := rangedloop.Config{
 		Parallelism:        r.Parallelism,
 		BatchSize:          2500,
@@ -76,13 +52,30 @@ func (r RangedLoop) Run() error {
 
 	switch r.ScanType {
 	case "test", "placement", "single":
+		metabaseDB, err := r.GetMetabaseDB(ctx, log.Named("metabase"))
+		if err != nil {
+			return errs.New("Error creating metabase connection: %+v", err)
+		}
+		defer func() {
+			_ = metabaseDB.Close()
+		}()
+
 		provider = NewFullScan(metabaseDB, r.ScanType)
 	case "full":
+		metabaseDB, err := r.GetMetabaseDB(ctx, log.Named("metabase"))
+		if err != nil {
+			return errs.New("Error creating metabase connection: %+v", err)
+		}
+		defer func() {
+			_ = metabaseDB.Close()
+		}()
+
 		provider = rangedloop.NewMetabaseRangeSplitter(log, metabaseDB, cfg)
 	case "avro":
 		segmentPattern := fmt.Sprintf("%s*/%s/%s-*/segments.avro-*", r.BackupDay, r.BackupDatabase, r.Instance)
 		segmentsAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, segmentPattern)
 		metainfoPattern := fmt.Sprintf("%s*/%s/%s-*/node_aliases.avro-*", r.BackupDay, "metainfo", r.Instance)
+		fmt.Println("Reading backup from", r.BackupBucket, segmentPattern, metainfoPattern)
 		nodeAliasesAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, metainfoPattern)
 		provider = rangedloop.NewAvroSegmentsSplitter(segmentsAvroIterator, nodeAliasesAvroIterator)
 	}
