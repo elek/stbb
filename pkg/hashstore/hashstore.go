@@ -17,4 +17,5 @@ type Hashstore struct {
 	RestoreTime RestoreTime `cmd:"" help:"get/set restore time for a satellite"`
 	Get         Get         `cmd:"" help:"get a record from a hashtable"`
 	Diff        Diff        `cmd:"" help:"diff two hashstore"`
+	Audit       Audit       `cmd:"" help:"audit a hashstore: check if pieces are included"`
 }
