@@ -6,9 +6,12 @@ import (
 	"github.com/elek/stbb/pkg/db"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
+	"os"
+	"path/filepath"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
+	"strings"
 	"time"
 )
 
@@ -18,13 +21,53 @@ type RangedLoop struct {
 	ScanParam int
 
 	Parallelism int `default:"1"`
-	NodeID      storj.NodeID
+	NodeID      string
 	Output      string
 
 	BackupBucket   string
 	BackupDatabase string
 	BackupDay      string
 	Instance       string
+}
+
+func (r RangedLoop) parseNodeIDs() ([]storj.NodeID, error) {
+	// Check if NodeID parameter points to a file
+	if fileInfo, err := os.Stat(r.NodeID); err == nil && !fileInfo.IsDir() {
+		// Read nodeIDs from file
+		content, err := os.ReadFile(r.NodeID)
+		if err != nil {
+			return nil, errs.New("Error reading nodeIDs file %s: %+v", r.NodeID, err)
+		}
+
+		var nodeIDs []storj.NodeID
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue // Skip empty lines and comments
+			}
+			nodeID, err := storj.NodeIDFromString(line)
+			if err != nil {
+				return nil, errs.New("Invalid nodeID in file %s: %s: %+v", r.NodeID, line, err)
+			}
+			nodeIDs = append(nodeIDs, nodeID)
+		}
+		return nodeIDs, nil
+	} else {
+		// Try to parse as single nodeID
+		nodeID, err := storj.NodeIDFromString(r.NodeID)
+		if err != nil {
+			return nil, errs.New("Invalid nodeID %s: %+v", r.NodeID, err)
+		}
+		return []storj.NodeID{nodeID}, nil
+	}
+}
+
+func (r RangedLoop) getNodeOutputDir(nodeID storj.NodeID) string {
+	if r.Output == "" {
+		return nodeID.String()
+	}
+	return filepath.Join(r.Output, nodeID.String())
 }
 
 func (r RangedLoop) Run() error {
@@ -45,8 +88,19 @@ func (r RangedLoop) Run() error {
 
 	observers = append(observers, NewCount())
 	observers = append(observers, metrics.NewObserver())
-	if !r.NodeID.IsZero() {
-		observers = append(observers, NewPieceList(r.NodeID, r.Output))
+	if r.NodeID != "" {
+		nodeIDs, err := r.parseNodeIDs()
+		if err != nil {
+			return err
+		}
+		for _, nodeID := range nodeIDs {
+			outputDir := r.getNodeOutputDir(nodeID)
+			err := os.MkdirAll(outputDir, 0755)
+			if err != nil {
+				return errs.New("Error creating output directory %s: %+v", outputDir, err)
+			}
+			observers = append(observers, NewPieceList(nodeID, filepath.Join(outputDir, nodeID.String())))
+		}
 	}
 	var provider rangedloop.RangeSplitter
 
