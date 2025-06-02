@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/storj/satellite/metabase"
 )
 
 type Show struct {
 	StreamID string `arg:""`
+	db.WithDatabase
 }
 
 func (s *Show) Run() error {
@@ -23,9 +24,7 @@ func (s *Show) Run() error {
 	}
 
 	ctx := context.TODO()
-	metabaseDB, err := metabase.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_METAINFO"), metabase.Config{
-		ApplicationName: "stbb",
-	})
+	metabaseDB, err := s.GetMetabaseDB(ctx, log.Named("metabase"))
 	if err != nil {
 		return errs.New("Error creating metabase connection: %+v", err)
 	}

@@ -31,9 +31,7 @@ func (s *Classify) Run() error {
 	}
 	ctx := context.TODO()
 
-	metabaseDB, err := metabase.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_METAINFO"), metabase.Config{
-		ApplicationName: "stbb",
-	})
+	metabaseDB, err := s.GetMetabaseDB(ctx, log.Named("metabase"))
 	if err != nil {
 		return errs.New("Error creating metabase connection: %+v", err)
 	}
