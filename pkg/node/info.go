@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/nodeselection"
+	"storj.io/storj/satellite/overlay"
 	"strings"
 )
 
@@ -80,6 +81,23 @@ func (i Info) Run() error {
 	fmt.Println("last_ip_port", node.LastIPPort)
 	fmt.Println("piece_count", node.PieceCount)
 	fmt.Println("version", node.Version)
+	fmt.Println("dq", node.Disqualified)
+	if node.DisqualificationReason != nil {
+		switch *node.DisqualificationReason {
+		case overlay.DisqualificationReasonUnknown:
+			fmt.Println("dq_reason", "unknown")
+		case overlay.DisqualificationReasonAuditFailure:
+			fmt.Println("dq_reason", "audit_failure")
+		case overlay.DisqualificationReasonSuspension:
+			fmt.Println("dq_reason", "suspension")
+		case overlay.DisqualificationReasonNodeOffline:
+			fmt.Println("dq_reason", "offline")
+		default:
+			fmt.Println("dq_reason", "???")
+		}
+
+	}
+	fmt.Println("suspended", node.OfflineSuspended)
 
 	for _, t := range tags {
 		fmt.Printf("   %s=%s\n", t.Name, string(t.Value))
