@@ -326,7 +326,9 @@ func (b *BitShift) InitScoreNode() nodeselection.ScoreNode {
 	if !ok {
 		panic("unknown tracker")
 	}
-	successTracker := metainfo.NewSuccessTrackers([]storj.NodeID{}, tracker)
+	successTracker := metainfo.NewSuccessTrackers([]storj.NodeID{}, func(id storj.NodeID) metainfo.SuccessTracker {
+		return tracker()
+	})
 	b.tracker = successTracker
 	return successTracker
 }

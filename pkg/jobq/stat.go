@@ -52,7 +52,7 @@ func (s *Stat) Run() error {
 	client := jobq.WrapConn(conn)
 	defer client.Close()
 
-	stats, err := client.StatAll(ctx)
+	stats, err := client.StatAll(ctx, false)
 	if err != nil {
 		return errors.WithStack(err)
 	}
