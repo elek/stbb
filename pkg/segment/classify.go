@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/nodeselection"
@@ -118,6 +117,8 @@ func (s *Classify) Run() error {
 			doPlacementCheck,
 			doPlacementCheck,
 			placement)
+		fmt.Println("redundancy", fmt.Sprintf("%d/(%d)/%d/%d", segment.Redundancy.RequiredShares, segment.Redundancy.RepairShares, segment.Redundancy.OptimalShares, segment.Redundancy.TotalShares))
+		fmt.Println("repaired_at", segment.RepairedAt)
 		pattern := "%-20s %d\n"
 		fmt.Printf(pattern, "healthy", result.Healthy.Count())
 		fmt.Printf(pattern, "forcing-repair", result.ForcingRepair.Count())
