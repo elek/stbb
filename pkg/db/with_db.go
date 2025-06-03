@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"os"
 	"storj.io/storj/satellite"
@@ -22,7 +23,11 @@ type SatelliteConfig struct {
 func (w WithDatabase) GetSatelliteDB(ctx context.Context, log *zap.Logger) (satellite.DB, error) {
 	url := os.Getenv("STBB_DB_SATELLITE")
 	if url == "" && w.Satellite != "" {
-		url = w.Satellites[w.Satellite].Satellite
+		config, found := w.Satellites[w.Satellite]
+		if !found {
+			return nil, errors.New("satellite configuration is not found")
+		}
+		url = config.Satellite
 	}
 	satelliteDB, err := satellitedb.Open(ctx, log.Named("satellite"), url, satellitedb.Options{
 		ApplicationName: "stbb",
@@ -33,7 +38,11 @@ func (w WithDatabase) GetSatelliteDB(ctx context.Context, log *zap.Logger) (sate
 func (w WithDatabase) GetMetabaseDB(ctx context.Context, log *zap.Logger) (*metabase.DB, error) {
 	url := os.Getenv("STBB_DB_METABASE")
 	if url == "" && w.Satellite != "" {
-		url = w.Satellites[w.Satellite].Metabase
+		config, found := w.Satellites[w.Satellite]
+		if !found {
+			return nil, errors.New("satellite configuration is not found")
+		}
+		url = config.Metabase
 	}
 	db, err := metabase.Open(ctx, log.Named("metabase"), url, metabase.Config{
 		ApplicationName: "stbb",
