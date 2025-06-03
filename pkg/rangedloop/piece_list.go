@@ -11,20 +11,18 @@ import (
 )
 
 type PieceList struct {
-	nodeID storj.NodeID
-	output string
-	index  int
+	nodeIDs []storj.NodeID
+	output  string
+	index   int
 }
 
 type PieceListFork struct {
-	NodeID storj.NodeID
-	writer *os.File
+	writers map[storj.NodeID]*os.File
 }
 
-func NewPieceList(nodeID storj.NodeID, output string) *PieceList {
+func NewPieceList(nodeIDs []storj.NodeID) *PieceList {
 	return &PieceList{
-		nodeID: nodeID,
-		output: output,
+		nodeIDs: nodeIDs,
 	}
 }
 
@@ -33,21 +31,25 @@ func (p *PieceList) Start(ctx context.Context, time time.Time) (err error) {
 }
 
 func (p *PieceList) Fork(ctx context.Context) (rangedloop.Partial, error) {
-	outputFile := fmt.Sprintf("%s-%d", p.output, p.index)
-	fmt.Println("Writing output to", outputFile)
-	writer, err := os.Create(outputFile)
-	if err != nil {
-		return nil, err
+	res := &PieceListFork{
+		writers: make(map[storj.NodeID]*os.File),
+	}
+	for _, n := range p.nodeIDs {
+		outputFile := fmt.Sprintf("%s-%d", n, p.index)
+
+		writer, err := os.Create(outputFile)
+		if err != nil {
+			return nil, err
+		}
+		res.writers[n] = writer
 	}
 	p.index++
-	return &PieceListFork{
-		NodeID: p.nodeID,
-		writer: writer,
-	}, nil
+	return res, nil
+
 }
 
 func (p *PieceList) Join(ctx context.Context, partial rangedloop.Partial) error {
-	return partial.(*PieceListFork).writer.Close()
+	return partial.(*PieceListFork).Close()
 }
 
 func (p *PieceList) Finish(ctx context.Context) error {
@@ -57,17 +59,30 @@ func (p *PieceList) Finish(ctx context.Context) error {
 func (p *PieceListFork) Process(ctx context.Context, segments []rangedloop.Segment) error {
 	for _, segment := range segments {
 		for _, piece := range segment.Pieces {
-			if piece.StorageNode == p.NodeID {
-				_, err := p.writer.WriteString(fmt.Sprintf("%s,%d,%d,%s,%s\n",
-					segment.StreamID.String(),
-					segment.Position.Encode(),
-					piece.Number,
-					segment.RootPieceID.String(),
-					segment.RootPieceID.Derive(piece.StorageNode, int32(piece.Number)).String()))
-				if err != nil {
-					return errors.WithStack(err)
-				}
+			writer, found := p.writers[piece.StorageNode]
+			if !found {
+				continue
 			}
+			_, err := writer.WriteString(fmt.Sprintf("%s,%d,%d,%s,%s\n",
+				segment.StreamID.String(),
+				segment.Position.Encode(),
+				piece.Number,
+				segment.RootPieceID.String(),
+				segment.RootPieceID.Derive(piece.StorageNode, int32(piece.Number)).String()))
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+	}
+	return nil
+}
+
+func (p *PieceListFork) Close() error {
+	for _, n := range p.writers {
+		err := n.Close()
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 	return nil

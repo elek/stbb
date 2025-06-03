@@ -99,7 +99,7 @@ func (r RangedLoop) Run() error {
 			if err != nil {
 				return errs.New("Error creating output directory %s: %+v", outputDir, err)
 			}
-			observers = append(observers, NewPieceList(nodeID, filepath.Join(outputDir, nodeID.String())))
+			observers = append(observers, NewPieceList(nodeIDs))
 		}
 	}
 	var provider rangedloop.RangeSplitter
