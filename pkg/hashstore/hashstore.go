@@ -18,4 +18,5 @@ type Hashstore struct {
 	Get         Get         `cmd:"" help:"get a record from a hashtable"`
 	Diff        Diff        `cmd:"" help:"diff two hashstore"`
 	Audit       Audit       `cmd:"" help:"audit a hashstore: check if pieces are included"`
+	LogRead     LogRead     `cmd:"" help:"find record in hashstore log files without using metadata"`
 }
