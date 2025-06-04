@@ -7,7 +7,6 @@ import (
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
-	"path/filepath"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
@@ -63,13 +62,6 @@ func (r RangedLoop) parseNodeIDs() ([]storj.NodeID, error) {
 	}
 }
 
-func (r RangedLoop) getNodeOutputDir(nodeID storj.NodeID) string {
-	if r.Output == "" {
-		return nodeID.String()
-	}
-	return filepath.Join(r.Output, nodeID.String())
-}
-
 func (r RangedLoop) Run() error {
 	log, err := zap.NewDevelopment()
 	if err != nil {
@@ -93,14 +85,7 @@ func (r RangedLoop) Run() error {
 		if err != nil {
 			return err
 		}
-		for _, nodeID := range nodeIDs {
-			outputDir := r.getNodeOutputDir(nodeID)
-			err := os.MkdirAll(outputDir, 0755)
-			if err != nil {
-				return errs.New("Error creating output directory %s: %+v", outputDir, err)
-			}
-			observers = append(observers, NewPieceList(nodeIDs))
-		}
+		observers = append(observers, NewPieceList(nodeIDs))
 	}
 	var provider rangedloop.RangeSplitter
 

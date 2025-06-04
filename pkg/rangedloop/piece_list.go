@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"os"
+	"path/filepath"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"time"
@@ -35,7 +36,8 @@ func (p *PieceList) Fork(ctx context.Context) (rangedloop.Partial, error) {
 		writers: make(map[storj.NodeID]*os.File),
 	}
 	for _, n := range p.nodeIDs {
-		outputFile := fmt.Sprintf("%s-%d", n, p.index)
+		_ = os.MkdirAll(n.String(), 0755)
+		outputFile := filepath.Join(n.String(), fmt.Sprintf("%s-%d", n, p.index))
 
 		writer, err := os.Create(outputFile)
 		if err != nil {
