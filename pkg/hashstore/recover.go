@@ -15,6 +15,7 @@ type Recover struct {
 	Dir     string `default:"." help:"the directory to recover"`
 	MetaDir string `help:"the directory to create the recovered hashtable"`
 	Size    int    `default:"26" help:"size of the new hashtable (power of 2)"`
+	Kind    int    `default:"1" help:"kind of the hashtable, 0 hashtbl, 1 memtbl"`
 }
 
 func (n *Recover) Run() (err error) {
@@ -31,7 +32,7 @@ func (n *Recover) Run() (err error) {
 	}
 	defer tblFile.Close()
 
-	tbl, err := hashstore.CreateHashTbl(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()))
+	tbl, err := hashstore.CreateTable(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()), hashstore.TableKind(n.Kind))
 	if err != nil {
 		return errors.WithStack(err)
 	}
