@@ -11,13 +11,15 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"os"
+	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
 	"strings"
 	"time"
 )
 
 type Report struct {
-	File string `arg:""`
+	File   string        `arg:""`
+	NodeID *storj.NodeID `help:"opional node ID to filter segments if they are not part of the segment today"`
 	db.WithDatabase
 }
 
@@ -64,7 +66,11 @@ func (s *Report) Run() error {
 			Position: sp,
 		})
 		if err != nil {
-			fmt.Println(segment.StreamID, segment.Position.Encode(), err.Error())
+			_, _ = fmt.Fprintf(os.Stderr, "%s/%d %v\n", segment.StreamID, segment.Position.Encode(), err.Error())
+			continue
+		}
+		if s.NodeID != nil && !hasPiece(segment, s.NodeID) {
+			_, _ = fmt.Fprintf(os.Stderr, "Node is no part of piece list any more: %s/%d\n", segment.StreamID, segment.Position.Encode())
 			continue
 		}
 		repaired := ""
@@ -73,4 +79,13 @@ func (s *Report) Run() error {
 		}
 		fmt.Println(segment.StreamID, segment.Position.Encode(), segment.Placement, segment.CreatedAt.Format(time.RFC3339), repaired)
 	}
+}
+
+func hasPiece(segment metabase.Segment, id *storj.NodeID) bool {
+	for _, piece := range segment.Pieces {
+		if piece.StorageNode == *id {
+			return true
+		}
+	}
+	return false
 }
