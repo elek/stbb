@@ -3,6 +3,7 @@ package segment
 import (
 	"context"
 	"fmt"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
@@ -19,9 +20,11 @@ import (
 )
 
 type Download struct {
-	StreamID string `arg:""`
 	util.DialerHelper
-	Keys string `required:""`
+	db.WithDatabase
+	StreamID string `arg:""`
+	Keys     string `required:""`
+	NodeInfo bool
 }
 
 func (s *Download) Run() error {
@@ -31,14 +34,20 @@ func (s *Download) Run() error {
 	}
 	ctx := context.TODO()
 
-	metabaseDB, err := metabase.Open(ctx, log.Named("metabase"), os.Getenv("STBB_DB_METAINFO"), metabase.Config{
-		ApplicationName: "stbb",
-	})
+	metabaseDB, err := s.GetMetabaseDB(ctx, log.Named("metabase"))
 	if err != nil {
 		return errs.New("Error creating metabase connection: %+v", err)
 	}
 	defer func() {
 		_ = metabaseDB.Close()
+	}()
+
+	satelliteDB, err := s.GetSatelliteDB(ctx, log.Named("satellite"))
+	if err != nil {
+		return errs.New("Error creating metabase connection: %+v", err)
+	}
+	defer func() {
+		_ = satelliteDB.Close()
 	}()
 
 	driver, source, _, err := dbutil.SplitConnStr(os.Getenv("STBB_DB_SATELLITE"))
@@ -88,6 +97,8 @@ func (s *Download) Run() error {
 
 	outDir := fmt.Sprintf("segment_%s_%d", su, sp.Encode())
 	_ = os.MkdirAll(outDir, 0777)
+
+	pieces := 0
 	for _, piece := range segment.Pieces {
 		node, err := satelliteDBX.Get_Node_By_Id(ctx, dbx.Node_Id(piece.StorageNode.Bytes()))
 		if err != nil {
@@ -98,6 +109,7 @@ func (s *Download) Run() error {
 
 		outFile := filepath.Join(outDir, fmt.Sprintf("%d_%s", piece.Number, pieceID))
 		if _, err := os.Stat(outFile); err == nil {
+			pieces++
 			continue
 		}
 
@@ -133,11 +145,27 @@ func (s *Download) Run() error {
 		})
 		_ = conn.Close()
 		if err != nil {
-			fmt.Println("ERROR", pieceID, "couldn't be downloaded", snURL, err)
+			tagStr := ""
+			tags, terr := satelliteDB.OverlayCache().GetNodeTags(ctx, snURL.ID)
+			if terr == nil {
+				host, err := tags.FindBySignerAndName(snURL.ID, "host")
+				if err == nil {
+					tagStr += string(host.Value)
+				}
+				instance, err := tags.FindBySignerAndName(snURL.ID, "service")
+				if err == nil {
+					tagStr += "/" + string(instance.Value)
+				}
+
+			}
+
+			fmt.Println("ERROR", pieceID, "couldn't be downloaded", snURL, tagStr, err)
 			continue
 		}
 		fmt.Println(pieceID, "is downloaded from", snURL)
+		pieces++
 
 	}
+	fmt.Println("pieces", pieces, "required", segment.Redundancy.RequiredShares, "in placement", segment.Placement)
 	return nil
 }
