@@ -31,6 +31,7 @@ import (
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"net"
 	"os"
@@ -46,11 +47,13 @@ import (
 )
 
 func main() {
-
-	zapLog, err := zap.NewDevelopment()
+	logCfg := zap.NewDevelopmentConfig()
+	logCfg.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
+	zapLog, err := logCfg.Build()
 	if err != nil {
 		panic(err)
 	}
+	defer zapLog.Sync()
 
 	if os.Getenv("STBB_JAEGER") != "" {
 		// agent.tracing.datasci.storj.io:5775
