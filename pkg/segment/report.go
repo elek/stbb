@@ -1,6 +1,7 @@
 package segment
 
 import (
+	"bufio"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -38,12 +39,21 @@ func (s *Report) Run() error {
 		_ = metabaseDB.Close()
 	}()
 
+	firstLine, err := readFirstLine(s.File)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
 	input, err := os.Open(s.File)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	defer input.Close()
+
 	cr := csv.NewReader(input)
+	if !strings.Contains(firstLine, ",") {
+		cr.Comma = ' '
+	}
 	for {
 		line, err := cr.Read()
 		if err != nil {
@@ -88,4 +98,27 @@ func hasPiece(segment metabase.Segment, id *storj.NodeID) bool {
 		}
 	}
 	return false
+}
+
+func readFirstLine(filename string) (string, error) {
+	if filename == "" {
+		return "", errors.New("filename cannot be empty")
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		return scanner.Text(), nil
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading file: %w", err)
+	}
+
+	return "", errors.New("file is empty")
 }
