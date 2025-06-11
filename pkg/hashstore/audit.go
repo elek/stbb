@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"io"
 	"os"
 	"path/filepath"
 	"storj.io/common/storj"
@@ -14,11 +15,12 @@ import (
 )
 
 type Audit struct {
-	Prefix string
+	Prefix    string
+	Hashstore string `help:"the location of the hashstore files" default:"."`
 }
 
 func (a *Audit) Run() error {
-	tables, err := listFiles(".", "hashtbl-", "")
+	tables, err := listFiles(a.Hashstore, "hashtbl-", "")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -31,7 +33,7 @@ func (a *Audit) Run() error {
 	fmt.Println("Found piece files:", pieceFiles)
 
 	var tbls []hashstore.Tbl
-	var fls []*os.File
+	var fls []io.Closer
 	defer func() {
 		for _, f := range fls {
 			_ = f.Close()
@@ -39,7 +41,7 @@ func (a *Audit) Run() error {
 	}()
 	ctx := context.Background()
 	for _, table := range tables {
-		f, err := os.Open(table)
+		f, err := os.Open(filepath.Join(a.Hashstore, table))
 		if err != nil {
 			return errors.WithStack(err)
 		}
