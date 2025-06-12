@@ -2,6 +2,7 @@ package segment
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -19,9 +20,10 @@ import (
 )
 
 type Report struct {
-	File   string        `arg:""`
-	NodeID *storj.NodeID `help:"opional node ID to filter segments if they are not part of the segment today"`
 	db.WithDatabase
+	File    string        `arg:""`
+	NodeID  *storj.NodeID `help:"optional node ID to filter segments if they are not part of the segment today"`
+	InPlace bool          `help:"rewrite the input with actualized data"`
 }
 
 func (s *Report) Run() error {
@@ -50,15 +52,33 @@ func (s *Report) Run() error {
 	}
 	defer input.Close()
 
+	var out io.Writer
+	if s.InPlace {
+		buffer := bytes.NewBuffer([]byte{})
+		out = buffer
+		defer func() {
+			err = os.WriteFile(s.File, buffer.Bytes(), 0600)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}()
+	} else {
+		out = os.Stdout
+	}
+	cout := csv.NewWriter(out)
+	defer func() {
+		cout.Flush()
+	}()
 	cr := csv.NewReader(input)
 	if !strings.Contains(firstLine, ",") {
 		cr.Comma = ' '
+		cout.Comma = ' '
 	}
 	for {
 		line, err := cr.Read()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return nil
+				break
 			}
 			return errors.WithStack(err)
 		}
@@ -80,15 +100,22 @@ func (s *Report) Run() error {
 			continue
 		}
 		if s.NodeID != nil && !hasPiece(segment, s.NodeID) {
-			_, _ = fmt.Fprintf(os.Stderr, "Node is no part of piece list any more: %s/%d\n", segment.StreamID, segment.Position.Encode())
+			_, _ = fmt.Fprintf(os.Stderr, "Node is not part of piece list any more: %s/%d\n", segment.StreamID, segment.Position.Encode())
+			continue
+		}
+		if segment.Expired(time.Now()) {
+			_, _ = fmt.Fprintf(os.Stderr, "Segment is expired: %s/%d\n", segment.StreamID, segment.Position.Encode())
 			continue
 		}
 		repaired := ""
 		if segment.RepairedAt != nil {
 			repaired = segment.RepairedAt.Format(time.RFC3339)
 		}
-		fmt.Println(segment.StreamID, segment.Position.Encode(), segment.Placement, segment.CreatedAt.Format(time.RFC3339), repaired)
+		if !s.InPlace {
+			fmt.Println(segment.StreamID, segment.Position.Encode(), segment.Placement, segment.CreatedAt.Format(time.RFC3339), repaired)
+		}
 	}
+	return nil
 }
 
 func hasPiece(segment metabase.Segment, id *storj.NodeID) bool {
