@@ -14,7 +14,8 @@ import (
 type Stat struct {
 	Server        string `required:"true"`
 	Identity      string `required:"true"`
-	WithHistogram bool
+	WithHistogram bool   `help:"Include raw histogram data in the output (all records)."`
+	Histogram     string `help:"Include histogram data in the output (healthy,retrievable,oop)."`
 	Placement     *int
 }
 
@@ -56,7 +57,7 @@ func (s *Stat) Run() error {
 
 	var stats []jobq.QueueStat
 	if s.Placement == nil {
-		results, err := client.StatAll(ctx, s.WithHistogram)
+		results, err := client.StatAll(ctx, s.WithHistogram || s.Histogram != "")
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -78,11 +79,44 @@ func (s *Stat) Run() error {
 		if s.WithHistogram {
 			fmt.Println("Histogram:")
 			for _, bucket := range stat.Histogram {
-				fmt.Printf("  missing: %d - oop: %d: %d\n", bucket.NumMissing, bucket.NumOutOfPlacement, bucket.Count)
+				fmt.Printf("  missing: %d, retrivbl: %d, oop: %d (%s/%d) > %d\n", bucket.NumNormalizedHealthy, bucket.NumNormalizedRetrievable, bucket.NumOutOfPlacement, bucket.Exemplar.StreamID, bucket.Exemplar.Position, bucket.Count)
 			}
 			fmt.Println()
 		}
+		if s.Histogram != "" {
+			buckets := make(map[int64]*histBucket)
+			minv := int64(-1)
+			maxv := int64(-1)
+			for _, bucket := range stat.Histogram {
+				key := bucket.NumNormalizedHealthy
+				if minv == -1 || minv > key {
+					minv = key
+				}
+				if maxv == -1 || maxv < key {
+					maxv = key
+				}
+				if _, found := buckets[key]; !found {
+					buckets[key] = &histBucket{
+						count:     0,
+						exemplars: []string{},
+					}
+				}
+				buckets[key].count += bucket.Count
+				buckets[key].exemplars = append(buckets[key].exemplars, fmt.Sprintf("%s/%d", bucket.Exemplar.StreamID, bucket.Exemplar.Position))
+			}
+			for i := minv; i <= maxv; i++ {
+				if _, found := buckets[i]; !found {
+					fmt.Println("  ", i)
+					continue
+				}
+				fmt.Println("  ", i, buckets[i].count, buckets[i].exemplars[0], len(buckets[i].exemplars))
+			}
+		}
 	}
 	return nil
+}
 
+type histBucket struct {
+	count     int64
+	exemplars []string
 }
