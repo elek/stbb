@@ -63,7 +63,7 @@ func (s *Stat) Run() error {
 		}
 		stats = append(stats, results...)
 	} else {
-		result, err := client.Stat(ctx, storj.PlacementConstraint(*s.Placement), s.WithHistogram)
+		result, err := client.Stat(ctx, storj.PlacementConstraint(*s.Placement), s.WithHistogram || s.Histogram != "")
 		if err != nil {
 			return errors.WithStack(err)
 		}
