@@ -14,9 +14,6 @@ import (
 	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase"
-	"storj.io/storj/satellite/satellitedb/dbx"
-	"storj.io/storj/shared/dbutil"
-	"storj.io/storj/shared/dbutil/pgutil"
 )
 
 type Download struct {
@@ -49,20 +46,6 @@ func (s *Download) Run() error {
 	defer func() {
 		_ = satelliteDB.Close()
 	}()
-
-	driver, source, _, err := dbutil.SplitConnStr(os.Getenv("STBB_DB_SATELLITE"))
-	if err != nil {
-		return err
-	}
-	source, err = pgutil.EnsureApplicationName(source, "stbb")
-	if err != nil {
-		return err
-	}
-
-	satelliteDBX, err := dbx.Open(driver, source, nil)
-	if err != nil {
-		return err
-	}
 
 	su, sp, err := util.ParseSegmentPosition(s.StreamID)
 	if err != nil {
@@ -100,9 +83,9 @@ func (s *Download) Run() error {
 
 	pieces := 0
 	for _, piece := range segment.Pieces {
-		node, err := satelliteDBX.Get_Node_By_Id(ctx, dbx.Node_Id(piece.StorageNode.Bytes()))
+		nd, err := satelliteDB.OverlayCache().Get(ctx, piece.StorageNode)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		pieceID := segment.RootPieceID.Derive(piece.StorageNode, int32(piece.Number))
@@ -113,7 +96,7 @@ func (s *Download) Run() error {
 			continue
 		}
 
-		snURL, err := storj.ParseNodeURL(fmt.Sprintf("%s@%s", piece.StorageNode.String(), safeStr(node.LastIpPort)))
+		snURL, err := storj.ParseNodeURL(fmt.Sprintf("%s@%s", piece.StorageNode.String(), nd.LastIPPort))
 		if err != nil {
 			return err
 		}
