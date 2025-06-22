@@ -86,7 +86,7 @@ func (s *Report) Run() error {
 		if !strings.Contains(seg, "/") {
 			seg += "/" + line[1]
 		}
-		su, sp, err := util.ParseSegmentPosition(line[0])
+		su, sp, err := util.ParseSegmentPosition(seg)
 		if err != nil {
 			return err
 		}
