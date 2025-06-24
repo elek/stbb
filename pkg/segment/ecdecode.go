@@ -22,12 +22,7 @@ func (s *ECDecode) Run() error {
 		return err
 	}
 
-	fec, err := infectious.NewFEC(29, 110)
-	if err != nil {
-		return err
-	}
-
-	shares := []infectious.Share{}
+	var shares []infectious.Share
 
 	segmentDir := fmt.Sprintf("segment_%s_%d", su, sp.Encode())
 	entries, err := os.ReadDir(segmentDir)
@@ -35,6 +30,10 @@ func (s *ECDecode) Run() error {
 		return err
 	}
 	for _, e := range entries {
+		if strings.Contains(e.Name(), ".") {
+			// checksum
+			continue
+		}
 		data, err := os.ReadFile(filepath.Join(segmentDir, e.Name()))
 		if err != nil {
 			return err
@@ -53,6 +52,11 @@ func (s *ECDecode) Run() error {
 		})
 	}
 	fmt.Println(len(shares), "shares are loaded")
+
+	fec, err := infectious.NewFEC(29, len(entries))
+	if err != nil {
+		return err
+	}
 
 	scheme := eestream.NewRSScheme(fec, 256)
 	out := make([]byte, 0)
