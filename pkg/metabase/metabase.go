@@ -1,6 +1,6 @@
 package metabase
 
 type Metabase struct {
-	Generate Generate `cmd:"" help:"Generate segments for test data"`
-	Inline   Inline   `cmd:"" help:"inline segment load test"`
+	Inline    Inline    `cmd:"" help:"inline segment load test"`
+	GetObject GetObject `cmd:"" help:"get object from metabase by project ID, bucket and encrypted path"`
 }
