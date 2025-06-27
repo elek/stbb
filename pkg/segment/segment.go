@@ -11,4 +11,6 @@ type Segment struct {
 	Show         Show         `cmd:"" help:"show information about the segment"`
 	Report       Report       `cmd:"" help:"show segments based on segment id list"`
 	Nodes        Nodes        `cmd:"" help:"print details of nodes"`
+	Checksum     Checksum     `cmd:"" help:"Check checksum of the downloaded segment"`
+	Decrypt      Decrypt      `cmd:"" help:"Decrypt segment with the provided keys"`
 }

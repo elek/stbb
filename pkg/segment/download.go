@@ -112,7 +112,7 @@ func (s *Download) Run() error {
 		_, _, err = util.DownloadPiece(ctx, client, keySigner, util.DownloadRequest{
 			PieceID:     pieceID,
 			Storagenode: snURL,
-			Size:        int64(segment.EncryptedSize / 29),
+			Size:        int64(segment.EncryptedSize)/int64(segment.Redundancy.RequiredShares) + 256,
 			SatelliteID: ident.ID,
 		}, func(bytes []byte, hash *pb.PieceHash, ol *pb.OrderLimit) {
 			err := os.WriteFile(outFile, bytes, 0644)

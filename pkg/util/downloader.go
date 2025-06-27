@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"context"
 	"storj.io/common/pb"
 	"storj.io/common/signing"
@@ -39,6 +40,7 @@ func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient
 
 	chunkSize := req.Size
 	requestSize := int64(req.Size)
+	buff := bytes.NewBuffer([]byte{})
 	for downloaded < req.Size {
 		upperLimit := chunkSize + downloaded
 		if upperLimit > req.Size {
@@ -87,8 +89,9 @@ func DownloadPiece(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient
 
 		chunks++
 		downloaded += int64(len(resp.Chunk.Data))
-		handler(resp.Chunk.Data, hash, originalOrderLimit)
+		buff.Write(resp.Chunk.Data)
 	}
+	handler(buff.Bytes(), hash, originalOrderLimit)
 
 	return
 }
