@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/elek/stbb/pkg/db"
+	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
 	"os"
@@ -19,9 +20,10 @@ type RangedLoop struct {
 	ScanType  string `default:"full"`
 	ScanParam int
 
-	Parallelism int `default:"1"`
-	NodeID      string
-	Output      string
+	Parallelism      int `default:"1"`
+	NodeID           string
+	CheckerThreshold *int
+	Output           string
 
 	BackupBucket   string
 	BackupDatabase string
@@ -88,6 +90,19 @@ func (r RangedLoop) Run() error {
 		observers = append(observers, NewPieceList(nodeIDs))
 	}
 	var provider rangedloop.RangeSplitter
+
+	if r.CheckerThreshold != nil {
+		satelliteDB, err := r.GetSatelliteDB(ctx, log.Named("satellitedb"))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		selectedNodes, err := satelliteDB.OverlayCache().GetAllParticipatingNodes(ctx, 4*time.Hour, -100*time.Millisecond)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		observers = append(observers, NewChecker(selectedNodes, *r.CheckerThreshold))
+	}
 
 	switch r.ScanType {
 	case "test", "placement", "single":
