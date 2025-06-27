@@ -30,8 +30,8 @@ import (
 // for the project's metadata.
 type Access struct {
 	SatelliteURL storj.NodeURL
-	apiKey       *macaroon.APIKey
-	encAccess    *grant.EncryptionAccess
+	ApiKey       *macaroon.APIKey
+	EncAccess    *grant.EncryptionAccess
 }
 
 // getAPIKey are exposing the state do private methods.
@@ -42,7 +42,7 @@ type Access struct {
 //lint:ignore U1000, used with linkname
 //nolint:unused
 //go:linkname access_getAPIKey
-func access_getAPIKey(access *Access) *macaroon.APIKey { return access.apiKey }
+func access_getAPIKey(access *Access) *macaroon.APIKey { return access.ApiKey }
 
 // getEncAccess are exposing the state do private methods.
 //
@@ -52,7 +52,7 @@ func access_getAPIKey(access *Access) *macaroon.APIKey { return access.apiKey }
 //lint:ignore U1000, used with linkname
 //nolint:unused
 //go:linkname access_getEncAccess
-func access_getEncAccess(access *Access) *grant.EncryptionAccess { return access.encAccess }
+func access_getEncAccess(access *Access) *grant.EncryptionAccess { return access.EncAccess }
 
 // SharePrefix defines a prefix that will be shared.
 type SharePrefix struct {
@@ -111,8 +111,8 @@ func ParseAccess(access string) (*Access, error) {
 
 	return &Access{
 		SatelliteURL: satelliteURL,
-		apiKey:       inner.APIKey,
-		encAccess:    inner.EncAccess,
+		ApiKey:       inner.APIKey,
+		EncAccess:    inner.EncAccess,
 	}, nil
 }
 
@@ -126,8 +126,8 @@ func (access *Access) SatelliteAddress() string {
 func (access *Access) Serialize() (string, error) {
 	inner := grant.Access{
 		SatelliteAddress: access.SatelliteURL.String(),
-		APIKey:           access.apiKey,
-		EncAccess:        access.encAccess,
+		APIKey:           access.ApiKey,
+		EncAccess:        access.EncAccess,
 	}
 	return inner.Serialize()
 }
@@ -180,8 +180,8 @@ func (access *Access) Share(permission Permission, prefixes ...SharePrefix) (*Ac
 func (access *Access) toInternal() *grant.Access {
 	return &grant.Access{
 		SatelliteAddress: access.SatelliteURL.String(),
-		APIKey:           access.apiKey,
-		EncAccess:        access.encAccess,
+		APIKey:           access.ApiKey,
+		EncAccess:        access.EncAccess,
 	}
 }
 
@@ -193,8 +193,8 @@ func accessFromInternal(access *grant.Access) (*Access, error) {
 
 	return &Access{
 		SatelliteURL: satelliteURL,
-		apiKey:       access.APIKey,
-		encAccess:    access.EncAccess,
+		ApiKey:       access.APIKey,
+		EncAccess:    access.EncAccess,
 	}, nil
 }
 
