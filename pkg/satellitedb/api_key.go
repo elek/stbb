@@ -2,6 +2,7 @@ package satellitedb
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/elek/stbb/pkg/access"
 	"github.com/elek/stbb/pkg/db"
@@ -12,6 +13,7 @@ import (
 
 type ApiKey struct {
 	db.WithDatabase
+	WithSecret bool
 }
 
 func (s *ApiKey) Run() error {
@@ -37,5 +39,9 @@ func (s *ApiKey) Run() error {
 	}
 	fmt.Println("id", ak.ID)
 	fmt.Println("project_id", ak.ProjectID)
+	fmt.Println("head", hex.EncodeToString(ak.Head))
+	if s.WithSecret {
+		fmt.Println("secret", hex.EncodeToString(ak.Secret))
+	}
 	return nil
 }
