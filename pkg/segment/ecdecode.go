@@ -70,11 +70,14 @@ func (s *ECDecode) Run() error {
 	}
 	fmt.Printf("%d shares are loaded for %s/%d\n", len(pieces), su, sp.Encode())
 
-	out, err := os.Create(outputFile)
-	if err != nil {
-		return errors.WithStack(err)
+	var out *os.File
+	if !s.Correct {
+		out, err = os.Create(outputFile)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		defer out.Close()
 	}
-	defer out.Close()
 
 	startOffset := 0
 	outb := make([]byte, 0)

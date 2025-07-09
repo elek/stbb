@@ -2,6 +2,7 @@ package segment
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"github.com/elek/stbb/pkg/util"
@@ -29,12 +30,15 @@ func (s *Checksum) Run() error {
 		return err
 	}
 	for _, e := range entries {
+
 		if strings.Contains(e.Name(), ".") {
 			name, algo, _ := strings.Cut(e.Name(), ".")
 			var hasher hash.Hash
 			switch algo {
 			case "BLAKE3":
 				hasher = blake3.New()
+			case "SHA256":
+				hasher = sha256.New()
 			default:
 				panic("Unsupported checksum algorithm: " + algo)
 			}
