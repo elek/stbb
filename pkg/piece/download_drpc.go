@@ -65,7 +65,7 @@ func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *util.KeyS
 		PieceID:     d.Piece,
 		Size:        d.Size,
 	}, func(data []byte, hash *pb.PieceHash, limit *pb.OrderLimit) {
-		if hash.Hash != nil {
+		if hash != nil {
 			fmt.Println(hash.HashAlgorithm.String(), hex.EncodeToString(hash.Hash))
 		}
 		if d.Save {
