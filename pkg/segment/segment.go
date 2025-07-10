@@ -13,4 +13,5 @@ type Segment struct {
 	Nodes        Nodes        `cmd:"" help:"print details of nodes"`
 	Checksum     Checksum     `cmd:"" help:"Check checksum of the downloaded segment"`
 	Decrypt      Decrypt      `cmd:"" help:"Decrypt segment with the provided keys"`
+	Smoketest    Smoketest    `cmd:"" help:"Download Hash of the pieces and check if they are zero"`
 }
