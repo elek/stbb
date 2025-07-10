@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"path/filepath"
 	"storj.io/storj/storagenode/hashstore"
 	"time"
 )
 
 type Compact struct {
-	LogDir  string `help:"directory of the store" `
-	MetaDir string `help:"directory of the hashtable files" `
+	WithHashstore
 }
 
 func (i *Compact) Run() error {
@@ -21,7 +21,9 @@ func (i *Compact) Run() error {
 
 	ctx := context.Background()
 
-	store, err := hashstore.NewStore(ctx, i.LogDir, i.MetaDir, log)
+	metaFile, logDir := i.GetPath()
+
+	store, err := hashstore.NewStore(ctx, logDir, filepath.Dir(metaFile), log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

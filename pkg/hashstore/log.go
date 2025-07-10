@@ -16,18 +16,22 @@ import (
 )
 
 type Logs struct {
-	WithHashtable
-	Logs string `arg:""`
+	WithHashstore
 }
 
 func (l *Logs) Run() error {
 	ctx := context.Background()
 
-	hashtbl, close, err := l.WithHashtable.Open(ctx)
+	meta, logs := l.GetPath()
+	f, err := os.Open(meta)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer close()
+	hashtbl, err := hashstore.OpenTable(ctx, f)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer f.Close()
 
 	// collect statistics about the hash table and how live each of the log files are.
 	nset := uint64(0)
@@ -58,7 +62,7 @@ func (l *Logs) Run() error {
 
 	var shouldTrash func(ctx context.Context, key hashstore.Key, created time.Time) bool
 
-	logFiles, err := findFiles(l.Logs)
+	logFiles, err := findFiles(logs)
 	if err != nil {
 		return errors.WithStack(err)
 	}
