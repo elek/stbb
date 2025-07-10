@@ -41,7 +41,6 @@ func ParseUUID(id string) (uuid.UUID, error) {
 	}
 	if !strings.Contains(id, "-") {
 		id = id[0:8] + "-" + id[8:12] + "-" + id[12:16] + "-" + id[16:20] + "-" + id[20:]
-		fmt.Println(id)
 	}
 	return uuid.FromString(id)
 }
