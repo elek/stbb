@@ -17,4 +17,5 @@ type Node struct {
 	GeoIP          GeoIP          `cmd:"" help:"opens and prints out maxmind GeoIP database"`
 	Convert        Convert        `cmd:""`
 	Info           Info           `cmd:"" help:"information for one node"`
+	Audit          Audit          `cmd:"" help:"audit pieces from CSV file by downloading and checking checksums"`
 }
