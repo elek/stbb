@@ -98,7 +98,7 @@ func (s *Checksum) Run() error {
 						return errors.WithStack(err)
 					}
 
-					piece := segment.Pieces[number]
+					piece, _ := segment.Pieces.FindByNum(number)
 
 					fmt.Println(e.Name(), "Checksum mismatch", hex.EncodeToString(rawChecksum), hex.EncodeToString(calculatedHash), position, pieceID, checksum, piece.StorageNode, piece.Number)
 

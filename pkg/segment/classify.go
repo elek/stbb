@@ -96,7 +96,7 @@ func (s *Classify) Run() error {
 		if s.PlacementFile != "" {
 			doPlacementCheck = true
 			c := nodeselection.ConfigurablePlacementRule{
-				s.PlacementFile,
+				PlacementRules: s.PlacementFile,
 			}
 			def, err := c.Parse(func() (nodeselection.Placement, error) {
 				panic("default placement shouldn't be used")
@@ -132,7 +132,6 @@ func (s *Classify) Run() error {
 		fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Count())
 
 		for _, piece := range segment.Pieces {
-
 			fmt.Printf("[%s] %d %s %s\n", getStatus(result, int(piece.Number)), piece.Number, piece.StorageNode, getNodeInfo(nodeInfo, piece.StorageNode))
 		}
 	}
