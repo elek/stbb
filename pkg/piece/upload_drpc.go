@@ -22,6 +22,7 @@ type UploadDrpc struct {
 	NodeURL storj.NodeURL         `arg:"" name:"nodeurl"`
 	File    string                `arg:"" help:"file to upload as a piece"`
 	Keys    string                `help:"location of the identity files to sign orders"`
+	PieceID string                `help:"Piece ID to use for upload, if not set a new one is generated"`
 }
 
 func (u *UploadDrpc) Run() error {
@@ -64,7 +65,15 @@ func (u *UploadDrpc) ConnectAndUpload(ctx context.Context, orderLimitCreator *ut
 
 func (d *UploadDrpc) Upload(ctx context.Context, client pb.DRPCReplaySafePiecestoreClient, creator *util.KeySigner) (uploaded int, id storj.PieceID, err error) {
 	defer mon.Task()(&ctx)(&err)
-	pieceID := storj.NewPieceID()
+	var pieceID storj.PieceID
+	if d.PieceID == "" {
+		pieceID = storj.NewPieceID()
+	} else {
+		pieceID, err = storj.PieceIDFromString(d.PieceID)
+		if err != nil {
+			return 0, pieceID, errs.Wrap(err)
+		}
+	}
 
 	if d.NoSync {
 		ctx = experiment.With(ctx, "nosync")
