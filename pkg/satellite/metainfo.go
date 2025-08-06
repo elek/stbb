@@ -21,6 +21,16 @@ type Metainfo struct {
 	identity *identity.FullIdentity
 }
 
+func (m *Metainfo) GetBucketTagging(ctx context.Context, request *pb.GetBucketTaggingRequest) (*pb.GetBucketTaggingResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Metainfo) SetBucketTagging(ctx context.Context, request *pb.SetBucketTaggingRequest) (*pb.SetBucketTaggingResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *Metainfo) DeleteObjects(ctx context.Context, request *pb.DeleteObjectsRequest) (*pb.DeleteObjectsResponse, error) {
 	panic("implement me")
 }

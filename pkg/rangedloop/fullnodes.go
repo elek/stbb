@@ -23,7 +23,7 @@ type FullSelectedNode struct {
 func GetParticipatingNodes(ctx context.Context, db tagsql.DB) (records []*FullSelectedNode, err error) {
 	var nodes []*FullSelectedNode
 
-	err = withRows(db.Query(ctx, `
+	err = withRows(db.QueryContext(ctx, `
 		SELECT id, address, last_net, last_ip_port, country_code,
 			last_contact_success > $1 AS online,
 			(offline_suspended IS NOT NULL OR unknown_audit_suspended IS NOT NULL) AS suspended,

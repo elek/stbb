@@ -156,7 +156,7 @@ func (n *SelectPool) Run() (err error) {
 	if selection == 0 {
 		selection = 110
 	}
-	success := placements[n.Placement].EC.Success
+	success := placements[n.Placement].EC.Success(placements[n.Placement].EC.Minimum)
 	if success == 0 {
 		success = 65
 	}
