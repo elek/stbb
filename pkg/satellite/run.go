@@ -5,9 +5,12 @@ import (
 	"crypto/tls"
 	_ "embed"
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs/v2"
-	"net"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/peertls/tlsopts"
@@ -15,8 +18,6 @@ import (
 	"storj.io/drpc/drpcmigrate"
 	"storj.io/drpc/drpcmux"
 	"storj.io/drpc/drpcserver"
-	"strings"
-	"time"
 )
 
 type NodeEndpoint struct {
@@ -42,7 +43,7 @@ func (s *NodeEndpoint) CheckIn(ctx context.Context, req *pb.CheckInRequest) (*pb
 		}
 
 	}
-	fmt.Println("Node checked in", req.Address, req.Capacity.FreeDisk, strings.Join(printTags, ","))
+	fmt.Println("Node checked in", req.Address, req.Capacity.FreeDisk, strings.Join(printTags, ","), "features:", req.Features)
 	return &pb.CheckInResponse{
 		PingNodeSuccess: true,
 	}, nil
@@ -147,7 +148,7 @@ type Run struct {
 func (r Run) Run() error {
 	ctx := context.Background()
 	ident, err := identity.FullIdentityFromPEM(util.Certificate, util.Key)
-	fmt.Print("Starting ", ident.ID.String()+"@localhost:5656")
+	fmt.Println("Starting ", ident.ID.String()+"@localhost:5656")
 	if err != nil {
 		return errs.Wrap(err)
 	}
