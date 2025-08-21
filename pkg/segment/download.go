@@ -3,13 +3,15 @@ package segment
 import (
 	"context"
 	"fmt"
+	"math"
+	"os"
+	"path/filepath"
+
 	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"os"
-	"path/filepath"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
@@ -108,11 +110,12 @@ func (s *Download) Run() error {
 		}
 
 		client := pb.NewDRPCPiecestoreClient(util.NewTracedConnection(conn))
+		size := int64(math.Ceil(float64(segment.EncryptedSize)/float64(segment.Redundancy.RequiredShares)/float64(segment.Redundancy.ShareSize))) * int64(segment.Redundancy.ShareSize)
 
 		_, _, err = util.DownloadPiece(ctx, client, keySigner, util.DownloadRequest{
 			PieceID:     pieceID,
 			Storagenode: snURL,
-			Size:        int64(segment.EncryptedSize)/int64(segment.Redundancy.RequiredShares) + 256,
+			Size:        size,
 			SatelliteID: ident.ID,
 		}, func(bytes []byte, hash *pb.PieceHash, ol *pb.OrderLimit) {
 			err := os.WriteFile(outFile, bytes, 0644)
