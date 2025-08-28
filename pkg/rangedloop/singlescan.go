@@ -2,11 +2,12 @@ package rangedloop
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/pkg/errors"
 	"storj.io/common/uuid"
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
-	"storj.io/storj/shared/tagsql"
 )
 
 type FullScan struct {
@@ -47,88 +48,36 @@ func (s *SQLProvider) Range() rangedloop.UUIDRange {
 }
 
 func (s *SQLProvider) Iterate(ctx context.Context, fn func([]rangedloop.Segment) error) error {
-	panic("TODO: reimplement this with using Adapter")
-	//aliasMap, err := s.conn.LatestNodesAliasMap(ctx)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//query := `select
-	//stream_id, position,
-	//		created_at, expires_at, repaired_at,
-	//		root_piece_id,
-	//		encrypted_size,
-	//		plain_offset, plain_size,
-	//		redundancy,
-	//		remote_alias_pieces,
-	//		placement FROM segments WHERE segments.position is not null AND segments.remote_alias_pieces is not null`
-	//
-	//var args []interface{}
-	//switch s.scanType {
-	//case "test":
-	//	query += " LIMIT 100"
-	//case "placement":
-	//	query += " AND segments.placement = $1"
-	//	args = append(args, storj.PlacementConstraint(12))
-	//default:
-	//}
-	//fmt.Println("executing", query)
-	//rows, err := s.conn.UnderlyingTagSQL().QueryContext(context.Background(), query, args...)
-	//if err != nil {
-	//	return errors.WithStack(err)
-	//}
-	//defer rows.Close()
-	//segments := make([]rangedloop.Segment, 0, 1000)
-	//for rows.Next() {
-	//	p := metabase.LoopSegmentEntry{}
-	//	err := scanItem(ctx, aliasMap, rows, &p)
-	//	if err != nil {
-	//		return errors.WithStack(err)
-	//	}
-	//	segments = append(segments, rangedloop.Segment(p))
-	//	if len(segments) > 1000 {
-	//		err := fn(segments)
-	//		if err != nil {
-	//			return err
-	//		}
-	//		segments = segments[:0]
-	//	}
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//err = fn(segments)
-	//if err != nil {
-	//	return err
-	//}
+	ix := 0
+	err := s.conn.IterateLoopSegments(ctx, metabase.IterateLoopSegments{
+		BatchSize: 10,
+	}, func(ctx context.Context, iterator metabase.LoopSegmentsIterator) error {
+		var segments []rangedloop.Segment
+		var entry metabase.LoopSegmentEntry
+		for iterator.Next(ctx, &entry) {
+
+			if entry.Inline() {
+				continue
+			}
+			ix++
+			fmt.Println(entry.StreamID)
+			segments = append(segments, rangedloop.Segment(entry))
+			if ix > 8 {
+				break
+			}
+		}
+		err := fn(segments)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 var _ rangedloop.SegmentProvider = &SQLProvider{}
-
-func scanItem(ctx context.Context, aliasMap *metabase.NodeAliasMap, row tagsql.Rows, item *metabase.LoopSegmentEntry) error {
-	err := row.Scan(
-		&item.StreamID, &item.Position,
-		&item.CreatedAt, &item.ExpiresAt, &item.RepairedAt,
-		&item.RootPieceID,
-		&item.EncryptedSize,
-		&item.PlainOffset, &item.PlainSize,
-		redundancyScheme{&item.Redundancy},
-		&item.AliasPieces,
-		&item.Placement,
-	)
-	for _, piece := range item.AliasPieces {
-		sn, _ := aliasMap.Node(piece.Alias)
-		item.Pieces = append(item.Pieces, metabase.Piece{
-			Number:      piece.Number,
-			StorageNode: sn,
-		})
-	}
-	if err != nil {
-		return errors.WithMessage(err, "failed to scan segments: %w")
-	}
-
-	return nil
-}

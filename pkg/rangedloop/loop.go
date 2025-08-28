@@ -3,16 +3,17 @@ package rangedloop
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
-	"strings"
-	"time"
 )
 
 type RangedLoop struct {
@@ -20,9 +21,11 @@ type RangedLoop struct {
 	ScanType  string `default:"full"`
 	ScanParam int
 
-	Parallelism      int `default:"1"`
-	NodeID           string
-	CheckerThreshold *int
+	Parallelism int `default:"1"`
+
+	NodeID           string                     `help:"set a NodeID to generate a piece list report"`
+	CheckerThreshold *int                       `help:"set a normalized health threshold to do a durability check"`
+	Placement        *storj.PlacementConstraint `help:"set a placement constraint to calculate used space for"`
 	Output           string
 
 	BackupBucket   string
@@ -102,6 +105,10 @@ func (r RangedLoop) Run() error {
 		}
 
 		observers = append(observers, NewChecker(selectedNodes, *r.CheckerThreshold))
+	}
+
+	if r.Placement != nil {
+		observers = append(observers, NewUsedSpace(*r.Placement))
 	}
 
 	switch r.ScanType {
