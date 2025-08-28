@@ -10,13 +10,15 @@ import (
 )
 
 type UsedSpace struct {
-	placement storj.PlacementConstraint
-	size      int
+	placement     storj.PlacementConstraint
+	preExpansion  int
+	postExpansion int
 }
 
 type UsedSpaceFork struct {
-	placement storj.PlacementConstraint
-	size      int
+	placement     storj.PlacementConstraint
+	preExpansion  int
+	postExpansion int
 }
 
 func NewUsedSpace(placement storj.PlacementConstraint) *UsedSpace {
@@ -38,12 +40,13 @@ func (p *UsedSpace) Fork(ctx context.Context) (rangedloop.Partial, error) {
 }
 
 func (p *UsedSpace) Join(ctx context.Context, partial rangedloop.Partial) error {
-	p.size += partial.(*UsedSpaceFork).size
+	p.preExpansion += partial.(*UsedSpaceFork).preExpansion
+	p.postExpansion += partial.(*UsedSpaceFork).postExpansion
 	return nil
 }
 
 func (p *UsedSpace) Finish(ctx context.Context) error {
-	fmt.Println("Used space for placement", p.placement, "is", p.size, "bytes")
+	fmt.Printf("Used space for placement %d is: pre-expansion=%d, post-expansion=%d, ratio=%f.2", p.placement, p.preExpansion, p.postExpansion, float64(p.postExpansion)/float64(p.preExpansion))
 	return nil
 }
 
@@ -52,7 +55,8 @@ func (p *UsedSpaceFork) Process(ctx context.Context, segments []rangedloop.Segme
 		if segment.Placement != p.placement {
 			continue
 		}
-		p.size += int(segment.EncryptedSize)
+		p.preExpansion += int(segment.EncryptedSize)
+		p.postExpansion += int(segment.PieceSize()) * len(segment.Pieces)
 
 	}
 	return nil
