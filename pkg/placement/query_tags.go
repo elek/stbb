@@ -9,6 +9,7 @@ type QueryTags struct {
 	Tags           []string `help:"the tags to query for, separated by commas"`
 	SelfSignedTags []string `help:"the self signed tags to query for, separated by commas"`
 	QueryEnd       string   `help:"the query end, default is empty"`
+	Fields         []string `help:"the node table fields to return (node_id is always added)" default:""`
 }
 
 func (q QueryTags) Run() error {
@@ -23,6 +24,10 @@ func (q QueryTags) Run() error {
 	}
 
 	what := "node_with_tags.id as node_id"
+	for _, field := range q.Fields {
+		what += ",node_with_tags." + field + " as " + field
+	}
+
 	for tag, authoritive := range tags {
 		signer := "FROM_HEX('0000000000000000000000000000000000000000000000000000000000000100')"
 		if !authoritive {
