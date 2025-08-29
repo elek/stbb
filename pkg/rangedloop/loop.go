@@ -23,10 +23,14 @@ type RangedLoop struct {
 
 	Parallelism int `default:"1"`
 
-	NodeID           string                     `help:"set a NodeID to generate a piece list report"`
-	CheckerThreshold *int                       `help:"set a normalized health threshold to do a durability check"`
-	Placement        *storj.PlacementConstraint `help:"set a placement constraint to calculate used space for"`
-	Output           string
+	NodeID string `help:"set a NodeID to generate a piece list report"`
+
+	CheckerThreshold *int `help:"set a normalized health threshold to do a durability check"`
+
+	Placement  *storj.PlacementConstraint `help:"set a placement constraint to calculate used space for"`
+	Expiration time.Time                  `help:"set an expiration time to limit the scan to segments expiring before this time, format: 2006-01-02T15:04:05Z07:00"`
+
+	Output string
 
 	BackupBucket   string
 	BackupDatabase string
@@ -108,7 +112,7 @@ func (r RangedLoop) Run() error {
 	}
 
 	if r.Placement != nil {
-		observers = append(observers, NewUsedSpace(*r.Placement))
+		observers = append(observers, NewUsedSpace(*r.Placement, r.Expiration))
 	}
 
 	switch r.ScanType {
@@ -135,9 +139,9 @@ func (r RangedLoop) Run() error {
 	case "avro":
 		segmentPattern := fmt.Sprintf("%s*/%s/%s-*/segments.avro-*", r.BackupDay, r.BackupDatabase, r.Instance)
 		segmentsAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, segmentPattern)
-		metainfoPattern := fmt.Sprintf("%s*/%s/%s-*/node_aliases.avro-*", r.BackupDay, "metainfo", r.Instance)
-		fmt.Println("Reading backup from", r.BackupBucket, segmentPattern, metainfoPattern)
-		nodeAliasesAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, metainfoPattern)
+		nodeAliasPattern := fmt.Sprintf("%s*/%s/%s-*/node_aliases.avro-*", r.BackupDay, "metainfo", r.Instance)
+		fmt.Println("Reading backup from", r.BackupBucket, segmentPattern, nodeAliasPattern)
+		nodeAliasesAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, nodeAliasPattern)
 		provider = rangedloop.NewAvroSegmentsSplitter(segmentsAvroIterator, nodeAliasesAvroIterator)
 	}
 	service := rangedloop.NewService(log.Named("rangedloop"), cfg, provider, observers)
