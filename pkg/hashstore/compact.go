@@ -2,12 +2,19 @@ package hashstore
 
 import (
 	"context"
+	"path/filepath"
+	"time"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"path/filepath"
 	"storj.io/storj/storagenode/hashstore"
-	"time"
 )
+
+var DefaultMMapcfg = hashstore.MmapCfg{}
+var DefaultHashstoreConfig = hashstore.Config{
+	LogsPath:  "hashstore",
+	TablePath: "hashstore",
+}
 
 type Compact struct {
 	WithHashstore
@@ -23,7 +30,7 @@ func (i *Compact) Run() error {
 
 	metaFile, logDir := i.GetPath()
 
-	store, err := hashstore.NewStore(ctx, logDir, filepath.Dir(metaFile), log)
+	store, err := hashstore.NewStore(ctx, DefaultHashstoreConfig, logDir, filepath.Dir(metaFile), log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

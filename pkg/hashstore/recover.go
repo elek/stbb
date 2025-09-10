@@ -3,12 +3,13 @@ package hashstore
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
-	"storj.io/storj/storagenode/hashstore"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"storj.io/storj/storagenode/hashstore"
 )
 
 type Recover struct {
@@ -32,7 +33,7 @@ func (n *Recover) Run() (err error) {
 	}
 	defer tblFile.Close()
 
-	tbl, err := hashstore.CreateTable(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()), hashstore.TableKind(n.Kind))
+	tbl, err := hashstore.CreateTable(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()), hashstore.TableKind(n.Kind), DefaultHashstoreConfig)
 	if err != nil {
 		return errors.WithStack(err)
 	}

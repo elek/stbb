@@ -3,18 +3,19 @@ package hashstore
 import (
 	"context"
 	"encoding/binary"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
 	"storj.io/storj/storagenode/blobstore"
 	"storj.io/storj/storagenode/blobstore/filestore"
 	"storj.io/storj/storagenode/piecestore"
-	"strings"
-	"time"
 )
 
 type Convert struct {
@@ -45,7 +46,7 @@ func (i *Convert) Run() error {
 	dest := filepath.Join(destDir, "hashstore")
 	_ = os.MkdirAll(dest, 0755)
 
-	op, err := piecestore.NewHashStoreBackend(ctx, dest, "", nil, nil, log)
+	op, err := piecestore.NewHashStoreBackend(ctx, DefaultHashstoreConfig, dest, "", nil, nil, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}

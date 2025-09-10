@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
-	"storj.io/common/storj"
-	"storj.io/storj/storagenode/hashstore"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"storj.io/common/storj"
+	"storj.io/storj/storagenode/hashstore"
 )
 
 type Audit struct {
@@ -47,7 +48,7 @@ func (a *Audit) Run() error {
 		}
 		fls = append(fls, f)
 
-		tbl, err := hashstore.OpenTable(ctx, f)
+		tbl, err := hashstore.OpenTable(ctx, f, DefaultHashstoreConfig)
 		if err != nil {
 			return errors.WithStack(err)
 		}

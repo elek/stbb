@@ -2,11 +2,12 @@ package hashstore
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
-	"storj.io/storj/storagenode/hashstore"
 	"strings"
+
+	"github.com/pkg/errors"
+	"storj.io/storj/storagenode/hashstore"
 )
 
 type WithHashtable struct {
@@ -38,7 +39,7 @@ func (w WithHashtable) openPath(ctx context.Context, path string) (hashstore.Tbl
 		if err != nil {
 			return nil, func() error { return nil }, errors.WithStack(err)
 		}
-		tbl, err := hashstore.OpenTable(ctx, o)
+		tbl, err := hashstore.OpenTable(ctx, o, DefaultHashstoreConfig)
 		return tbl, func() error {
 			_ = tbl.Close
 			return o.Close()

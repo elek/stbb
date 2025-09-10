@@ -35,13 +35,13 @@ require (
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20250806091210-9be884dd18bc
+	storj.io/common v0.0.0-20250905132913-dad2ec895b75
 	storj.io/drpc v0.0.35-0.20250513201419-f7819ea69b55
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20250523220404-454c1b072fad
-	storj.io/storj v1.91.0-alpha.0.20250807185557-379b2802395a
-	storj.io/uplink v1.13.2-0.20250804125839-51325a0f2ff6
+	storj.io/storj v1.91.0-alpha.0.20250909154855-c1a70c5bcca8
+	storj.io/uplink v1.13.2-0.20250807183920-f49c2319cb74
 )
 
 require (

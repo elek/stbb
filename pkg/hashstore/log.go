@@ -3,16 +3,17 @@ package hashstore
 import (
 	"context"
 	"fmt"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/pkg/errors"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
-	"storj.io/common/memory"
-	"storj.io/storj/storagenode/hashstore"
 	"strconv"
 	"time"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/pkg/errors"
+	"storj.io/common/memory"
+	"storj.io/storj/storagenode/hashstore"
 )
 
 type Logs struct {
@@ -27,7 +28,7 @@ func (l *Logs) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hashtbl, err := hashstore.OpenTable(ctx, f)
+	hashtbl, err := hashstore.OpenTable(ctx, f, DefaultHashstoreConfig)
 	if err != nil {
 		return errors.WithStack(err)
 	}
