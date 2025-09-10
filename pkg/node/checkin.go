@@ -3,11 +3,12 @@ package node
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/elek/stbb/pkg/util"
 	"storj.io/common/pb"
 	"storj.io/common/rpc"
 	"storj.io/common/storj"
-	"time"
 )
 
 type Checkin struct {
@@ -40,19 +41,28 @@ func (c *Checkin) Run() error {
 	resp, err := client.CheckIn(ctx, &pb.CheckInRequest{
 		Address: c.ExternalAddress,
 		Capacity: &pb.NodeCapacity{
-			FreeDisk: 100000000,
+			FreeDisk: 10000000000,
 		},
 		Operator: &pb.NodeOperator{
-			Email: "asd@asd.com",
+			Email: "stbb@storj.io",
 		},
 		Version: &pb.NodeVersion{
-			Version:   "latest & greatest",
+			Version:   "1.200.0",
 			Timestamp: time.Now(),
 		},
 	})
 	if err != nil {
 		return err
 	}
-	fmt.Println(resp)
+	fmt.Println("err:", resp.PingErrorMessage)
+	if resp.HashstoreSettings != nil {
+		fmt.Println("hashstore")
+		fmt.Println("active migrate:", resp.HashstoreSettings.ActiveMigrate)
+		fmt.Println("passive migrate", resp.HashstoreSettings.PassiveMigrate)
+		fmt.Println("read new first", resp.HashstoreSettings.ReadNewFirst)
+		fmt.Println("write to new", resp.HashstoreSettings.WriteToNew)
+		fmt.Println("read new first", resp.HashstoreSettings.ReadNewFirst)
+
+	}
 	return nil
 }
