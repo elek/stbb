@@ -2,36 +2,32 @@ package placement
 
 import (
 	"context"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/elek/stbb/pkg/db"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/overlay"
-	"strings"
-	"time"
 )
 
 type List struct {
 	db.WithDatabase
-	PlacementConfig string   `help:"location of the placement file"`
-	Placement       int      `help:"placement to use"`
-	Attributes      []string `help:"node attributes to print out"`
-	Filter          string   `help:"additional display only node filter"`
+	WithPlacement
+	Placement  int      `help:"placement to use"`
+	Attributes []string `help:"node attributes to print out"`
+	Filter     string   `help:"additional display only node filter"`
 }
 
 func (s List) Run() error {
 	ctx := context.Background()
 
 	log, err := zap.NewDevelopment()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	d, err := nodeselection.LoadConfig(s.PlacementConfig, nodeselection.NewPlacementConfigEnvironment(nil, nil))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -71,7 +67,12 @@ func (s List) Run() error {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
+	d, err := s.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(nil, nil))
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	filter, _ := d.CreateFilters(storj.PlacementConstraint(s.Placement))
+
 	row := table.Row{}
 	row = append(row, "node_id")
 	for _, attr := range attributes {
