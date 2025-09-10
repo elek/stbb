@@ -36,7 +36,8 @@ func (p *UsedSpace) Start(ctx context.Context, time time.Time) (err error) {
 
 func (p *UsedSpace) Fork(ctx context.Context) (rangedloop.Partial, error) {
 	res := &UsedSpaceFork{
-		placement: p.placement,
+		placement:  p.placement,
+		expiration: p.expiration,
 	}
 	return res, nil
 
