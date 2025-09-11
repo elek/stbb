@@ -3,8 +3,9 @@ package jobq
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 	"storj.io/common/identity"
 	"storj.io/common/peertls/tlsopts"
 	"storj.io/common/storj"
@@ -17,6 +18,7 @@ type Stat struct {
 	WithHistogram bool   `help:"Include raw histogram data in the output (all records)."`
 	Histogram     string `help:"Include histogram data in the output (healthy,retrievable,oop)."`
 	Placement     *int
+	Retry         bool
 }
 
 func (s *Stat) Run() error {
@@ -70,7 +72,13 @@ func (s *Stat) Run() error {
 		stats = append(stats, result)
 	}
 
-	for _, stat := range stats {
+	for ix, stat := range stats {
+		if s.Retry && ix%2 == 0 {
+			continue
+		}
+		if !s.Retry && ix%2 == 1 {
+			continue
+		}
 		fmt.Println("Placement", stat.Placement)
 		fmt.Println("Count", stat.Count)
 		fmt.Println("MaxSegmentHealth", stat.MaxSegmentHealth)
