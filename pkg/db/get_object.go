@@ -1,10 +1,10 @@
-package metabase
+package db
 
 import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/elek/stbb/pkg/db"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"storj.io/common/uuid"
@@ -12,7 +12,7 @@ import (
 )
 
 type GetObject struct {
-	db.WithDatabase
+	WithDatabase
 	ProjectID     uuid.UUID `arg:""`
 	Bucket        string    `arg:""`
 	EncryptedPath string    `arg:""`

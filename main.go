@@ -3,6 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net"
+	"os"
+	"reflect"
+	"runtime"
+	"runtime/debug"
+	"runtime/pprof"
+	"strings"
+	"sync"
+
 	"github.com/alecthomas/kong"
 	stbb "github.com/elek/stbb/pkg"
 	"github.com/elek/stbb/pkg/access"
@@ -12,11 +22,11 @@ import (
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/config"
 	"github.com/elek/stbb/pkg/crypto"
+	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/downloadng"
 	"github.com/elek/stbb/pkg/hashstore"
 	"github.com/elek/stbb/pkg/jobq"
 	"github.com/elek/stbb/pkg/load"
-	"github.com/elek/stbb/pkg/metabase"
 	"github.com/elek/stbb/pkg/metainfo"
 	"github.com/elek/stbb/pkg/node"
 	"github.com/elek/stbb/pkg/nodeid"
@@ -33,18 +43,9 @@ import (
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
-	"net"
-	"os"
-	"reflect"
-	"runtime"
-	"runtime/debug"
-	"runtime/pprof"
 	dbg "storj.io/common/debug"
 	"storj.io/common/storj"
 	jaeger "storj.io/monkit-jaeger"
-	"strings"
-	"sync"
 )
 
 func main() {
@@ -174,7 +175,7 @@ func main() {
 		IOTest      IOTest                  `cmd:""`
 		Placement   placement.Placement     `cmd:"placement (and node selection) based helpers"`
 		BadgerGet   authservice.ReadAuth    `cmd:"" help:"read grant from Badger based authservice database"`
-		Metabase    metabase.Metabase       `cmd:"" help:"Raw metabase db related helpers"`
+		Db          db.Db                   `cmd:"" help:"Raw DB helpers (mostly getters with metabase/satelltiedb"`
 		Admin       admin.Admin             `cmd:"" help:"helper commands, similar to the admin interface"`
 		Hashstore   hashstore.Hashstore     `cmd:"" help:"commands related to the new hashtable based store"`
 		Audit       audit.Audit             `cmd:"" help:"commands related to the audit subsystem"`

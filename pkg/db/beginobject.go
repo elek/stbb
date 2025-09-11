@@ -1,15 +1,16 @@
-package metabase
+package db
 
 import (
 	"context"
+	"os"
+	"time"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/common/storj"
 	"storj.io/common/testrand"
 	"storj.io/common/uuid"
 	"storj.io/storj/satellite/metabase"
-	"time"
 )
 
 type BeginObject struct {

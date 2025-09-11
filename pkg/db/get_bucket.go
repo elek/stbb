@@ -1,4 +1,4 @@
-package metabase
+package db
 
 import (
 	"context"
@@ -6,14 +6,13 @@ import (
 	"os"
 
 	access2 "github.com/elek/stbb/pkg/access"
-	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"storj.io/common/uuid"
 )
 
 type GetBucket struct {
-	db.WithDatabase
+	WithDatabase
 	ProjectID uuid.UUID `help:"the project ID. Keep it empty and set UPLINK_ACCESS env var to use the project ID from the access grant"`
 	Bucket    string    `arg:""`
 }
