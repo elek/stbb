@@ -3,22 +3,25 @@ package placement
 import (
 	"context"
 	"fmt"
+	"math/rand"
+
 	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"math/rand"
 	"storj.io/common/testrand"
 	"storj.io/storj/satellite/metainfo"
 
-	"go.uber.org/zap"
 	"sort"
+
+	"go.uber.org/zap"
 	"storj.io/common/memory"
 	"storj.io/common/storj"
 
-	"storj.io/storj/satellite/nodeselection"
-	"storj.io/storj/satellite/overlay"
 	"strings"
 	"time"
+
+	"storj.io/storj/satellite/nodeselection"
+	"storj.io/storj/satellite/overlay"
 )
 
 type SelectPool struct {
@@ -156,9 +159,9 @@ func (n *SelectPool) Run() (err error) {
 	if selection == 0 {
 		selection = 110
 	}
-	success := placements[n.Placement].EC.Success(placements[n.Placement].EC.Minimum)
-	if success == 0 {
-		success = 65
+	success := 65
+	if placements[n.Placement].EC.Success != nil {
+		success = placements[n.Placement].EC.Success(placements[n.Placement].EC.Minimum)
 	}
 
 	sum := 0
