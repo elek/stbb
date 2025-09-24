@@ -36,7 +36,6 @@ import (
 	"github.com/elek/stbb/pkg/rpc"
 	"github.com/elek/stbb/pkg/sandbox"
 	"github.com/elek/stbb/pkg/satellite"
-	"github.com/elek/stbb/pkg/satellitedb"
 	"github.com/elek/stbb/pkg/segment"
 	"github.com/elek/stbb/pkg/store"
 	"github.com/elek/stbb/pkg/uplink"
@@ -153,34 +152,34 @@ func main() {
 	defer initSignal()()
 
 	var cli struct {
-		Load        load.Load               `cmd:"" help:"Various load tests"`
-		Uplink      uplink.Uplink           `cmd:"" help:"Uplink based upload/download tests"`
-		Piece       piece.Piece             `cmd:""`
-		Nodeid      nodeid.NodeID           `cmd:""`
-		Node        node.Node               `cmd:""`
-		Satellite   satellite.Satellite     `cmd:""`
-		Downloadng  downloadng.DownloadCmd  `cmd:""`
-		Telemetry   stbb.TelemetryReceiver  `cmd:""`
-		Version     Version                 `cmd:""`
-		Access      access.AccessCmd        `cmd:""`
-		RPC         rpc.RPC                 `cmd:""`
-		Crypto      crypto.Crypto           `cmd:""`
-		GeoIP       GeoIP                   `cmd:""`
-		RangedLoop  rangedloop.RangedLoop   `cmd:""`
-		Sandbox     sandbox.Sandbox         `cmd:""`
-		Segment     segment.Segment         `cmd:""`
-		Metainfo    metainfo.Metainfo       `cmd:""`
-		Bloom       bloom.Bloom             `cmd:"helpers to process bloom filters"`
-		Store       store.Store             `cmd:""`
-		IOTest      IOTest                  `cmd:""`
-		Placement   placement.Placement     `cmd:"placement (and node selection) based helpers"`
-		BadgerGet   authservice.ReadAuth    `cmd:"" help:"read grant from Badger based authservice database"`
-		Db          db.Db                   `cmd:"" help:"Raw DB helpers (mostly getters with metabase/satelltiedb"`
-		Admin       admin.Admin             `cmd:"" help:"helper commands, similar to the admin interface"`
-		Hashstore   hashstore.Hashstore     `cmd:"" help:"commands related to the new hashtable based store"`
-		Audit       audit.Audit             `cmd:"" help:"commands related to the audit subsystem"`
-		Jobq        jobq.Jobq               `cmd:"" help:"jobq related helper commands"`
-		SatelliteDB satellitedb.SatelliteDB `cmd:"" help:"queries and updates related to the satellite database"`
+		Load       load.Load              `cmd:"" help:"Various load tests"`
+		Uplink     uplink.Uplink          `cmd:"" help:"Uplink based upload/download tests"`
+		Piece      piece.Piece            `cmd:""`
+		Nodeid     nodeid.NodeID          `cmd:""`
+		Node       node.Node              `cmd:""`
+		Satellite  satellite.Satellite    `cmd:""`
+		Downloadng downloadng.DownloadCmd `cmd:""`
+		Telemetry  stbb.TelemetryReceiver `cmd:""`
+		Version    Version                `cmd:""`
+		Access     access.AccessCmd       `cmd:""`
+		RPC        rpc.RPC                `cmd:""`
+		Crypto     crypto.Crypto          `cmd:""`
+		GeoIP      GeoIP                  `cmd:"" help:"geoip related helpers"`
+		RangedLoop rangedloop.RangedLoop  `cmd:""`
+		Sandbox    sandbox.Sandbox        `cmd:"" hidden:"true"`
+		Segment    segment.Segment        `cmd:""`
+		Metainfo   metainfo.Metainfo      `cmd:""`
+		Bloom      bloom.Bloom            `cmd:"helpers to process bloom filters"`
+		Store      store.Store            `cmd:""`
+		IOTest     IOTest                 `cmd:""`
+		Placement  placement.Placement    `cmd:"placement (and node selection) based helpers"`
+		BadgerGet  authservice.ReadAuth   `cmd:"" help:"read grant from Badger based authservice database"`
+		Db         db.Db                  `cmd:"" help:"Raw DB helpers (mostly getters with metabase/satelltiedb"`
+		Admin      admin.Admin            `cmd:"" help:"helper commands, similar to the admin interface"`
+		Hashstore  hashstore.Hashstore    `cmd:"" help:"commands related to the new hashtable based store"`
+		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
+		Jobq       jobq.Jobq              `cmd:"" help:"jobq related helper commands"`
+		Rollout    Rollout                `cmd:"" help:"check rollout status of version.storj.io"`
 	}
 
 	ctx := kong.Parse(&cli,
