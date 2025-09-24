@@ -1,17 +1,17 @@
-package satellitedb
+package db
 
 import (
 	"context"
 	"fmt"
-	"github.com/elek/stbb/pkg/db"
+	"time"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"storj.io/common/uuid"
-	"time"
 )
 
 type ListProjects struct {
-	db.WithDatabase
+	WithDatabase
 	ProjectID     uuid.UUID `arg:""`
 	Bucket        string    `arg:""`
 	EncryptedPath string    `arg:""`

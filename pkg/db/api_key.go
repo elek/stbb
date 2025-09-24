@@ -1,18 +1,18 @@
-package satellitedb
+package db
 
 import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"os"
+
 	"github.com/elek/stbb/pkg/access"
-	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 )
 
 type ApiKey struct {
-	db.WithDatabase
+	WithDatabase
 	WithSecret bool
 }
 
