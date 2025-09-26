@@ -1,8 +1,9 @@
-package satellite
+package node
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
 	"storj.io/common/pb"
