@@ -37,7 +37,6 @@ func (n *Recover) Run() (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer tbl.Close()
 
 	return filepath.Walk(n.Dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
