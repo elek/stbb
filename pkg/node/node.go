@@ -8,6 +8,7 @@ type Node struct {
 	Usage        Usage        `cmd:"" help:"calls the info endpoint of the satellite in the name of the storagenode (sn->satellite RPC)"`
 	Time         Time         `cmd:"" help:"Get time of the satellite (sn->satellite)"`
 	Paystub      Paystub      `cmd:"" help:"Get paystub from satellite (sn->satellite RPC)"`
+	Stats        Stats        `cmd:"" help:"Get stats from satellite (sn->satellite RPC)"`
 
 	Enrich Enrich `cmd:"" help:"enrich node information with metadata from the satellite"`
 
