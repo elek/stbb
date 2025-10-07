@@ -7,4 +7,5 @@ type Db struct {
 	GetNode      GetNode      `cmd:"" help:"get node from satellite db by node ID"`
 	ListProjects ListProjects `cmd:"" help:"List projects."`
 	ApiKey       ApiKey       `cmd:"" help:"Print details of current api key (including project id)"`
+	GetUser      GetUser      `cmd:"" help:"Print details of a user"`
 }
