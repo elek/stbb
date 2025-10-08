@@ -3,7 +3,11 @@ package segment
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/elek/stbb/pkg/db"
+	"github.com/elek/stbb/pkg/placement"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
@@ -13,14 +17,13 @@ import (
 	"storj.io/storj/satellite/nodeselection"
 	"storj.io/storj/satellite/repair"
 	"storj.io/storj/shared/location"
-	"strings"
-	"time"
 )
 
 type Classify struct {
 	db.WithDatabase
-	StreamID      string `arg:""`
-	PlacementFile string
+	placement.WithPlacement
+	StreamID       string `arg:""`
+	PlacementCheck bool   `help:"Check placement rules" default:"true"`
 }
 
 func (s *Classify) Run() error {
@@ -92,20 +95,12 @@ func (s *Classify) Run() error {
 		}
 
 		var placement nodeselection.Placement
-		doPlacementCheck := false
-		if s.PlacementFile != "" {
-			doPlacementCheck = true
-			c := nodeselection.ConfigurablePlacementRule{
-				PlacementRules: s.PlacementFile,
-			}
-			def, err := c.Parse(func() (nodeselection.Placement, error) {
-				panic("default placement shouldn't be used")
-			}, nodeselection.NewPlacementConfigEnvironment(nil, nil))
-			if err != nil {
-				return errs.Wrap(err)
-			}
-			placement = def[segment.Placement]
+
+		placements, err := s.GetPlacement(nodeselection.NewPlacementConfigEnvironment(nil, nil))
+		if err != nil {
+			return errs.Wrap(err)
 		}
+		placement = placements[segment.Placement]
 
 		fmt.Println("segment", segment.StreamID)
 		fmt.Println("placement", segment.Placement)
@@ -114,8 +109,8 @@ func (s *Classify) Run() error {
 			segment.Pieces,
 			selectedNodes,
 			map[location.CountryCode]struct{}{},
-			doPlacementCheck,
-			doPlacementCheck,
+			s.PlacementCheck,
+			s.PlacementCheck,
 			placement)
 		fmt.Println("redundancy", fmt.Sprintf("%d/(%d)/%d/%d", segment.Redundancy.RequiredShares, segment.Redundancy.RepairShares, segment.Redundancy.OptimalShares, segment.Redundancy.TotalShares))
 		fmt.Println("repaired_at", segment.RepairedAt)
@@ -154,9 +149,6 @@ func getStatus(result repair.PiecesCheckResult, number int) string {
 	}
 	if result.Suspended.Contains(number) {
 		st = append(st, "suspended")
-	}
-	if result.Clumped.Contains(number) {
-		st = append(st, "clumped")
 	}
 	if result.Retrievable.Contains(number) {
 		st = append(st, "retrievable")
