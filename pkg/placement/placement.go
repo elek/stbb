@@ -19,6 +19,7 @@ type Placement struct {
 	Score        Score        `cmd:"" help:"print out node scores"`
 	Replicasets  Replicasets  `cmd:"" help:"experiments with replicasets"`
 	DownloadPool DownloadPool `cmd:"" help:"test download pool, with requesting downloads from satellite and classify received nodes"`
+	Download     Download     `cmd:"" help:"initiate a download request and print out the selected nodes (using satellite)"`
 }
 
 type WithPlacement struct {
