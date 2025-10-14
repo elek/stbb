@@ -71,7 +71,17 @@ func (s List) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	filter, _ := d.CreateFilters(storj.PlacementConstraint(s.Placement))
+	placement := d[storj.PlacementConstraint(s.Placement)]
+
+	uploadFilter := placement.UploadFilter
+	if uploadFilter == nil {
+		uploadFilter = nodeselection.AnyFilter{}
+	}
+
+	filter := nodeselection.NodeFilters{
+		placement.NodeFilter,
+		uploadFilter,
+	}
 
 	row := table.Row{}
 	row = append(row, "node_id")
