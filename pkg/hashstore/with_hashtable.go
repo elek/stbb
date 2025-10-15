@@ -39,7 +39,7 @@ func (w WithHashtable) openPath(ctx context.Context, path string) (hashstore.Tbl
 		if err != nil {
 			return nil, func() error { return nil }, errors.WithStack(err)
 		}
-		tbl, err := hashstore.OpenTable(ctx, o, DefaultHashstoreConfig)
+		tbl, err := hashstore.OpenTable(ctx, o, hashstore.CreateDefaultConfig(0, false))
 		return tbl, func() error {
 			_ = tbl.Close
 			return o.Close()

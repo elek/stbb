@@ -48,7 +48,7 @@ func (a *Audit) Run() error {
 		}
 		fls = append(fls, f)
 
-		tbl, err := hashstore.OpenTable(ctx, f, DefaultHashstoreConfig)
+		tbl, err := hashstore.OpenTable(ctx, f, hashstore.CreateDefaultConfig(0, false))
 		if err != nil {
 			return errors.WithStack(err)
 		}

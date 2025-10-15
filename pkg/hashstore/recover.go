@@ -33,7 +33,7 @@ func (n *Recover) Run() (err error) {
 	}
 	defer tblFile.Close()
 
-	tbl, err := hashstore.CreateTable(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()), hashstore.TableKind(n.Kind), DefaultHashstoreConfig)
+	tbl, err := hashstore.CreateTable(ctx, tblFile, uint64(n.Size), hashstore.TimeToDateDown(time.Now()), hashstore.TableKind(n.Kind), hashstore.CreateDefaultConfig(0, false))
 	if err != nil {
 		return errors.WithStack(err)
 	}

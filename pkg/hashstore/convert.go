@@ -15,6 +15,7 @@ import (
 	"storj.io/common/storj"
 	"storj.io/storj/storagenode/blobstore"
 	"storj.io/storj/storagenode/blobstore/filestore"
+	"storj.io/storj/storagenode/hashstore"
 	"storj.io/storj/storagenode/piecestore"
 )
 
@@ -46,7 +47,7 @@ func (i *Convert) Run() error {
 	dest := filepath.Join(destDir, "hashstore")
 	_ = os.MkdirAll(dest, 0755)
 
-	op, err := piecestore.NewHashStoreBackend(ctx, DefaultHashstoreConfig, dest, "", nil, nil, log)
+	op, err := piecestore.NewHashStoreBackend(ctx, hashstore.CreateDefaultConfig(0, false), dest, "", nil, nil, log)
 	if err != nil {
 		return errors.WithStack(err)
 	}
