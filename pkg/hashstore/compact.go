@@ -11,13 +11,12 @@ import (
 )
 
 var DefaultMMapcfg = hashstore.MmapCfg{}
-var DefaultHashstoreConfig = hashstore.Config{
-	LogsPath:  "hashstore",
-	TablePath: "hashstore",
-}
 
 type Compact struct {
 	WithHashstore
+	AliveFraction          float64 `help:"Fraction of alive data to keep" default:"0.25"`
+	DeleteTrashImmediately bool    `help:"Delete trash segments immediately" default:"true"`
+	RewriteMultiple        float64 `help:"Limit data size to be rewritten in one cycle" default:"2.0"`
 }
 
 func (i *Compact) Run() error {
@@ -30,7 +29,12 @@ func (i *Compact) Run() error {
 
 	metaFile, logDir := i.GetPath()
 
-	store, err := hashstore.NewStore(ctx, DefaultHashstoreConfig, logDir, filepath.Dir(metaFile), log)
+	cfg := hashstore.CreateDefaultConfig(0, false)
+	cfg.Compaction.AliveFraction = i.AliveFraction
+	cfg.Compaction.DeleteTrashImmediately = i.DeleteTrashImmediately
+	cfg.Compaction.RewriteMultiple = i.RewriteMultiple
+
+	store, err := hashstore.NewStore(ctx, cfg, logDir, filepath.Dir(metaFile), log)
 	if err != nil {
 		return errors.WithStack(err)
 	}
