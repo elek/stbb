@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"slices"
@@ -12,12 +13,15 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/pkg/errors"
+	"github.com/zeebo/mwc"
 	"storj.io/common/memory"
 	"storj.io/storj/storagenode/hashstore"
 )
 
 type Logs struct {
 	WithHashstore
+	AliveFraction    float64 `help:"the fraction of live data in a log file to consider it for compaction" default:"0.25"`
+	ProbabilityPower float64 `help:"the power to raise the compaction probability to" default:"2.0"`
 }
 
 func (l *Logs) Run() error {
@@ -100,6 +104,7 @@ func (l *Logs) Run() error {
 		lp = append(lp, *v)
 	}
 
+	compactionProbabilityFactor := l.AliveFraction / (1 - l.AliveFraction)
 	slices.SortFunc(lp, func(a, b LogReport) int {
 		return int(a.Unknown() - b.Unknown())
 	})
@@ -109,7 +114,7 @@ func (l *Logs) Run() error {
 	}
 	tbl := table.NewWriter()
 	tbl.SetOutputMirror(os.Stdout)
-	tbl.AppendHeader(table.Row{"ID", "Path", "TTL", "Real size", "Used", "Expired", "Trash", "Unknown"})
+	tbl.AppendHeader(table.Row{"ID", "Path", "TTL", "Real size", "Used", "Expired", "Trash", "Unknown", "Alive", "Compact"})
 	for _, v := range lp {
 		sum.RealSize += v.RealSize
 		sum.Used += v.Used
@@ -119,6 +124,9 @@ func (l *Logs) Run() error {
 		if !v.TTL.IsZero() {
 			ttl = v.TTL.Format(time.RFC3339)
 		}
+		alive := (float64(v.Used.Int()) + float64(v.Trash.Int())) / float64(v.RealSize.Int())
+		prob := compactionProbabilityFactor * (1 - alive) / alive
+		compact := mwc.Float64() < math.Pow(prob, l.ProbabilityPower)
 		tbl.AppendRow(table.Row{
 			v.ID,
 			v.Path,
@@ -128,6 +136,8 @@ func (l *Logs) Run() error {
 			v.Expired.Base10String(),
 			v.Trash.Base10String(),
 			v.Unknown(),
+			alive,
+			compact,
 		})
 	}
 	tbl.AppendFooter(table.Row{
