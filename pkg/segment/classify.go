@@ -167,7 +167,7 @@ func getNodeInfo(info map[storj.NodeID]nodeselection.SelectedNode, nodeID storj.
 		return "???"
 	}
 	identification := ""
-	for _, tag := range []string{"host", "instance"} {
+	for _, tag := range []string{"host", "service"} {
 		hostTag, err := node.Tags.FindBySignerAndName(nodeID, tag)
 		if err == nil {
 			if len(identification) > 0 {
