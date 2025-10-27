@@ -224,8 +224,9 @@ func (n *SelectPool) Run() (err error) {
 	if !n.CSV {
 		keys := maps.Keys(oop)
 		sort.Ints(keys)
+		fmt.Println("out of placement violations:")
 		for k := range keys {
-			fmt.Println(k, oop[k])
+			fmt.Println("# of oop placement pieces:", k, "happened this times:", oop[k])
 		}
 		fmt.Println()
 	}
