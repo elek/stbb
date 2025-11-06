@@ -2,10 +2,11 @@ package hashstore
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type WithHashstore struct {
@@ -15,6 +16,7 @@ type WithHashstore struct {
 	Logs    string `arg:""  optional:"true"`
 }
 
+// GetPath returns the meta path and log path based on the WithHashstore configuration.
 func (w WithHashstore) GetPath() (string, string) {
 	metaPath := ""
 	logPath := ""

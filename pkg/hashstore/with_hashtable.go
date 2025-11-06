@@ -2,6 +2,7 @@ package hashstore
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,9 +20,25 @@ func (w WithHashtable) Open(ctx context.Context) (hashstore.Tbl, func() error, e
 }
 
 func (w WithHashtable) openPath(ctx context.Context, path string) (hashstore.Tbl, func() error, error) {
+	if strings.HasPrefix(w.Path, "@") {
+		id, tbl, ok := strings.Cut(strings.TrimPrefix(w.Path, "@"), "/")
+		if !ok {
+			panic("Use the format @storagenode1234/s0")
+		}
+
+		metaPath, err := pickFirstTbl(fmt.Sprintf("/opt/snmeta/%s/hashstore/12EayRS2V1kEsWESU9QMRseFhdxYxKicsiFmxrsLZHeLUtdps3S/%s/meta", id, tbl))
+		if err != nil {
+			metaPath, err = pickFirstTbl(fmt.Sprintf("/opt/%s/config/storage/hashstore/12EayRS2V1kEsWESU9QMRseFhdxYxKicsiFmxrsLZHeLUtdps3S/%s/meta", id, tbl))
+			if err != nil {
+				panic("Couldn't find meta directory: " + err.Error())
+			}
+		}
+		path = metaPath
+	}
+
 	stat, err := os.Stat(path)
 	if err != nil {
-		return nil, func() error { return nil }, errors.WithStack(err)
+		return nil, func() error { return nil }, errors.New("could not stat hashtable path: " + path + " " + err.Error())
 	}
 	if stat.IsDir() {
 		entries, err := os.ReadDir(path)
