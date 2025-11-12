@@ -3,15 +3,16 @@ package segment
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
-	"os"
-	"path/filepath"
 	"storj.io/infectious"
 	"storj.io/uplink/private/eestream"
-	"strconv"
-	"strings"
 )
 
 type ECDecode struct {
@@ -90,14 +91,18 @@ func (s *ECDecode) Run() error {
 		if endOffset > length {
 			endOffset = length
 		}
+		maxix := 0
 		for ix, data := range pieces {
 			shares = append(shares, infectious.Share{
 				Number: ix,
 				Data:   data[startOffset:endOffset],
 			})
+			if ix > maxix {
+				maxix = ix
+			}
 		}
 		startOffset += 256
-		fec, err := infectious.NewFEC(s.K, len(entries))
+		fec, err := infectious.NewFEC(s.K, maxix+1)
 		if err != nil {
 			return errors.WithStack(err)
 		}
