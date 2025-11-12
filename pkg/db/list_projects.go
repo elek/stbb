@@ -7,14 +7,10 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"storj.io/common/uuid"
 )
 
 type ListProjects struct {
 	WithDatabase
-	ProjectID     uuid.UUID `arg:""`
-	Bucket        string    `arg:""`
-	EncryptedPath string    `arg:""`
 }
 
 func (s *ListProjects) Run() error {
@@ -34,7 +30,7 @@ func (s *ListProjects) Run() error {
 		return errors.WithStack(err)
 	}
 	for _, p := range list.Projects {
-		fmt.Println(p.ID, p.Name)
+		fmt.Println(p.ID, p.PublicID, p.OwnerID, p.Name)
 	}
 	return nil
 }
