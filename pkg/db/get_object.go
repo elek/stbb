@@ -70,5 +70,7 @@ func (s *GetObject) Run() error {
 	fmt.Println("stream_id", committed.StreamID)
 	fmt.Println("stream_version_id", committed.StreamVersionID())
 	fmt.Println("stream_id", committed.StreamID)
+	fmt.Println("plain_size", committed.TotalPlainSize)
+	fmt.Println("encrypted_size", committed.TotalEncryptedSize)
 	return nil
 }
