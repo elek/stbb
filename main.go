@@ -19,6 +19,7 @@ import (
 	"github.com/elek/stbb/pkg/admin"
 	"github.com/elek/stbb/pkg/audit"
 	"github.com/elek/stbb/pkg/authservice"
+	"github.com/elek/stbb/pkg/avro"
 	"github.com/elek/stbb/pkg/bloom"
 	"github.com/elek/stbb/pkg/config"
 	"github.com/elek/stbb/pkg/crypto"
@@ -180,6 +181,7 @@ func main() {
 		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
 		Jobq       jobq.Jobq              `cmd:"" help:"jobq related helper commands"`
 		Rollout    Rollout                `cmd:"" help:"check rollout status of version.storj.io"`
+		Avro       avro.Avro              `cmd:"" help:"helpers to work with avro files"`
 	}
 
 	ctx := kong.Parse(&cli,

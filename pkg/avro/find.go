@@ -2,7 +2,9 @@ package avro
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log"
 
@@ -16,13 +18,22 @@ type Find struct {
 	Prefix   string `arg:"" help:"Prefix path in the bucket to search Avro files"`
 	KeyField string `arg:"" help:"Primary key field name to search for"`
 	KeyValue string `arg:"" help:"Value of the primary key to search for"`
+	Debug    bool   `help:"Enable debug mode"`
 }
 
-func (f Find) Run() error {
+func (f *Find) Run() error {
 	ctx := context.Background()
 
+	var value any
+	value = f.KeyValue
+	raw, err := hex.DecodeString(f.KeyValue)
+	if err == nil {
+		fmt.Println("HEX value using it as a []byte")
+		value = raw
+	}
+
 	// Search for the record
-	record, err := SearchAvroRecord(ctx, f.Bucket, f.Prefix, f.KeyField, f.KeyValue)
+	record, err := f.SearchAvroRecord(ctx, f.Bucket, f.Prefix, f.KeyField, value)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -33,7 +44,7 @@ func (f Find) Run() error {
 }
 
 // SearchAvroRecord searches for a record with the given primary key across all Avro files
-func SearchAvroRecord(ctx context.Context, bucketName, prefix, keyField string, keyValue interface{}) (map[string]interface{}, error) {
+func (f *Find) SearchAvroRecord(ctx context.Context, bucketName, prefix, keyField string, keyValue interface{}) (map[string]interface{}, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create storage client: %w", err)
@@ -57,7 +68,7 @@ func SearchAvroRecord(ctx context.Context, bucketName, prefix, keyField string, 
 		fmt.Printf("Searching in: %s\n", attrs.Name)
 
 		// Search in this file
-		record, err := searchInFile(ctx, bucket, attrs.Name, keyField, keyValue)
+		record, err := f.searchInFile(ctx, bucket, attrs.Name, keyField, keyValue)
 		if err != nil {
 			log.Printf("Error searching file %s: %v", attrs.Name, err)
 			continue
@@ -72,7 +83,7 @@ func SearchAvroRecord(ctx context.Context, bucketName, prefix, keyField string, 
 }
 
 // searchInFile searches for a record in a single Avro file
-func searchInFile(ctx context.Context, bucket *storage.BucketHandle, objectName, keyField string, keyValue interface{}) (map[string]interface{}, error) {
+func (f *Find) searchInFile(ctx context.Context, bucket *storage.BucketHandle, objectName, keyField string, keyValue interface{}) (map[string]interface{}, error) {
 	fmt.Println("Searching in", objectName)
 	obj := bucket.Object(objectName)
 	reader, err := obj.NewReader(ctx)
@@ -101,9 +112,10 @@ func searchInFile(ctx context.Context, bucket *storage.BucketHandle, objectName,
 		if recordMap[keyField] == nil {
 			continue
 		}
-		fmt.Println(recordMap[keyField])
-		// Check if the key matches
-		if recordMap[keyField] == keyValue {
+		if f.Debug {
+			fmt.Println(hex.EncodeToString(recordMap[keyField].([]byte)))
+		}
+		if bytes.Equal(recordMap[keyField].([]byte), keyValue.([]byte)) {
 			return recordMap, nil
 		}
 	}
