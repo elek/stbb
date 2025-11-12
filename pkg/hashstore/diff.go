@@ -22,7 +22,7 @@ func (d Diff) Run() error {
 		return errors.WithStack(err)
 	}
 	defer f.Close()
-	leftTable, err := hashstore.OpenHashTbl(ctx, f, DefaultMMapcfg)
+	leftTable, _, err := hashstore.OpenHashTbl(ctx, f, DefaultMMapcfg)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -34,7 +34,7 @@ func (d Diff) Run() error {
 		return errors.WithStack(err)
 	}
 	defer g.Close()
-	rightTable, err := hashstore.OpenHashTbl(ctx, g, DefaultMMapcfg)
+	rightTable, _, err := hashstore.OpenHashTbl(ctx, g, DefaultMMapcfg)
 	if err != nil {
 		return errors.WithStack(err)
 	}

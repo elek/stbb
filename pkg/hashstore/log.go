@@ -32,7 +32,7 @@ func (l *Logs) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	hashtbl, err := hashstore.OpenTable(ctx, f, hashstore.CreateDefaultConfig(0, false))
+	hashtbl, _, err := hashstore.OpenTable(ctx, f, hashstore.CreateDefaultConfig(0, false))
 	if err != nil {
 		return errors.WithStack(err)
 	}

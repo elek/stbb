@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"storj.io/common/storj"
 	"storj.io/storj/satellite/durability"
+	"storj.io/storj/satellite/metabase/avrometabase"
 	"storj.io/storj/satellite/metabase/rangedloop"
 	"storj.io/storj/satellite/metrics"
 )
@@ -79,10 +80,10 @@ func (r WithRangedLoop) RunLoop(fn func(observers []rangedloop.Observer) []range
 		provider = rangedloop.NewMetabaseRangeSplitter(log, metabaseDB, cfg)
 	case "avro":
 		segmentPattern := fmt.Sprintf("%s*/%s/%s-*/segments.avro-*", r.BackupDay, r.BackupDatabase, r.Instance)
-		segmentsAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, segmentPattern)
+		segmentsAvroIterator := avrometabase.NewGCSIterator(r.BackupBucket, segmentPattern)
 		nodeAliasPattern := fmt.Sprintf("%s*/%s/%s-*/node_aliases.avro-*", r.BackupDay, "metainfo", r.Instance)
 		fmt.Println("Reading backup from", r.BackupBucket, segmentPattern, nodeAliasPattern)
-		nodeAliasesAvroIterator := rangedloop.NewAvroGCSIterator(r.BackupBucket, nodeAliasPattern)
+		nodeAliasesAvroIterator := avrometabase.NewGCSIterator(r.BackupBucket, nodeAliasPattern)
 		provider = rangedloop.NewAvroSegmentsSplitter(segmentsAvroIterator, nodeAliasesAvroIterator)
 	}
 	service := rangedloop.NewService(log.Named("rangedloop"), cfg, provider, observers)
