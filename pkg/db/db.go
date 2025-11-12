@@ -8,4 +8,5 @@ type Db struct {
 	ListProjects ListProjects `cmd:"" help:"List projects."`
 	ApiKey       ApiKey       `cmd:"" help:"Print details of current api key (including project id)"`
 	GetUser      GetUser      `cmd:"" help:"Print details of a user"`
+	ListSegments ListSegments `cmd:"" help:"list segments for a given project ID and stream ID"`
 }
