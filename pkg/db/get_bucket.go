@@ -48,6 +48,7 @@ func (s *GetBucket) Run() error {
 	fmt.Println("name", bucket.Name)
 	fmt.Println("created", bucket.Created)
 	fmt.Println("createdby", bucket.CreatedBy)
+	fmt.Println("project", bucket.ProjectID)
 	fmt.Println("placement", bucket.Placement)
 	return nil
 }
