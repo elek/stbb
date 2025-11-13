@@ -14,14 +14,14 @@ var PieceCmd = &cobra.Command{
 type Piece struct {
 	UploadDrpc   UploadDrpc         `cmd:"" help:"Upload piece to the Storagenode"`
 	DownloadDrpc DownloadDRPC       `cmd:"" help:"Download piece from the Storagenode"`
-	List         List               `cmd:"" help:"Print out pieces for one particular object"`
 	Nodes        Nodes              `cmd:"" help:"Print out piece locations with pieceID and node ID"`
 	NodeSpeed    NodeSpeed          `cmd:"" help:"Download one piece from all the nodes"`
-	Decode       Decode             `cmd:"" help:"Decode piece alias (from the condensed format, stored in db)"`
 	DownloadPs   DownloadPieceStore `cmd:"" help:"Download piece from the Storagenode using piece store"`
 	Unalias      Unalias            `cmd:"" help:"Decode node aliases"`
 	Exist        Exist              `cmd:"" help:"check if piece id is on SN"`
 	Audit        Audit              `cmd:"" help:"audit pieces on node"`
 	Derive       Derive             `cmd:"" help:"derive piece id"`
-	Checksum     Checksum           `cmd:"" help:"download piece and checks if stored checksum is fine"`
+	Checksum     Checksum           `cmd:"" help:"check piece checksum"`
+	Orderlimit   Orderlimit         `cmd:"" help:"Parse orderlimit file"`
+	Hash         Hash               `cmd:"" help:"Parse piece hash file"`
 }

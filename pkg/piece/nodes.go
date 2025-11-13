@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"os"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/zeebo/errs"
-	"os"
 	"storj.io/common/grant"
 	"storj.io/common/pb"
 	"storj.io/common/storj"

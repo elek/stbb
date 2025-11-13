@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/pkg/errors"
 	"storj.io/common/identity"
 	"storj.io/common/pb"
 	"storj.io/common/signing"
 	"storj.io/common/storj"
-	"time"
 )
 
 type OrderLimitCreator interface {

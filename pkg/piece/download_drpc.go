@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/elek/stbb/pkg/util"
 	"os"
+	"time"
+
+	"github.com/elek/stbb/pkg/util"
 	"storj.io/common/pb"
 	"storj.io/common/storj"
-	"time"
 )
 
 type DownloadDRPC struct {
@@ -73,6 +74,24 @@ func (d *DownloadDRPC) ConnectAndDownload(ctx context.Context, signer *util.KeyS
 			if err != nil {
 				panic(err)
 			}
+			if hash != nil {
+				marshalled, err := pb.Marshal(hash)
+				if err != nil {
+					panic(err)
+				}
+				err = os.WriteFile(d.Piece.String()+".hash", marshalled, 0644)
+			}
+			if limit != nil {
+				marshalled, err := pb.Marshal(limit)
+				if err != nil {
+					panic(err)
+				}
+				err = os.WriteFile(d.Piece.String()+".orderlimit", marshalled, 0644)
+			}
+			if err != nil {
+				panic(err)
+			}
+
 		}
 
 	})

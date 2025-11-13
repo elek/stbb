@@ -2,6 +2,7 @@ package piece
 
 import (
 	"fmt"
+
 	"storj.io/common/storj"
 )
 

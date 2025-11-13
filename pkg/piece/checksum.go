@@ -2,70 +2,63 @@ package piece
 
 import (
 	"bytes"
-	"context"
-	"encoding/binary"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"io"
-	"storj.io/common/pb"
-	"storj.io/storj/storagenode/blobstore"
-	"storj.io/storj/storagenode/blobstore/filestore"
+	"github.com/zeebo/blake3"
 )
 
 type Checksum struct {
-	Dir string `arg:""`
+	File string `arg:"" help:"checksum file to be used"`
 }
 
-func (c Checksum) Run() error {
-	ctx := context.TODO()
-	log, _ := zap.NewDevelopment()
-	dir, err := filestore.NewDir(log, c.Dir)
+func (c *Checksum) Run() error {
+	raw, err := os.ReadFile(c.File)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	blobs := filestore.New(log, dir, filestore.DefaultConfig)
-	ns, err := blobs.ListNamespaces(ctx)
-	for _, n := range ns {
-		fmt.Println("checking namespace ", hex.EncodeToString(n))
-		ix := 0
-		err = blobs.WalkNamespace(ctx, n, nil, func(info blobstore.BlobInfo) error {
-			err := c.checkBlob(ctx, blobs, info)
-			ix++
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			return nil
-		})
-		fmt.Println("checked", ix, "blobs")
+	fmt.Println("Checksum:", hex.EncodeToString(raw))
+	var hasher hash.Hash
+	switch strings.ToLower(filepath.Ext(c.File)) {
+	case ".blake3":
+		hasher = blake3.New()
+	case ".sha256":
+		hasher = sha256.New()
+	default:
+		return errors.New("unknown checksum file extension: " + filepath.Ext(c.File))
+	}
+	data, err := os.ReadFile(strings.TrimSuffix(c.File, filepath.Ext(c.File)))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = hasher.Write(data)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(err)
-}
+	matched := -1
+	for i := 0; i < 1024; i++ {
+		calculatedHash := hasher.Sum(nil)
+		if bytes.Equal(raw, calculatedHash) {
+			matched = i
+			break
+		}
+		_, err := hasher.Write([]byte{0})
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
 
-func (c Checksum) checkBlob(ctx context.Context, blobs blobstore.Blobs, info blobstore.BlobInfo) (err error) {
-	defer mon.Task()(&ctx)(&err)
-	reader, err := blobs.Open(ctx, info.BlobRef())
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-	raw, err := io.ReadAll(reader)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	size := binary.BigEndian.Uint16(raw[0:2])
-	header := &pb.PieceHeader{}
-	headerBytes := raw[2 : size+2]
-	err = pb.Unmarshal(headerBytes, header)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	hasher := pb.NewHashFromAlgorithm(header.HashAlgorithm)
-	_, _ = hasher.Write(raw[512:])
-	if !bytes.Equal(hasher.Sum(nil), header.Hash) {
-		return errors.New("Hash mismatch: " + hex.EncodeToString(info.BlobRef().Key))
+	if matched >= 0 {
+		fmt.Println("Checksum OK", matched)
+	} else {
+		fmt.Println("Checksum FAILED")
 	}
 	return nil
 }
