@@ -6,17 +6,19 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+
 	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/blake3"
 	"go.uber.org/zap"
-	"hash"
-	"os"
-	"path/filepath"
 	"storj.io/storj/satellite/metabase"
-	"strconv"
-	"strings"
 )
 
 type Checksum struct {
@@ -61,18 +63,35 @@ func (s *Checksum) Run() error {
 	if err != nil {
 		return err
 	}
+	var files []string
 	for _, e := range entries {
-
-		if strings.Contains(e.Name(), ".") {
-			name, algo, _ := strings.Cut(e.Name(), ".")
+		files = append(files, e.Name())
+	}
+	ix := func(s string) int {
+		parts := strings.Split(s, "_")
+		if len(parts) < 2 {
+			return -1
+		}
+		numStr := parts[0]
+		num, _ := strconv.Atoi(numStr)
+		return num
+	}
+	sort.Slice(files, func(i, j int) bool {
+		return ix(files[i]) < ix(files[j])
+	})
+	for _, f := range files {
+		if strings.Contains(f, ".") {
+			name, algo, _ := strings.Cut(f, ".")
 			var hasher hash.Hash
 			switch algo {
 			case "BLAKE3":
 				hasher = blake3.New()
 			case "SHA256":
 				hasher = sha256.New()
+			case "hash", "orderlimit":
+				continue
 			default:
-				panic("Unsupported checksum algorithm: " + algo)
+				panic("Unsupported checksum algorithm: " + algo + " in file " + f)
 			}
 			raw, err := os.ReadFile(filepath.Join(segmentDir, name))
 			if err != nil {
@@ -82,16 +101,16 @@ func (s *Checksum) Run() error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			rawChecksum, err := os.ReadFile(filepath.Join(segmentDir, e.Name()))
+			rawChecksum, err := os.ReadFile(filepath.Join(segmentDir, f))
 			if err != nil {
 				return errors.WithStack(err)
 			}
 			calculatedHash := hasher.Sum(nil)
 			if !bytes.Equal(rawChecksum, calculatedHash) {
 				if !s.PieceInfo {
-					fmt.Println(e.Name(), "Checksum mismatch", hex.EncodeToString(rawChecksum), hex.EncodeToString(calculatedHash))
+					fmt.Println(f, "Checksum mismatch", hex.EncodeToString(rawChecksum), hex.EncodeToString(calculatedHash))
 				} else {
-					position, rest, _ := strings.Cut(e.Name(), "_")
+					position, rest, _ := strings.Cut(f, "_")
 					pieceID, checksum, _ := strings.Cut(rest, ".")
 					number, err := strconv.Atoi(position)
 					if err != nil {
@@ -100,12 +119,12 @@ func (s *Checksum) Run() error {
 
 					piece, _ := segment.Pieces.FindByNum(number)
 
-					fmt.Println(e.Name(), "Checksum mismatch", hex.EncodeToString(rawChecksum), hex.EncodeToString(calculatedHash), position, pieceID, checksum, piece.StorageNode, piece.Number)
+					fmt.Println(f, "Checksum mismatch", hex.EncodeToString(rawChecksum), hex.EncodeToString(calculatedHash), position, pieceID, checksum, piece.StorageNode, piece.Number)
 
 				}
 			} else {
 				if !s.PieceInfo {
-					fmt.Println(e.Name(), "Checksum OK")
+					fmt.Println(f, "Checksum OK")
 				}
 			}
 
