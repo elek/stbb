@@ -8,6 +8,7 @@ type Segment struct {
 	Classify     Classify     `cmd:"" help:"execute piece classification on segment"`
 	Download     Download     `cmd:"" help:"download all the available pieces ASAP"`
 	Ecdecode     ECDecode     `cmd:"" help:"decode original segment from downloaded pieces"`
+	Ecrepair     ECRepair     `cmd:"" help:"try to localize EC problems with ignoring different pieces"`
 	Show         Show         `cmd:"" help:"show information about the segment"`
 	Report       Report       `cmd:"" help:"show segments based on segment id list"`
 	Nodes        Nodes        `cmd:"" help:"print details of nodes"`

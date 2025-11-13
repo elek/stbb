@@ -117,7 +117,6 @@ func (s *ECDecode) Run() error {
 			}
 
 			for _, share := range shares {
-
 				if !bytes.Equal(original[share.Number].Data, share.Data) {
 					fmt.Println("Piece", share.Number, "was corrupt at the offset", startOffset)
 				}
@@ -127,6 +126,7 @@ func (s *ECDecode) Run() error {
 
 		decoded, err := scheme.Decode(outb, shares)
 		if err != nil {
+			fmt.Println(err, "failed to decode segment "+fmt.Sprintf("%s/%d at offset %d-%d out of %d bytes", su, sp.Encode(), startOffset-256, endOffset, length))
 			return errors.WithStack(err)
 		}
 		_, err = out.Write(decoded)
