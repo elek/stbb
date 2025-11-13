@@ -10,12 +10,10 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/linkedin/goavro/v2"
-	"google.golang.org/api/iterator"
 )
 
 type Find struct {
-	Bucket   string `arg:"" help:"GCS bucket name"`
-	Prefix   string `arg:"" help:"Prefix path in the bucket to search Avro files"`
+	WithAvroFiles
 	KeyField string `arg:"" help:"Primary key field name to search for"`
 	KeyValue string `arg:"" help:"Value of the primary key to search for"`
 	Debug    bool   `help:"Enable debug mode"`
@@ -33,53 +31,20 @@ func (f *Find) Run() error {
 	}
 
 	// Search for the record
-	record, err := f.SearchAvroRecord(ctx, f.Bucket, f.Prefix, f.KeyField, value)
+	err = f.WithAvroFiles.ForEach(func(bucket *storage.BucketHandle, name string) error {
+		record, err := f.searchInFile(ctx, bucket, name, f.KeyField, value)
+		if err != nil {
+			return err
+		}
+		if record != nil {
+			PrintRecord("", record)
+		}
+		return nil
+	})
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-
-	// Print the record
-	PrintRecord(record)
 	return nil
-}
-
-// SearchAvroRecord searches for a record with the given primary key across all Avro files
-func (f *Find) SearchAvroRecord(ctx context.Context, bucketName, prefix, keyField string, keyValue interface{}) (map[string]interface{}, error) {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create storage client: %w", err)
-	}
-	defer client.Close()
-
-	bucket := client.Bucket(bucketName)
-	query := &storage.Query{Prefix: prefix}
-	it := bucket.Objects(ctx, query)
-
-	// Iterate through all objects in the bucket with the given prefix
-	for {
-		attrs, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("error iterating objects: %w", err)
-		}
-
-		fmt.Printf("Searching in: %s\n", attrs.Name)
-
-		// Search in this file
-		record, err := f.searchInFile(ctx, bucket, attrs.Name, keyField, keyValue)
-		if err != nil {
-			log.Printf("Error searching file %s: %v", attrs.Name, err)
-			continue
-		}
-		if record != nil {
-			fmt.Printf("\n✓ Found in: %s\n", attrs.Name)
-			return record, nil
-		}
-	}
-
-	return nil, fmt.Errorf("record with %s=%v not found", keyField, keyValue)
 }
 
 // searchInFile searches for a record in a single Avro file
@@ -123,10 +88,27 @@ func (f *Find) searchInFile(ctx context.Context, bucket *storage.BucketHandle, o
 	return nil, nil
 }
 
-func PrintRecord(record map[string]interface{}) {
-	fmt.Println("\n=== Record Details ===")
+func PrintRecord(prefix string, record map[string]interface{}) {
 	for key, value := range record {
-		fmt.Printf("%s: %v\n", key, value)
+		if m, ok := value.(map[string]interface{}); ok {
+			for k, v := range m {
+				switch k {
+				case "string", "long":
+					fmt.Printf("%s %s: %v\n", prefix, key, v)
+				case "bytes":
+					fmt.Printf("%s %s: %x\n", prefix, key, v)
+				default:
+					fmt.Printf("%s %s: %v (%s)\n", prefix, key, v, k)
+				}
+			}
+			continue
+		}
+
+		format := "%v"
+		if _, ok := value.([]byte); ok {
+			format = "%x"
+		}
+
+		fmt.Printf("%s %s: "+format+"\n", prefix, key, value)
 	}
-	fmt.Println("=====================")
 }
