@@ -21,9 +21,10 @@ import (
 type Download struct {
 	util.DialerHelper
 	db.WithDatabase
-	StreamID string `arg:""`
-	Keys     string `required:""`
-	NodeInfo bool
+	StreamID       string `arg:""`
+	Keys           string `required:""`
+	NodeInfo       bool
+	SegmentMetafil string `help:"Path to segment metafile to read segment info from instead of metabase"`
 }
 
 func (s *Download) Run() error {
@@ -49,20 +50,26 @@ func (s *Download) Run() error {
 		_ = satelliteDB.Close()
 	}()
 
-	su, sp, err := util.ParseSegmentPosition(s.StreamID)
-	if err != nil {
-		return err
-	}
+	var segment metabase.Segment
+	if _, err := os.Stat(s.StreamID); err == nil {
+		segment, err = ReadSegmentFile(s.StreamID)
+		if err != nil {
+			return err
+		}
+	} else {
+		su, sp, err := util.ParseSegmentPosition(s.StreamID)
+		if err != nil {
+			return err
+		}
 
-	segment, err := metabaseDB.GetSegmentByPosition(ctx, metabase.GetSegmentByPosition{
-		StreamID: su,
-		Position: sp,
-	})
-	if err != nil {
-		return err
+		segment, err = metabaseDB.GetSegmentByPosition(ctx, metabase.GetSegmentByPosition{
+			StreamID: su,
+			Position: sp,
+		})
+		if err != nil {
+			return err
+		}
 	}
-	fmt.Println("placement", segment.Placement)
-	//fmt.Println("size", segment.EncryptedSize/int32(segment.Redundancy.RequiredShares))
 
 	satelliteIdentityCfg := identity.Config{
 		CertPath: filepath.Join(s.Keys, "identity.cert"),
@@ -80,7 +87,7 @@ func (s *Download) Run() error {
 
 	keySigner := util.NewKeySignerFromFullIdentity(ident, pb.PieceAction_GET_REPAIR)
 
-	outDir := fmt.Sprintf("segment_%s_%d", su, sp.Encode())
+	outDir := fmt.Sprintf("segment_%s_%d", segment.StreamID.String(), segment.Position.Encode())
 	_ = os.MkdirAll(outDir, 0777)
 
 	pieces := 0
@@ -110,20 +117,36 @@ func (s *Download) Run() error {
 		}
 
 		client := pb.NewDRPCPiecestoreClient(util.NewTracedConnection(conn))
-		size := int64(math.Ceil(float64(segment.EncryptedSize)/float64(segment.Redundancy.RequiredShares)/float64(segment.Redundancy.ShareSize))) * int64(segment.Redundancy.ShareSize)
+		requiredBytesPerShare := int(math.Ceil(float64(segment.EncryptedSize) / float64(segment.Redundancy.RequiredShares)))
+		pad := int(segment.Redundancy.ShareSize)
+		size := (requiredBytesPerShare + int(segment.Redundancy.ShareSize)) / pad * pad
 
 		_, _, err = util.DownloadPiece(ctx, client, keySigner, util.DownloadRequest{
 			PieceID:     pieceID,
 			Storagenode: snURL,
-			Size:        size,
+			Size:        int64(size),
 			SatelliteID: ident.ID,
-		}, func(bytes []byte, hash *pb.PieceHash, ol *pb.OrderLimit) {
+		}, func(bytes []byte, hash *pb.PieceHash, limit *pb.OrderLimit) {
 			err := os.WriteFile(outFile, bytes, 0644)
 			if err != nil {
 				fmt.Println(err)
 			}
 			if hash != nil {
 				err = os.WriteFile(outFile+"."+hash.HashAlgorithm.String(), hash.Hash, 0644)
+			}
+			if hash != nil {
+				marshalled, err := pb.Marshal(hash)
+				if err != nil {
+					panic(err)
+				}
+				err = os.WriteFile(outFile+".hash", marshalled, 0644)
+			}
+			if limit != nil {
+				marshalled, err := pb.Marshal(limit)
+				if err != nil {
+					panic(err)
+				}
+				err = os.WriteFile(outFile+".orderlimit", marshalled, 0644)
 			}
 			if err != nil {
 				fmt.Println(err)
