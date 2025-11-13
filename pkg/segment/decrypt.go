@@ -3,13 +3,14 @@ package segment
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/elek/stbb/pkg/access"
 	"github.com/elek/stbb/pkg/db"
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"io"
-	"os"
 	"storj.io/common/encryption"
 	"storj.io/common/paths"
 	"storj.io/common/storj"
@@ -126,6 +127,9 @@ func (s *Decrypt) Run() error {
 
 	// we also have some padding due to the encryption
 	remainingPlain := int(segment.PlainSize)
+	if remainingPlain == 0 {
+		remainingPlain = int(segment.EncryptedSize)
+	}
 	k := 0
 	l := 0
 	for {
