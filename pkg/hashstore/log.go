@@ -92,6 +92,11 @@ func (l *Logs) Run() error {
 				logFiles[rec.Log].Used += memory.Size(rec.Length)
 			}
 
+			endOffset := memory.Size(int(rec.Offset) + int(rec.Length) + 64)
+			if endOffset > logFiles[rec.Log].LastUsefullByte {
+				logFiles[rec.Log].LastUsefullByte = endOffset
+			}
+
 			nset++
 
 			return nil
@@ -109,12 +114,14 @@ func (l *Logs) Run() error {
 		return int(a.Unknown() - b.Unknown())
 	})
 
+	var sumTruncatable memory.Size
 	sum := LogReport{
 		Path: "SUMMARY",
 	}
 	tbl := table.NewWriter()
 	tbl.SetOutputMirror(os.Stdout)
-	tbl.AppendHeader(table.Row{"ID", "Path", "TTL", "Real size", "Used", "Expired", "Trash", "Unknown", "Alive", "Compact"})
+	headers := table.Row{"ID", "Path", "TTL", "Real size", "Used", "Expired", "Trash", "Unreferenced", "Alive", "Compact", "Truncatable"}
+	tbl.AppendHeader(headers)
 	for _, v := range lp {
 		sum.RealSize += v.RealSize
 		sum.Used += v.Used
@@ -127,6 +134,11 @@ func (l *Logs) Run() error {
 		alive := (float64(v.Used.Int()) + float64(v.Trash.Int())) / float64(v.RealSize.Int())
 		prob := compactionProbabilityFactor * (1 - alive) / alive
 		compact := mwc.Float64() < math.Pow(prob, l.ProbabilityPower)
+		truncatable := v.RealSize - v.LastUsefullByte
+		if v.Used == 0 {
+			truncatable = 0
+		}
+		sumTruncatable += truncatable
 		tbl.AppendRow(table.Row{
 			v.ID,
 			v.Path,
@@ -138,6 +150,7 @@ func (l *Logs) Run() error {
 			v.Unknown(),
 			alive,
 			compact,
+			truncatable,
 		})
 	}
 	tbl.AppendFooter(table.Row{
@@ -149,20 +162,25 @@ func (l *Logs) Run() error {
 		sum.Expired.Base10String(),
 		sum.Trash.Base10String(),
 		sum.Unknown().Base10String(),
+		"",
+		"",
+		sumTruncatable.Base10String(),
 	})
+	tbl.AppendFooter(headers)
 	tbl.Render()
 
 	return nil
 }
 
 type LogReport struct {
-	ID       int
-	Path     string
-	RealSize memory.Size
-	Used     memory.Size
-	Expired  memory.Size
-	Trash    memory.Size
-	TTL      time.Time
+	ID              int
+	Path            string
+	RealSize        memory.Size
+	Used            memory.Size
+	Expired         memory.Size
+	Trash           memory.Size
+	TTL             time.Time
+	LastUsefullByte memory.Size
 }
 
 func (r LogReport) Unknown() memory.Size {
