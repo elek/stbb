@@ -79,7 +79,7 @@ func (l *Logs) Run() error {
 			}
 			nexist++ // bump the number of records that exist for progress reporting.
 			if _, found := logFiles[rec.Log]; !found {
-				fmt.Printf("WARNING: log file %d is not found\n", rec.Log, len(logFiles))
+				fmt.Printf("WARNING: log file %d is not found (out of %d log files)\n", rec.Log, len(logFiles))
 				return nil
 			}
 			if expired(rec.Expires) {
