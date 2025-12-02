@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/elek/stbb/pkg/cohorts"
 	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
@@ -164,9 +165,12 @@ func (n *SelectPool) Run() (err error) {
 		success = placements[n.Placement].EC.Success(placements[n.Placement].EC.Minimum)
 	}
 
+	cohortReq := placements[n.Placement].CohortRequirements
+	cohortNames := placements[n.Placement].CohortNames
 	sum := 0
 	stat := map[string]int{}
 	oop := map[int]int{}
+	cohortSuccess := map[int]int{}
 	for i := 0; i < n.K; i++ {
 		nodes, err := cache.GetNodes(ctx, overlay.FindStorageNodesRequest{
 			RequestedCount: selection,
@@ -180,6 +184,25 @@ func (n *SelectPool) Run() (err error) {
 		for _, node := range nodes {
 			stat[nodeAttribute(*node)]++
 			sum++
+		}
+
+		if cohortReq != nil {
+			upl := 0
+			matcher := cohorts.NewMatcher(cohortReq.ToProto(), len(nodes))
+
+			for ix, node := range nodes {
+				tags := map[string]string{}
+				for cohortName, namer := range cohortNames {
+					tags[cohortName] = string(namer(*node))
+				}
+
+				upl++
+				if matcher.Increment(tags, byte(ix)) {
+					break
+				}
+
+			}
+			cohortSuccess[upl]++
 		}
 
 		pieces, invNodes := convert(nodes)
@@ -225,10 +248,16 @@ func (n *SelectPool) Run() (err error) {
 		keys := maps.Keys(oop)
 		sort.Ints(keys)
 		fmt.Println("out of placement violations:")
-		for k := range keys {
+		for _, k := range keys {
 			fmt.Println("# of oop placement pieces:", k, "happened this times:", oop[k])
 		}
 		fmt.Println()
+		fmt.Println("cohort success distribution:")
+		keys = maps.Keys(cohortSuccess)
+		sort.Ints(keys)
+		for _, k := range keys {
+			fmt.Println("# of pieces required for upload:", k, "happened this times:", cohortSuccess[k])
+		}
 	}
 
 	//tw.Debug()
