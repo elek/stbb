@@ -57,6 +57,9 @@ func main() {
 	}
 	defer zapLog.Sync()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	if os.Getenv("STBB_JAEGER") != "" {
 		// agent.tracing.datasci.storj.io:5775
 		serviceName := os.Getenv("STBB_SERVICE_NAME")
@@ -71,7 +74,7 @@ func main() {
 			_ = collector.Close()
 		}()
 
-		defer tracked(context.Background(), collector.Run)()
+		defer tracked(ctx, collector.Run)()
 
 		cancel := jaeger.RegisterJaeger(monkit.Default, collector, jaeger.Options{Fraction: 1})
 		defer cancel()
@@ -184,7 +187,7 @@ func main() {
 		Avro       avro.Avro              `cmd:"" help:"helpers to work with avro files"`
 	}
 
-	ctx := kong.Parse(&cli,
+	ktx := kong.Parse(&cli,
 		kong.TypeMapper(reflect.TypeOf(storj.NodeURL{}), kong.MapperFunc(func(ctx *kong.DecodeContext, target reflect.Value) error {
 			s := ctx.Scan.Pop().Value.(string)
 			url, err := storj.ParseNodeURL(s)
@@ -198,7 +201,7 @@ func main() {
 	)
 
 	kong.Bind(ctx)
-	err = ctx.Run(ctx)
+	err = ktx.Run(ctx)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}

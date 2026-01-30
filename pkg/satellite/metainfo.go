@@ -3,6 +3,8 @@ package satellite
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/klauspost/compress/zstd"
 	"github.com/zeebo/errs"
 	"golang.org/x/exp/slices"
@@ -14,11 +16,25 @@ import (
 	"storj.io/common/uuid"
 	"storj.io/storj/satellite/internalpb"
 	"storj.io/storj/satellite/metainfo"
-	"time"
 )
 
 type Metainfo struct {
 	identity *identity.FullIdentity
+}
+
+func (m *Metainfo) LicenseInfo(ctx context.Context, request *pb.LicenseInfoRequest) (*pb.LicenseInfoResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Metainfo) GetBucketNotificationConfiguration(ctx context.Context, request *pb.GetBucketNotificationConfigurationRequest) (*pb.GetBucketNotificationConfigurationResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Metainfo) SetBucketNotificationConfiguration(ctx context.Context, request *pb.SetBucketNotificationConfigurationRequest) (*pb.SetBucketNotificationConfigurationResponse, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (m *Metainfo) GetBucketTagging(ctx context.Context, request *pb.GetBucketTaggingRequest) (*pb.GetBucketTaggingResponse, error) {

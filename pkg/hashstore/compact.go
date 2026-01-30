@@ -17,6 +17,7 @@ type Compact struct {
 	AliveFraction          float64 `help:"Fraction of alive data to keep" default:"0.25"`
 	DeleteTrashImmediately bool    `help:"Delete trash segments immediately" default:"true"`
 	RewriteMultiple        float64 `help:"Limit data size to be rewritten in one cycle" default:"2.0"`
+	DefaultKind            int     `help:"Default table kind (0=hashstore,1=memstore)"`
 }
 
 func (i *Compact) Run() error {
@@ -33,8 +34,11 @@ func (i *Compact) Run() error {
 	cfg.Compaction.AliveFraction = i.AliveFraction
 	cfg.Compaction.DeleteTrashImmediately = i.DeleteTrashImmediately
 	cfg.Compaction.RewriteMultiple = i.RewriteMultiple
+	cfg.TableDefaultKind = hashstore.TableKindCfg{
+		Kind: hashstore.TableKind(i.DefaultKind),
+	}
 
-	store, err := hashstore.NewStore(ctx, cfg, logDir, filepath.Dir(metaFile), log)
+	store, err := hashstore.NewStore(ctx, cfg, logDir, filepath.Dir(metaFile), log, nil, nil)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -3,6 +3,7 @@ package node
 import (
 	"encoding/hex"
 	"fmt"
+
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/orders"
 	"storj.io/storj/storagenode/orders/ordersfile"
@@ -30,8 +31,16 @@ func (c UnsentOrder) Run() error {
 			return err
 		}
 
-		fmt.Printf("%x %d %x %x\n", one.Limit.PieceId, one.Limit.Action, one.Limit.EncryptedMetadataKeyId, one.Limit.EncryptedMetadata)
+		if len(one.Limit.EncryptedMetadataKeyId) == 0 {
+			continue
+		}
 
+		fmt.Printf("piece_id=%s action=%d %x\n", hex.EncodeToString(one.Limit.PieceId[:]), one.Limit.Action, one.Limit.EncryptedMetadataKeyId)
+		fmt.Println("limit.action", one.Limit.Action)
+		fmt.Println("limit.satellite", one.Limit.SatelliteId)
+		fmt.Println("limit.creation", one.Limit.OrderCreation)
+		fmt.Println("limit.limit", one.Limit.Limit)
+		fmt.Println("order.amount", one.Order.Amount)
 		var orderKeyID orders.EncryptionKeyID
 		copy(orderKeyID[:], one.Limit.EncryptedMetadataKeyId)
 
@@ -44,14 +53,15 @@ func (c UnsentOrder) Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(hex.EncodeToString(decrypted.GetBucketId()))
-		fmt.Println(hex.EncodeToString(decrypted.ProjectBucketPrefix))
+		fmt.Println("metadata.bucket_id", hex.EncodeToString(decrypted.GetBucketId()))
+		fmt.Println("metadata.project_bucket_prefix", hex.EncodeToString(decrypted.ProjectBucketPrefix))
 		compact, err := metabase.ParseCompactBucketPrefix(decrypted.CompactProjectBucketPrefix)
 		if err != nil {
 			return err
 		}
-		fmt.Println(compact.ProjectID.String())
-		fmt.Println(compact.BucketName)
+		fmt.Println("metadata.project_id", compact.ProjectID.String())
+		fmt.Println("metadata.bucket_name", compact.BucketName)
+		fmt.Println()
 	}
 	return nil
 }

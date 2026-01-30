@@ -14,7 +14,8 @@ type UpdateUser struct {
 	db.WithDatabase
 	Email    string `arg:""`
 	Password string
-	Status   *int `name:"status" help:"set user status"`
+	Status   *int    `name:"status" help:"set user status"`
+	Tenant   *string `help:"tenant ID" short:"t"`
 }
 
 func (s *UpdateUser) Run() error {
@@ -30,7 +31,7 @@ func (s *UpdateUser) Run() error {
 		return errors.WithStack(err)
 	}
 
-	user, err := satelliteDB.Console().Users().GetByEmail(ctx, s.Email)
+	user, err := satelliteDB.Console().Users().GetByEmailAndTenant(ctx, s.Email, s.Tenant)
 	if err != nil {
 		return errors.WithStack(err)
 	}

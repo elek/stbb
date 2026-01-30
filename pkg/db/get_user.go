@@ -11,7 +11,8 @@ import (
 
 type GetUser struct {
 	WithDatabase
-	Email string `arg:""`
+	Email  string  `arg:""`
+	Tenant *string `help:"tenant ID" short:"t"`
 }
 
 func (s *GetUser) Run() error {
@@ -30,7 +31,7 @@ func (s *GetUser) Run() error {
 		}
 	}()
 
-	user, err := sdb.Console().Users().GetByEmail(ctx, s.Email)
+	user, err := sdb.Console().Users().GetByEmailAndTenant(ctx, s.Email, s.Tenant)
 	if err != nil {
 		return errors.WithStack(err)
 	}
