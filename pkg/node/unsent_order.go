@@ -3,6 +3,8 @@ package node
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"strings"
 
 	"storj.io/storj/satellite/metabase"
 	"storj.io/storj/satellite/orders"
@@ -19,14 +21,23 @@ func (c UnsentOrder) Run() error {
 	if err != nil {
 		return err
 	}
-	for {
-		one, err := input.ReadOne()
+
+	if _, err := os.Stat(c.EncryptionKeys); err == nil {
+		raw, err := os.ReadFile(c.EncryptionKeys)
 		if err != nil {
 			return err
 		}
+		c.EncryptionKeys = strings.Split(string(raw), "\n")[0]
+		fmt.Println(c.EncryptionKeys)
+	}
+	keys := orders.EncryptionKeys{}
+	err = keys.Set(c.EncryptionKeys)
+	if err != nil {
+		return err
+	}
 
-		keys := orders.EncryptionKeys{}
-		err = keys.Set(c.EncryptionKeys)
+	for {
+		one, err := input.ReadOne()
 		if err != nil {
 			return err
 		}
