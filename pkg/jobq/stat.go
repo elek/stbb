@@ -13,8 +13,8 @@ import (
 )
 
 type Stat struct {
-	Server        string `required:"true"`
-	Identity      string `required:"true"`
+	Server        string `help:"jobq server address"`
+	Identity      string `help:"identity of the jobq cliet"`
 	WithHistogram bool   `help:"Include raw histogram data in the output (all records)."`
 	Histogram     string `help:"Include histogram data in the output (healthy,retrievable,oop)."`
 	Placement     *int
