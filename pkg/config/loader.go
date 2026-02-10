@@ -3,9 +3,10 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
+
 	"github.com/alecthomas/kong"
 	"gopkg.in/yaml.v3"
-	"io"
 )
 
 // Loader is a Kong configuration loader for YAML.

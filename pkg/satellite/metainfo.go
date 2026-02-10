@@ -22,7 +22,7 @@ type Metainfo struct {
 	identity *identity.FullIdentity
 }
 
-func (m *Metainfo) LicenseInfo(ctx context.Context, request *pb.LicenseInfoRequest) (*pb.LicenseInfoResponse, error) {
+func (m *Metainfo) AccountLicenses(ctx context.Context, request *pb.AccountLicensesRequest) (*pb.AccountLicensesResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
