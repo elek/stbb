@@ -19,4 +19,5 @@ type Hashstore struct {
 	Diff        Diff        `cmd:"" help:"diff two hashstore"`
 	Audit       Audit       `cmd:"" help:"audit a hashstore: check if pieces are included"`
 	LogRead     LogRead     `cmd:"" help:"find record in hashstore log files without using metadata"`
+	ReadTest    ReadTest    `cmd:"read-test" help:"read first byte of every piece in the hashstore"`
 }
