@@ -98,6 +98,12 @@ func (i Info) Run() error {
 
 	}
 	fmt.Println("suspended", node.OfflineSuspended)
+	if node.UnknownAuditSuspended != nil {
+		fmt.Println("unknown_audit_suspended", node.UnknownAuditSuspended)
+	}
+	if node.OfflineUnderReview != nil {
+		fmt.Println("offline_under_review", node.OfflineUnderReview)
+	}
 
 	for _, t := range tags {
 		fmt.Printf("   %s=%s\n", t.Name, string(t.Value))
