@@ -2,6 +2,7 @@ package hashstore
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -65,18 +66,23 @@ func (r *ReadTest) Run() error {
 		}
 	}()
 
-	var total, success, readErr, missingLog int64
+	today := hashstore.TimeToDateDown(time.Now())
+
+	var total, success, readErr, missingLog, skippedToday int64
 	start := time.Now()
 
 	err = hashtbl.Range(ctx, func(_ context.Context, rec hashstore.Record) (bool, error) {
 		total++
 
+		if rec.Created >= today {
+			skippedToday++
+			return true, nil
+		}
+
 		fh, err := getFile(rec.Log)
 		if err != nil {
 			missingLog++
-			if missingLog <= 10 {
-				fmt.Printf("MISSING LOG: key=%x log=%d err=%v\n", rec.Key, rec.Log, err)
-			}
+			fmt.Printf("MISSING LOG: key=%s log=%d err=%v\n", hex.EncodeToString(rec.Key[:]), rec.Log, err)
 			return true, nil
 		}
 
@@ -84,19 +90,15 @@ func (r *ReadTest) Run() error {
 		_, err = fh.ReadAt(buf[:], int64(rec.Offset))
 		if err != nil {
 			readErr++
-			if readErr <= 10 {
-				fmt.Printf("READ ERROR: key=%x log=%d offset=%d length=%d err=%v\n",
-					rec.Key, rec.Log, rec.Offset, rec.Length, err)
-			}
+			fmt.Printf("READ ERROR: key=%s log=%d offset=%d length=%d err=%v\n", hex.EncodeToString(rec.Key[:]), rec.Log, rec.Offset, rec.Length, err)
 			return true, nil
 		}
 
 		success++
 
-		if total%100000 == 0 {
+		if total%1000 == 0 {
 			elapsed := time.Since(start)
-			fmt.Printf("progress: %d records, %d success, %d read errors, %d missing logs (%.0f rps)\n",
-				total, success, readErr, missingLog, float64(total)/elapsed.Seconds())
+			fmt.Printf("progress: %d records, %d success, %d read errors, %d missing logs, %d skipped today (%.0f rps)\n", total, success, readErr, missingLog, skippedToday, float64(total)/elapsed.Seconds())
 		}
 
 		return true, nil
@@ -106,8 +108,8 @@ func (r *ReadTest) Run() error {
 	}
 
 	elapsed := time.Since(start)
-	fmt.Printf("\nDone: %d total, %d success, %d read errors, %d missing logs (%.1fs, %.0f rps)\n",
-		total, success, readErr, missingLog, elapsed.Seconds(), float64(total)/elapsed.Seconds())
+	fmt.Printf("\nDone: %d total, %d success, %d read errors, %d missing logs, %d skipped today (%.1fs, %.0f rps)\n",
+		total, success, readErr, missingLog, skippedToday, elapsed.Seconds(), float64(total)/elapsed.Seconds())
 
 	return nil
 }
