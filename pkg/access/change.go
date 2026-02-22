@@ -3,7 +3,9 @@ package access
 import (
 	"fmt"
 	"os"
+
 	"storj.io/common/macaroon"
+	"storj.io/common/storj"
 )
 
 type Change struct {
@@ -18,10 +20,12 @@ func (h Change) Run() error {
 	if err != nil {
 		return err
 	}
-	id := access.SatelliteURL.ID
-
 	if h.ID != "" {
-		access.SatelliteURL.ID = id
+		nodeID, err := storj.NodeIDFromString(h.ID)
+		if err != nil {
+			return err
+		}
+		access.SatelliteURL.ID = nodeID
 	}
 
 	if h.Host != "" {
