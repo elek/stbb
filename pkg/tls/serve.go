@@ -3,7 +3,7 @@ package tls
 import (
 	"bufio"
 	"crypto/tls"
-	"github.com/elek/stbb/pkg/piece"
+	"github.com/elek/stbb/pkg/util"
 	"log"
 	"net"
 	"strconv"
@@ -14,7 +14,7 @@ type Server struct {
 }
 
 func (t Server) Run() (err error) {
-	cer, err := tls.X509KeyPair(piece.Cert, piece.Key)
+	cer, err := tls.X509KeyPair(util.Certificate, util.Key)
 	if err != nil {
 		return
 	}

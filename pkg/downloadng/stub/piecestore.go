@@ -198,4 +198,8 @@ func (p *piecestoreStream) Close() error {
 	return nil
 }
 
+func (p *piecestore) Transport() drpc.Transport {
+	return nil
+}
+
 var _ drpc.Conn = &piecestore{}

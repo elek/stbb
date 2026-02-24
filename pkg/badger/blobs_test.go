@@ -75,7 +75,7 @@ func TestWalkNamespace(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	err = store.WalkNamespace(ctx, []byte("ns1"), "", func(info blobstore.BlobInfo) error {
+	err = store.WalkNamespace(ctx, []byte("ns1"), nil, func(info blobstore.BlobInfo) error {
 		fileInfo, err := info.Stat(ctx)
 		if err != nil {
 			return errs.Wrap(err)

@@ -42,7 +42,7 @@ func TestCount(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.Equal(t, 20, c.count)
+	require.Equal(t, int64(20), c.count.Load())
 
 }
 

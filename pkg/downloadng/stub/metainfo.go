@@ -266,4 +266,8 @@ func (p *metainfo) NewStream(ctx context.Context, rpc string, enc drpc.Encoding)
 	panic("not implemented")
 }
 
+func (p *metainfo) Transport() drpc.Transport {
+	return nil
+}
+
 var _ drpc.Conn = &metainfo{}

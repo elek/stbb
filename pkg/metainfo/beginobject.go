@@ -55,7 +55,7 @@ func (m BeginObject) Run() error {
 			ApiKey: []byte(access.APIKey.SerializeRaw()),
 		},
 		Bucket:             []byte(bucket),
-		EncryptedObjectKey: []byte(fmt.Sprintf("%s-%d-%d", key, rand.Int())),
+		EncryptedObjectKey: []byte(fmt.Sprintf("%s-%d", key, rand.Int())),
 		EncryptionParameters: &pb.EncryptionParameters{
 			CipherSuite: pb.CipherSuite_ENC_AESGCM,
 			BlockSize:   256,
