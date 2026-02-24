@@ -2,8 +2,9 @@ package nodeid
 
 import (
 	"crypto/x509"
-	"github.com/pkg/errors"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 	"storj.io/common/identity"
 )
 
@@ -35,19 +36,9 @@ func (s *Sign) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	//signedChainBytes := [][]byte{signedPeerCA.Raw, ca.Cert.Raw}
-	//signedChainBytes = append(signedChainBytes, ca.RawRestChain()...)
-	//
-	//signedChain, err := pkcrypto.CertsFromDER(signedChainBytes)
-	//if err != nil {
-	//	return nil
-	//}
-	//for _, s := range signedChain {
-	//	fmt.Println(s.PublicKey)
-	//}
-	//
-	fi.RestChain = []*x509.Certificate{signedPeerCA}
-	fi.CA = ca.Cert
+
+	fi.RestChain = []*x509.Certificate{ca.Cert}
+	fi.CA = signedPeerCA
 	err = cfg.PeerConfig().Save(fi.PeerIdentity())
 	if err != nil {
 		return err
