@@ -32,13 +32,21 @@ func (c *Cert) Run() error {
 			return errors.WithStack(err)
 		}
 		block, _ := pem.Decode(keyBytes)
-		privateKey, err := x509.ParseECPrivateKey(block.Bytes)
-		if err != nil {
-			return errors.WithStack(err)
+		var ecKey *ecdsa.PrivateKey
+		if parsed, ecErr := x509.ParseECPrivateKey(block.Bytes); ecErr == nil {
+			ecKey = parsed
+		} else if key, pkcs8Err := x509.ParsePKCS8PrivateKey(block.Bytes); pkcs8Err == nil {
+			var ok bool
+			ecKey, ok = key.(*ecdsa.PrivateKey)
+			if !ok {
+				return fmt.Errorf("PKCS8 key in %s is not ECDSA", f)
+			}
+		} else {
+			return fmt.Errorf("failed to parse key %s: %w (also tried PKCS8: %v)", f, ecErr, pkcs8Err)
 		}
-		allKeys[filepath.Base(f)] = &privateKey.PublicKey
-		fmt.Println(filepath.Base(f), privateKey.PublicKey.X.Text(16), privateKey.PublicKey.Y.Text(16))
-		externalKeys[filepath.Base(f)] = &privateKey.PublicKey
+		allKeys[filepath.Base(f)] = &ecKey.PublicKey
+		fmt.Println(filepath.Base(f), ecKey.PublicKey.X.Text(16), ecKey.PublicKey.Y.Text(16))
+		externalKeys[filepath.Base(f)] = &ecKey.PublicKey
 	}
 
 	for _, f := range c.Files {
