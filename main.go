@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -188,6 +189,23 @@ func main() {
 	}
 
 	ktx := kong.Parse(&cli,
+		kong.TypeMapper(reflect.TypeOf(storj.NodeID{}), kong.MapperFunc(func(ctx *kong.DecodeContext, target reflect.Value) error {
+			s := ctx.Scan.Pop().Value.(string)
+			id, err := storj.NodeIDFromString(s)
+			if err != nil {
+				// try hex decoding
+				bs, hexErr := hex.DecodeString(s)
+				if hexErr != nil {
+					return err
+				}
+				id, err = storj.NodeIDFromBytes(bs)
+				if err != nil {
+					return err
+				}
+			}
+			target.Set(reflect.ValueOf(id))
+			return nil
+		})),
 		kong.TypeMapper(reflect.TypeOf(storj.NodeURL{}), kong.MapperFunc(func(ctx *kong.DecodeContext, target reflect.Value) error {
 			s := ctx.Scan.Pop().Value.(string)
 			url, err := storj.ParseNodeURL(s)
