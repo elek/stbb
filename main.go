@@ -40,6 +40,7 @@ import (
 	"github.com/elek/stbb/pkg/satellite"
 	"github.com/elek/stbb/pkg/segment"
 	"github.com/elek/stbb/pkg/store"
+	"github.com/elek/stbb/pkg/taskqueue"
 	"github.com/elek/stbb/pkg/uplink"
 	"github.com/spacemonkeygo/monkit/v3"
 	"go.uber.org/zap"
@@ -184,6 +185,7 @@ func main() {
 		Hashstore  hashstore.Hashstore    `cmd:"" help:"commands related to the new hashtable based store"`
 		Audit      audit.Audit            `cmd:"" help:"commands related to the audit subsystem"`
 		Jobq       jobq.Jobq              `cmd:"" help:"jobq related helper commands"`
+		Taskqueue  taskqueue.TaskQueue    `cmd:"" help:"task queue (balancer) related helper commands"`
 		Rollout    Rollout                `cmd:"" help:"check rollout status of version.storj.io"`
 		Avro       avro.Avro              `cmd:"" help:"helpers to work with avro files"`
 	}
