@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -50,7 +52,7 @@ func (s *GetObject) Run() error {
 		}
 		s.ProjectID = &key.ProjectID
 	}
-	decodeString, err := hex.DecodeString(s.EncryptedPath)
+	decodeString, err := decodeEncryptedPath(s.EncryptedPath)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -73,4 +75,30 @@ func (s *GetObject) Run() error {
 	fmt.Println("plain_size", committed.TotalPlainSize)
 	fmt.Println("encrypted_size", committed.TotalEncryptedSize)
 	return nil
+}
+
+// decodeEncryptedPath decodes an encrypted path from either hex encoding
+// or base64-URL encoding (as output by `uplink ls --encrypted`).
+// The base64 format has `/`-separated components, each base64-URL encoded.
+func decodeEncryptedPath(path string) ([]byte, error) {
+	// Try hex first.
+	decoded, err := hex.DecodeString(path)
+	if err == nil {
+		return decoded, nil
+	}
+
+	// Try base64-URL format: components separated by `/`, each base64-URL encoded.
+	parts := strings.Split(path, "/")
+	var result []byte
+	for i, part := range parts {
+		if i > 0 {
+			result = append(result, '/')
+		}
+		b, err := base64.URLEncoding.DecodeString(part)
+		if err != nil {
+			return nil, errors.Errorf("failed to decode path component %q: %v", part, err)
+		}
+		result = append(result, b...)
+	}
+	return result, nil
 }
