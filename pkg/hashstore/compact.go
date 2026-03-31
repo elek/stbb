@@ -18,6 +18,7 @@ type Compact struct {
 	DeleteTrashImmediately bool    `help:"Delete trash segments immediately" default:"true"`
 	RewriteMultiple        float64 `help:"Limit data size to be rewritten in one cycle" default:"2.0"`
 	DefaultKind            int     `help:"Default table kind (0=hashstore,1=memstore)"`
+	SkipLogCheck           bool    `help:"Skip log file integrity check on startup" default:"true"`
 }
 
 func (i *Compact) Run() error {
@@ -31,6 +32,7 @@ func (i *Compact) Run() error {
 	metaFile, logDir := i.GetPath()
 
 	cfg := hashstore.CreateDefaultConfig(0, false)
+	cfg.Store.SkipLogCheck = i.SkipLogCheck
 	cfg.Compaction.AliveFraction = i.AliveFraction
 	cfg.Compaction.DeleteTrashImmediately = i.DeleteTrashImmediately
 	cfg.Compaction.RewriteMultiple = i.RewriteMultiple
