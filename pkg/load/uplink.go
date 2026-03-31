@@ -3,14 +3,15 @@ package load
 import (
 	"context"
 	"fmt"
-	"github.com/elek/stbb/pkg/util"
-	"github.com/zeebo/errs"
 	"math/rand"
 	"os"
-	"storj.io/storj/cmd/uplink/ulloc"
-	"storj.io/uplink"
 	"sync"
 	"time"
+
+	"github.com/elek/stbb/pkg/util"
+	"github.com/zeebo/errs"
+	"storj.io/storj/cmd/uplink/ulloc"
+	"storj.io/uplink"
 )
 
 type Uplink struct {
@@ -84,21 +85,27 @@ func (u *Uplink) Test(ix int, ctx context.Context, key string, cfg uplink.Config
 		if ctx.Err() != nil {
 			return
 		}
-		keyInstance := fmt.Sprintf("%s-%d-%d", key, ix, j)
+		keyInstance := fmt.Sprintf("%s/%d/%d/%d", key, ix, j%256, j)
 		if u.Verbose {
-			fmt.Println("Uploading / downloading " + keyInstance)
+			fmt.Println("Uploading " + keyInstance)
 		}
 		err := Upload(ctx, project, data, bucket, keyInstance, u.TTL)
 		if err != nil {
 			fmt.Println(err)
 		}
 		if u.EnableDownload {
+			if u.Verbose {
+				fmt.Println("Downloading " + keyInstance)
+			}
 			_, err = Download(ctx, project, bucket, keyInstance)
 			if err != nil {
 				fmt.Println(err)
 			}
 		}
 		if u.EnableDelete {
+			if u.Verbose {
+				fmt.Println("Deleting " + keyInstance)
+			}
 			err = Delete(ctx, project, bucket, keyInstance)
 			if err != nil {
 				fmt.Println(err)
