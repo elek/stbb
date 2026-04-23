@@ -20,6 +20,7 @@ type Compact struct {
 	DefaultKind            int     `help:"Default table kind (0=hashstore,1=memstore)"`
 	SkipLogCheck           bool    `help:"Skip log file integrity check on startup" default:"true"`
 	SkipFsck               bool    `help:"Skip fsck (log file consistency check) on startup" default:"false"`
+	Mmap                   bool    `help:"Use mmap for reads" default:"false"`
 }
 
 func (i *Compact) Run() error {
@@ -40,6 +41,8 @@ func (i *Compact) Run() error {
 	cfg.TableDefaultKind = hashstore.TableKindCfg{
 		Kind: hashstore.TableKind(i.DefaultKind),
 	}
+	cfg.Hashtbl.Mmap = i.Mmap
+	cfg.Memtbl.Mmap = i.Mmap
 
 	store, err := hashstore.NewStore(ctx, cfg, logDir, filepath.Dir(metaFile), log, nil, nil)
 	if err != nil {
