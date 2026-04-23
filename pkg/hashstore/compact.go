@@ -19,10 +19,11 @@ type Compact struct {
 	RewriteMultiple        float64 `help:"Limit data size to be rewritten in one cycle" default:"2.0"`
 	DefaultKind            int     `help:"Default table kind (0=hashstore,1=memstore)"`
 	SkipLogCheck           bool    `help:"Skip log file integrity check on startup" default:"true"`
+	SkipFsck               bool    `help:"Skip fsck (log file consistency check) on startup" default:"false"`
 }
 
 func (i *Compact) Run() error {
-	log, err := zap.NewDevelopment()
+	log, err := zap.NewDevelopment(zap.AddStacktrace(zap.ErrorLevel))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -32,7 +33,7 @@ func (i *Compact) Run() error {
 	metaFile, logDir := i.GetPath()
 
 	cfg := hashstore.CreateDefaultConfig(0, false)
-	cfg.Store.SkipLogCheck = i.SkipLogCheck
+	cfg.Store.SkipLogCheck = i.SkipLogCheck || i.SkipFsck
 	cfg.Compaction.AliveFraction = i.AliveFraction
 	cfg.Compaction.DeleteTrashImmediately = i.DeleteTrashImmediately
 	cfg.Compaction.RewriteMultiple = i.RewriteMultiple
