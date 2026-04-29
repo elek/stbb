@@ -30,6 +30,7 @@ type SelectPool struct {
 	db.WithDatabase
 	Placement storj.PlacementConstraint
 	Selector  string
+	Values    string
 	CSV       bool
 	Tracker   string `default:"noop"`
 	Rps       int    `default:"400"`
@@ -45,6 +46,17 @@ func (n *SelectPool) Run() (err error) {
 	}
 
 	var attributes []nodeselection.NodeAttribute
+	var values []nodeselection.NodeValue
+	if n.Values != "" {
+		for _, valdef := range strings.Split(n.Values, ",") {
+			val, err := nodeselection.CreateNodeValue(valdef)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			values = append(values, val)
+		}
+	}
+
 	for _, attr := range strings.Split(selectorDef, ",") {
 		attr, err := nodeselection.CreateNodeAttribute(attr)
 		if err != nil {
@@ -56,6 +68,9 @@ func (n *SelectPool) Run() (err error) {
 		var result []string
 		for _, attr := range attributes {
 			result = append(result, attr(n))
+		}
+		for _, val := range values {
+			result = append(result, fmt.Sprintf("%v", val(n)))
 		}
 		return strings.Join(result, ",")
 	}
@@ -181,11 +196,6 @@ func (n *SelectPool) Run() (err error) {
 			return errors.WithStack(err)
 		}
 
-		for _, node := range nodes {
-			stat[nodeAttribute(*node)]++
-			sum++
-		}
-
 		if cohortReq != nil {
 			upl := 0
 			matcher := cohorts.NewMatcher(cohortReq.ToProto(), len(nodes))
@@ -203,6 +213,11 @@ func (n *SelectPool) Run() (err error) {
 
 			}
 			cohortSuccess[upl]++
+		}
+
+		for _, node := range nodes {
+			stat[nodeAttribute(*node)]++
+			sum++
 		}
 
 		pieces, invNodes := convert(nodes)
@@ -223,6 +238,10 @@ func (n *SelectPool) Run() (err error) {
 
 		for _, s := range strings.Split(selectorDef, ",") {
 			parts := strings.Split(s, ":")
+			output += fmt.Sprintf("%s,", parts[len(parts)-1])
+		}
+		for _, valdef := range strings.Split(n.Values, ",") {
+			parts := strings.Split(valdef, ":")
 			output += fmt.Sprintf("%s,", parts[len(parts)-1])
 		}
 		output += "value\n"
