@@ -24,7 +24,7 @@ type Uplink struct {
 	EnableDownload bool          `default:"false" help:"Enable download as part of the test"`
 	EnableDelete   bool          `default:"false" help:"Enable deletion as part of the test (set TTL if you don't use it'!)"`
 
-	progress util.Progres
+	progress util.Progress
 }
 
 func (u *Uplink) Run() error {
@@ -42,7 +42,7 @@ func (u *Uplink) Run() error {
 		return err
 	}
 
-	u.progress = util.Progres{}
+	u.progress = util.Progress{}
 
 	bucket, key, ok := p.RemoteParts()
 	if !ok {

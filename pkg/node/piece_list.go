@@ -3,14 +3,15 @@ package node
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"time"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/zeebo/errs"
 	"go.uber.org/zap"
-	"io"
-	"os"
 	"storj.io/storj/satellite/metabase"
-	"time"
 )
 
 type PieceList struct {
@@ -51,7 +52,7 @@ func (p *PieceList) Run() error {
 		}
 	}()
 
-	progress := util.Progres{}
+	progress := util.Progress{}
 	err = metabaseDB.IterateLoopSegments(ctx, metabase.IterateLoopSegments{
 		BatchSize:          100000,
 		AsOfSystemInterval: 1 * time.Minute,

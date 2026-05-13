@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 
+	"sort"
+
 	"github.com/elek/stbb/pkg/cohorts"
 	"github.com/elek/stbb/pkg/db"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"storj.io/common/testrand"
-	"storj.io/storj/satellite/metainfo"
-
-	"sort"
 
 	"go.uber.org/zap"
 	"storj.io/common/memory"
@@ -36,6 +35,7 @@ type SelectPool struct {
 	Rps       int    `default:"400"`
 	K         int    `default:"1000000"`
 	FakeNodes int    `default:"0" help:"Number of fake nodes to use instead of db"`
+	Cancel    string `help:"node filter to prefer cancelling matched nodes first"`
 }
 
 func (n *SelectPool) Run() (err error) {
@@ -79,12 +79,20 @@ func (n *SelectPool) Run() (err error) {
 	switch n.Tracker {
 	case "noop":
 		tw = &Noop{}
-	case "fair":
-		tw = &Fair{}
-	case "bitshift":
-		tw = &BitShift{}
+	//case "fair":
+	//	tw = &Fair{}
+	//case "bitshift":
+	//	tw = &BitShift{}
 	default:
 		return errors.New("unknown tracker: " + n.Tracker)
+	}
+
+	var cancelFilter nodeselection.NodeFilter
+	if n.Cancel != "" {
+		cancelFilter, err = nodeselection.FilterFromString(n.Cancel, nil)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	placements, err := n.WithPlacement.GetPlacement(nodeselection.NewPlacementConfigEnvironment(tw.InitScoreNode(), &NoopFailureTracker{}))
@@ -215,6 +223,31 @@ func (n *SelectPool) Run() (err error) {
 			cohortSuccess[upl]++
 		}
 
+		if cancelFilter != nil && len(nodes) > success {
+			// Separate nodes into matched (prefer to cancel) and unmatched.
+			var matched, unmatched []*nodeselection.SelectedNode
+			for _, node := range nodes {
+				if cancelFilter.Match(node) {
+					matched = append(matched, node)
+				} else {
+					unmatched = append(unmatched, node)
+				}
+			}
+			// Shuffle both groups so cancellation within each group is random.
+			rand.Shuffle(len(matched), func(i, j int) {
+				matched[i], matched[j] = matched[j], matched[i]
+			})
+			rand.Shuffle(len(unmatched), func(i, j int) {
+				unmatched[i], unmatched[j] = unmatched[j], unmatched[i]
+			})
+			// Build kept list: take unmatched first, then matched (since we cancel matched preferentially).
+			kept := append(unmatched, matched...)
+			if len(kept) > success {
+				kept = kept[:success]
+			}
+			nodes = kept
+		}
+
 		for _, node := range nodes {
 			stat[nodeAttribute(*node)]++
 			sum++
@@ -337,69 +370,6 @@ func (n *Noop) InitScoreNode() nodeselection.ScoreNode {
 }
 
 var _ TrackerWrap = &Noop{}
-
-type Fair struct {
-	tracker *FairTracker
-}
-
-func (f *Fair) Debug() {
-	for id, score := range f.tracker.counters {
-		fmt.Println(id, score)
-	}
-}
-
-func (f *Fair) Increment(nodes []*nodeselection.SelectedNode, success int) {
-	for _, node := range nodes {
-		f.tracker.Update(node)
-	}
-}
-
-func (f *Fair) Bump() {
-	f.tracker.BumpGeneration()
-}
-
-func (f *Fair) InitScoreNode() nodeselection.ScoreNode {
-	f.tracker = NewFairTracker()
-	return f.tracker
-}
-
-var _ TrackerWrap = &Fair{}
-
-type BitShift struct {
-	tracker *metainfo.SuccessTrackers
-}
-
-func (b *BitShift) Debug() {
-
-}
-
-func (b *BitShift) InitScoreNode() nodeselection.ScoreNode {
-	tracker, ok := metainfo.GetNewSuccessTracker("bitshift")
-	if !ok {
-		panic("unknown tracker")
-	}
-	successTracker := metainfo.NewSuccessTrackers([]storj.NodeID{}, func(id storj.NodeID) metainfo.SuccessTracker {
-		return tracker()
-	})
-	b.tracker = successTracker
-	return successTracker
-}
-
-func (b *BitShift) Increment(nodes []*nodeselection.SelectedNode, success int) {
-	rand.Shuffle(len(nodes), func(i, j int) {
-		nodes[i], nodes[j] = nodes[j], nodes[i]
-	})
-
-	for ix, node := range nodes {
-		b.tracker.GetTracker(storj.NodeID{}).Increment(node.ID, ix < success)
-	}
-}
-
-func (b *BitShift) Bump() {
-	b.tracker.BumpGeneration()
-}
-
-var _ TrackerWrap = &BitShift{}
 
 type NodeList struct {
 	Nodes []*nodeselection.SelectedNode

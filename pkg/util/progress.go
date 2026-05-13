@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-type Progres struct {
+type Progress struct {
 	counter     int64
 	lastCounter int64
 	last        time.Time
 	mu          sync.Mutex
 }
 
-func (o *Progres) Increment() {
+func (o *Progress) Increment() {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	o.counter++
@@ -25,7 +25,7 @@ func (o *Progres) Increment() {
 	}
 }
 
-func (o *Progres) Counter() int64 {
+func (o *Progress) Counter() int64 {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 	return o.counter

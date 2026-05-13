@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/elek/stbb/pkg/util"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
+
+	"github.com/elek/stbb/pkg/util"
+	"github.com/pkg/errors"
 	"storj.io/common/storj"
 	"storj.io/storj/shared/tagsql"
 	"storj.io/storj/storagenode/blobstore/filestore"
-	"strconv"
-	"time"
 )
 
 type PieceListCheck struct {
@@ -46,7 +47,7 @@ func (p *PieceListCheck) Run() error {
 
 	sqlDB.QueryContext(ctx, "SELECT ( ")
 
-	progress := util.Progres{}
+	progress := util.Progress{}
 	for {
 		line, err := cr.Read()
 		if err != nil {

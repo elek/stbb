@@ -3,12 +3,13 @@ package store
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"os"
 	"storj.io/storj/storagenode/pieces"
-	"time"
 )
 
 type Size struct {
@@ -29,7 +30,7 @@ func (s Size) Run() error {
 	}
 	fw := pieces.NewFileWalker(log, store, nil, nil, nil)
 
-	p := util.Progres{}
+	p := util.Progress{}
 	var satPiecesTotal, satPiecesContentSize int64
 	start := time.Now()
 	err = fw.WalkSatellitePieces(context.Background(), s.Satellite, nil, func(access pieces.StoredPieceAccess) error {

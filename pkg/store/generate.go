@@ -2,6 +2,9 @@ package store
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/elek/stbb/pkg/util"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -9,8 +12,6 @@ import (
 	"storj.io/common/storj"
 	"storj.io/storj/storagenode/blobstore"
 	"storj.io/storj/storagenode/pieces"
-	"sync"
-	"time"
 )
 
 type Generate struct {
@@ -32,7 +33,7 @@ func (g Generate) Run() error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	p := &util.Progres{}
+	p := &util.Progress{}
 	defer store.Close()
 	var wg sync.WaitGroup
 	for i := 0; i < g.Thread; i++ {
