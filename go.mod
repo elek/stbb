@@ -39,12 +39,12 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	lukechampine.com/blake3 v1.1.7
-	storj.io/common v0.0.0-20260328020406-acac5312e030
+	storj.io/common v0.0.0-20260514184426-9f076a4a8d52
 	storj.io/drpc v0.0.35-0.20250513201419-f7819ea69b55
 	storj.io/edge v1.75.1-0.20240328060906-2856366f2015
 	storj.io/infectious v0.0.2
 	storj.io/monkit-jaeger v0.0.0-20250523220404-454c1b072fad
-	storj.io/storj v1.153.0-rc
+	storj.io/storj v1.154.0-rc.0.20260519084606-2020e7ae12c8
 	storj.io/uplink v1.13.2-0.20260204161751-a31c5f3468fc
 )
 
@@ -62,6 +62,7 @@ require (
 	cloud.google.com/go/pubsub/v2 v2.0.0 // indirect
 	cloud.google.com/go/secretmanager v1.16.0 // indirect
 	cloud.google.com/go/spanner v1.88.0 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0 // indirect
@@ -89,6 +90,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-oauth2/oauth2/v4 v4.5.4 // indirect
+	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/glog v1.2.5 // indirect
@@ -195,4 +197,3 @@ require (
 	storj.io/minmaxheap v0.0.0-20250403032542-1e24a6fe9c16 // indirect
 	storj.io/picobuf v0.0.4 // indirect
 )
-

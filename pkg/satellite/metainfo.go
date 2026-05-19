@@ -227,6 +227,11 @@ func (m *Metainfo) DownloadObject(ctx context.Context, request *pb.DownloadObjec
 	panic("implement me")
 }
 
+func (m *Metainfo) GetPendingObjectMetadata(ctx context.Context, request *pb.GetPendingObjectMetadataRequest) (*pb.GetPendingObjectMetadataResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m *Metainfo) UpdateObjectMetadata(ctx context.Context, request *pb.UpdateObjectMetadataRequest) (*pb.UpdateObjectMetadataResponse, error) {
 	//TODO implement me
 	panic("implement me")

@@ -33,6 +33,8 @@ cloud.google.com/go/storage v1.56.0 h1:iixmq2Fse2tqxMbWhLWC9HfBj1qdxqAmiK8/eqtsL
 cloud.google.com/go/storage v1.56.0/go.mod h1:Tpuj6t4NweCLzlNbw9Z9iwxEkrSem20AetIeH/shgVU=
 cloud.google.com/go/trace v1.11.7 h1:kDNDX8JkaAG3R2nq1lIdkb7FCSi1rCmsEtKVsty7p+U=
 cloud.google.com/go/trace v1.11.7/go.mod h1:TNn9d5V3fQVf6s4SCveVMIBS2LJUqo73GACmq/Tky0s=
+filippo.io/edwards25519 v1.2.0 h1:crnVqOiS4jqYleHd9vaKZ+HKtHfllngJIiOpNpoJsjo=
+filippo.io/edwards25519 v1.2.0/go.mod h1:xzAOLCNug/yB62zG1bQ8uziwrIqIuxhctzJT18Q77mc=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0 h1:BzsL0qE7LvtTEtXG7Dt5NS1EP0CQwI21HZfj9aGghhw=
 github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.6.0/go.mod h1:I7kE2kM3qCr9QPT4cU4cCFYkEpVyVr16YOGUHzy+nR0=
@@ -160,6 +162,8 @@ github.com/go-oauth2/oauth2/v4 v4.5.4 h1:YjI0tmGW8oxVhn9QSBIxlr641QugWrJY5UWa6Xm
 github.com/go-oauth2/oauth2/v4 v4.5.4/go.mod h1:BXiOY+QZtZy2ewbsGk2B5P8TWmtz/Rf7ES5ZttQFxfQ=
 github.com/go-ole/go-ole v1.2.6 h1:/Fpf6oFPoeFik9ty7siob0G6Ke8QvQEuVcuChpwXzpY=
 github.com/go-ole/go-ole v1.2.6/go.mod h1:pprOEPIfldk/42T2oK7lQ4v4JSDwmV0As9GaiUsvbm0=
+github.com/go-sql-driver/mysql v1.10.0 h1:Q+1LV8DkHJvSYAdR83XzuhDaTykuDx0l6fkXxoWCWfw=
+github.com/go-sql-driver/mysql v1.10.0/go.mod h1:M+cqaI7+xxXGG9swrdeUIoPG3Y3KCkF0pZej+SK+nWk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
@@ -799,8 +803,8 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 lukechampine.com/blake3 v1.1.7 h1:GgRMhmdsuK8+ii6UZFDL8Nb+VyMwadAgcJyfYHxG6n0=
 lukechampine.com/blake3 v1.1.7/go.mod h1:tkKEOtDkNtklkXtLNEOGNq5tcV90tJiA1vAA12R78LA=
-storj.io/common v0.0.0-20260328020406-acac5312e030 h1:Ehgr/uBj6ww8kkRA6Magpnkw+09HFfTGrCtYv3CcRak=
-storj.io/common v0.0.0-20260328020406-acac5312e030/go.mod h1:1GZnCZNGbzBzaqhG0cUypQeLfNhNIeNY9JVMMiCF14M=
+storj.io/common v0.0.0-20260514184426-9f076a4a8d52 h1:yOZ3NAOAzM1ECIdt8sCUdS7YKN8G/yCmgtGwAAw+SZE=
+storj.io/common v0.0.0-20260514184426-9f076a4a8d52/go.mod h1:1GZnCZNGbzBzaqhG0cUypQeLfNhNIeNY9JVMMiCF14M=
 storj.io/drpc v0.0.35-0.20250513201419-f7819ea69b55 h1:8OE12DvUnB9lfZcHe7IDGsuhjrY9GBAr964PVHmhsro=
 storj.io/drpc v0.0.35-0.20250513201419-f7819ea69b55/go.mod h1:Y9LZaa8esL1PW2IDMqJE7CFSNq7d5bQ3RI7mGPtmKMg=
 storj.io/edge v1.75.1-0.20240328060906-2856366f2015 h1:pCgzTo0lGOrn+AmriRdMU+pRxc7dUQj3AL1+yxe7SNE=
@@ -815,7 +819,7 @@ storj.io/monkit-jaeger v0.0.0-20250523220404-454c1b072fad h1:HkjZ/RDf2MiY7ENNhDW
 storj.io/monkit-jaeger v0.0.0-20250523220404-454c1b072fad/go.mod h1:ZS8oCmCdx8/cSCbQBeT3BSAgxqoHPclTerizqn5i+Os=
 storj.io/picobuf v0.0.4 h1:qswHDla+YZ2TovGtMnU4astjvrADSIz84FXRn0qgP6o=
 storj.io/picobuf v0.0.4/go.mod h1:hSMxmZc58MS/2qSLy1I0idovlO7+6K47wIGUyRZa6mg=
-storj.io/storj v1.153.0-rc h1:pUliI1GRKrwwZcvuhjnBk6mmMhplJ1w6GAeWvfIVcEg=
-storj.io/storj v1.153.0-rc/go.mod h1:fXpuqEnDdGix9RQCwXtBGW92Q89/DU7VvSWRU+pkoNw=
+storj.io/storj v1.154.0-rc.0.20260519084606-2020e7ae12c8 h1:OkRTvq7FIOdmVkp0I/4l0G5h9JHpQm25AR/ttc64gns=
+storj.io/storj v1.154.0-rc.0.20260519084606-2020e7ae12c8/go.mod h1:r3wANEe4tiiGqLu0NMjhDRT4YSRPBgyCSM8d9wAARCo=
 storj.io/uplink v1.13.2-0.20260204161751-a31c5f3468fc h1:xD0l0Ml2IAIthpKwgpz29+K54wxzezo8xeUkKYhAGx4=
 storj.io/uplink v1.13.2-0.20260204161751-a31c5f3468fc/go.mod h1:yhq2Db69jUznez7BVthSOkfx1576ypoCRSbc6RjB9vc=

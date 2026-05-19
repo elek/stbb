@@ -52,9 +52,12 @@ func (i *Compact) Run() error {
 	}
 	defer store.Close()
 
-	err = store.Compact(ctx, func(ctx context.Context, key hashstore.Key, created time.Time) bool {
-		return false
-	}, time.Time{})
+	err = store.Compact(ctx, hashstore.CompactArguments{
+		ShouldTrash: func(ctx context.Context, key hashstore.Key, created time.Time) bool {
+			return false
+		},
+		LastRestore: time.Time{},
+	})
 	if err != nil {
 		return errors.WithStack(err)
 	}
