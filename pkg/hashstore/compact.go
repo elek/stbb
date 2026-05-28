@@ -43,8 +43,8 @@ func (i *Compact) Run() error {
 	}
 	cfg.Hashtbl.Mmap = i.Mmap
 	cfg.Memtbl.Mmap = i.Mmap
-	// TODO: use after rebase
-	//cfg.Store.DisableCopyFileRange = true
+
+	cfg.Store.DisableCopyFileRange = true
 
 	store, err := hashstore.NewStore(ctx, cfg, logDir, filepath.Dir(metaFile), log, nil, nil)
 	if err != nil {
