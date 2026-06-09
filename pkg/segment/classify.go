@@ -2,6 +2,7 @@ package segment
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ type Classify struct {
 	placement.WithPlacement
 	StreamID       string `arg:""`
 	PlacementCheck bool   `help:"Check placement rules" default:"true"`
+	Hex            bool   `help:"Print node IDs in hex format"`
 }
 
 func (s *Classify) Run() error {
@@ -127,7 +129,11 @@ func (s *Classify) Run() error {
 		fmt.Printf(pattern, "out-of-placement", result.OutOfPlacement.Count())
 
 		for _, piece := range segment.Pieces {
-			fmt.Printf("[%s] %d %s %s\n", getStatus(result, int(piece.Number)), piece.Number, piece.StorageNode, getNodeInfo(nodeInfo, piece.StorageNode))
+			nodeIDStr := piece.StorageNode.String()
+			if s.Hex {
+				nodeIDStr = hex.EncodeToString(piece.StorageNode.Bytes())
+			}
+			fmt.Printf("[%s] %d %s %s\n", getStatus(result, int(piece.Number)), piece.Number, nodeIDStr, getNodeInfo(nodeInfo, piece.StorageNode))
 		}
 	}
 	return nil

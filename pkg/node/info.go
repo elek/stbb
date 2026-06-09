@@ -105,8 +105,20 @@ func (i Info) Run() error {
 		fmt.Println("offline_under_review", node.OfflineUnderReview)
 	}
 
+	fmt.Println("tags:")
+	signerOrder := []storj.NodeID{}
+	tagsBySigner := map[storj.NodeID][]nodeselection.NodeTag{}
 	for _, t := range tags {
-		fmt.Printf("   %s=%s\n", t.Name, string(t.Value))
+		if _, exists := tagsBySigner[t.Signer]; !exists {
+			signerOrder = append(signerOrder, t.Signer)
+		}
+		tagsBySigner[t.Signer] = append(tagsBySigner[t.Signer], t)
+	}
+	for _, signer := range signerOrder {
+		fmt.Printf("   signed by: %s\n", signer)
+		for _, t := range tagsBySigner[signer] {
+			fmt.Printf("      %s=%s\n", t.Name, string(t.Value))
+		}
 	}
 	return nil
 }
